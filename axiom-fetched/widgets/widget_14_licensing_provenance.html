@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Licensing &amp; Provenance Auditor</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --surface: #ffffff;
+      --surface-alt: #fbfdff;
+      --ink: #102338;
+      --ink-body: #1f3850;
+      --ink-muted: #60768d;
+      --muted-2: #7d90a5;
+      --rule: #e2e9f0;
+      --rule-strong: #cfdbe6;
+      --accent: #00a7d8;
+      --accent-soft: #eafaff;
+      --accent-ink: #0f6e8c;
+      --green: #24b36b;
+      --green-soft: #e7fff2;
+      --green-ink: #19824e;
+      --amber: #d99a13;
+      --amber-soft: #fff7df;
+      --amber-ink: #8a5c06;
+      --violet: #7b61ff;
+      --violet-soft: #eeeaff;
+      --violet-ink: #5a44c8;
+      --red: #e05f6e;
+      --red-soft: #ffeef0;
+      --red-ink: #c0455a;
+      --slate: #5b6b7d;
+      --shadow-soft: 0 8px 22px rgba(16, 35, 56, .05);
+      --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box }
+    html, body { margin: 0; padding: 0; overflow-x: hidden }
+
+    body {
+      background: linear-gradient(180deg, #f8fafc 0%, #f3f6fa 100%);
+      color: var(--ink-body);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.55;
+      padding: 14px;
+    }
+
+    .w14-wrap { max-width: 900px; margin: 0 auto }
+
+    .w14-title {
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(26px, 2.8vw, 40px);
+      font-weight: 800;
+      letter-spacing: -.035em;
+      line-height: 1.08;
+    }
+    .w14-subtitle {
+      max-width: 820px;
+      margin: 10px 0 16px;
+      color: var(--ink-muted);
+      font-size: 15px;
+      line-height: 1.62;
+    }
+    .w14-subtitle b { color: var(--ink-body) }
+
+    .w14-panel {
+      margin-bottom: 14px;
+      padding: 15px 17px;
+      border: 1px solid var(--rule);
+      border-radius: 18px;
+      background: var(--surface-alt);
+      box-shadow: var(--shadow-soft);
+    }
+    .w14-ptitle { color: var(--ink); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase }
+    .w14-phint { margin: 4px 0 12px; color: var(--ink-muted); font-size: 12.5px; line-height: 1.5 }
+    .w14-phint b { color: var(--ink-body) }
+
+    /* source table */
+    .w14-tbl { width: 100%; table-layout: fixed; border-collapse: collapse }
+    .w14-tbl col.c-pick { width: 78px }
+    .w14-tbl col.c-name { width: auto }
+    .w14-tbl col.c-claim { width: 168px }
+    .w14-tbl col.c-tok { width: 86px }
+    .w14-tbl th {
+      text-align: left; font-size: 10.5px; font-weight: 800; letter-spacing: .05em;
+      text-transform: uppercase; color: var(--muted-2); padding: 0 8px 8px; vertical-align: bottom;
+    }
+    .w14-tbl th.r { text-align: right }
+    .w14-tbl td {
+      padding: 9px 8px; border-top: 1px solid var(--rule);
+      vertical-align: middle; overflow-wrap: anywhere; word-break: break-word;
+    }
+    .w14-tbl tr.w14-on td { background: #fff }
+    .w14-srcname { font-size: 13.5px; font-weight: 700; color: var(--ink-body); line-height: 1.35 }
+    .w14-srcsub { font-size: 11px; color: var(--muted-2); line-height: 1.4; margin-top: 2px }
+    .w14-tok { font-family: var(--font-mono); font-size: 13px; font-weight: 800; color: var(--ink); text-align: right }
+    .w14-tok small { display: block; font-size: 9.5px; font-weight: 700; color: var(--muted-2); letter-spacing: .03em }
+
+    /* claimed license chip */
+    .w14-chip {
+      display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 999px;
+      font-family: var(--font-mono); font-size: 11px; font-weight: 800; white-space: nowrap;
+      border: 1px solid var(--rule-strong); background: #fff; color: var(--slate);
+    }
+    .w14-chip i { width: 7px; height: 7px; border-radius: 2px; flex: none; background: var(--muted-2) }
+    .w14-chip.g { border-color: #b6e7cd; background: var(--green-soft); color: var(--green-ink) }
+    .w14-chip.g i { background: var(--green) }
+    .w14-chip.a { border-color: #f0ddaf; background: var(--amber-soft); color: var(--amber-ink) }
+    .w14-chip.a i { background: var(--amber) }
+    .w14-chip.r { border-color: #f4c4cc; background: var(--red-soft); color: var(--red-ink) }
+    .w14-chip.r i { background: var(--red) }
+
+    /* include toggle */
+    .w14-tg {
+      position: relative; display: inline-block; width: 42px; height: 24px; cursor: pointer; user-select: none;
+    }
+    .w14-tg input { position: absolute; opacity: 0; width: 0; height: 0 }
+    .w14-tg .sl {
+      position: absolute; inset: 0; border-radius: 999px; background: #dde6ee;
+      border: 1px solid var(--rule-strong); transition: .18s ease;
+    }
+    .w14-tg .sl::after {
+      content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%;
+      background: #fff; box-shadow: 0 1px 3px rgba(16,35,56,.25); transition: .18s ease;
+    }
+    .w14-tg input:checked + .sl { background: linear-gradient(180deg, #2bb6dd, #0f87ab); border-color: #0f87ab }
+    .w14-tg input:checked + .sl::after { left: 22px }
+
+    /* corpus meter */
+    .w14-meter-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 11px }
+    .w14-mbig { font-family: var(--font-mono); font-size: 28px; font-weight: 800; letter-spacing: -.02em; line-height: 1; color: var(--ink) }
+    .w14-mbig small { font-size: 12px; color: var(--muted-2); font-weight: 700; margin-left: 6px }
+    .w14-stack { display: flex; height: 34px; border-radius: 11px; overflow: hidden; border: 1px solid var(--rule); background: #eef3f7 }
+    .w14-seg { display: flex; align-items: center; justify-content: center; font-size: 10.5px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; transition: width .35s cubic-bezier(.2,.7,.2,1) }
+    .w14-seg.g { background: linear-gradient(90deg, #43c98a, #1f9a5e) }
+    .w14-seg.a { background: linear-gradient(90deg, #e3b24f, #c0850c) }
+    .w14-seg.r { background: linear-gradient(90deg, #ea7180, #c8485c) }
+    .w14-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 11px }
+    .w14-lg { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink-body) }
+    .w14-lg i { width: 11px; height: 11px; border-radius: 3px; flex: none }
+    .w14-lg i.g { background: #1f9a5e } .w14-lg i.a { background: #c0850c } .w14-lg i.r { background: #c8485c }
+    .w14-lg b { font-family: var(--font-mono); font-weight: 800 }
+
+    /* verdict banner */
+    .w14-verdict { margin-top: 13px; padding: 13px 15px; border-radius: 13px; font-size: 13.5px; line-height: 1.55 }
+    .w14-verdict b { font-weight: 800 }
+    .w14-verdict.v-g { border: 1px solid #b6e7cd; background: var(--green-soft); color: var(--green-ink) }
+    .w14-verdict.v-a { border: 1px solid #f0ddaf; background: var(--amber-soft); color: var(--amber-ink) }
+    .w14-verdict.v-r { border: 1px solid #f4c4cc; background: var(--red-soft); color: var(--red-ink) }
+    .w14-vhead { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 5px }
+    .w14-vhead .pill { display: inline-flex; padding: 2px 9px; border-radius: 999px; font-size: 11px; letter-spacing: .02em; text-transform: none; border: 1px solid currentColor }
+
+    /* obligations list */
+    .w14-obl { margin-top: 11px; display: grid; grid-template-columns: minmax(0,1fr); gap: 7px }
+    .w14-obl .ob { display: flex; gap: 9px; align-items: flex-start; font-size: 12.5px; line-height: 1.5; color: var(--ink-body) }
+    .w14-obl .ob i { font-family: var(--font-mono); font-weight: 800; flex: none; margin-top: 1px }
+    .w14-obl .ob.g i { color: var(--green-ink) } .w14-obl .ob.a i { color: var(--amber-ink) } .w14-obl .ob.r i { color: var(--red-ink) }
+    .w14-obl .ob b { color: var(--ink) }
+
+    /* reveal */
+    .w14-revbtn-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 2px }
+    .w14-btn {
+      border: 1px solid #bcefff; border-radius: 11px; background: linear-gradient(180deg, #f2fcff, #e7f9ff);
+      color: var(--accent-ink); font-family: var(--font-sans); font-size: 13px; font-weight: 800;
+      padding: 9px 16px; cursor: pointer; transition: .16s ease;
+    }
+    .w14-btn:hover { box-shadow: 0 4px 12px rgba(0,167,216,.18) }
+    .w14-btn.v { border-color: #cdc2f6; background: linear-gradient(180deg, #f6f3ff, #efeaff); color: var(--violet-ink) }
+    .w14-mut { font-size: 12px; color: var(--muted-2) }
+
+    .w14-reveal { margin-top: 13px; display: none }
+    .w14-reveal.show { display: block }
+    .w14-rtbl { width: 100%; table-layout: fixed; border-collapse: collapse }
+    .w14-rtbl col.rc-name { width: auto }
+    .w14-rtbl col.rc-claim { width: 150px }
+    .w14-rtbl col.rc-act { width: 168px }
+    .w14-rtbl col.rc-flag { width: 30px }
+    .w14-rtbl th { text-align: left; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--muted-2); padding: 0 8px 8px }
+    .w14-rtbl td { padding: 9px 8px; border-top: 1px solid var(--rule); vertical-align: middle; overflow-wrap: anywhere; word-break: break-word }
+    .w14-rtbl .nm { font-size: 12.5px; font-weight: 700; color: var(--ink-body) }
+    .w14-flag { font-size: 15px; text-align: center; line-height: 1 }
+    .w14-flag.match { color: var(--green) }
+    .w14-flag.mis { color: var(--red) }
+    .w14-rate {
+      margin-top: 13px; padding: 12px 15px; border-radius: 13px; border: 1px solid #d8d0ff;
+      background: linear-gradient(180deg, #fbfaff, #f7f4ff); display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+    }
+    .w14-rate .num { font-family: var(--font-mono); font-weight: 800; color: var(--violet-ink); line-height: 1 }
+    .w14-rate .num .g { font-size: 34px; letter-spacing: -.02em }
+    .w14-rate .num small { display: block; margin-top: 4px; font-size: 11px; font-weight: 700; color: var(--muted-2); letter-spacing: .02em }
+    .w14-rate .txt { flex: 1 1 300px; font-size: 13px; line-height: 1.58; color: var(--ink-body) }
+    .w14-rate .txt b { color: var(--violet-ink) }
+
+    /* legal reality */
+    .w14-grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 11px }
+    .w14-fact { border: 1px solid var(--rule); border-radius: 12px; background: #fff; padding: 11px 13px }
+    .w14-fact .ft { font-size: 12px; font-weight: 800; color: var(--ink); margin-bottom: 4px }
+    .w14-fact .fb { font-size: 12px; color: var(--ink-muted); line-height: 1.52 }
+    .w14-fact .fb b { color: var(--ink-body) }
+
+    .w14-footer { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 6px; padding-top: 12px; flex-wrap: wrap }
+    .w14-foot-txt { color: var(--ink-muted); font-size: 12.5px; max-width: 560px; line-height: 1.55 }
+    .w14-badge { display: inline-flex; align-items: center; white-space: nowrap; padding: 6px 12px; border: 1px solid #d8d0ff; border-radius: 999px; background: var(--violet-soft); color: var(--violet-ink); font-family: var(--font-mono); font-size: 11.5px; font-weight: 700 }
+
+    @media(max-width:680px) {
+      body { padding: 13px }
+      .w14-grid2 { grid-template-columns: minmax(0,1fr) }
+      .w14-tbl col.c-claim { width: 120px }
+      .w14-tbl col.c-tok { width: 64px }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="w14-wrap">
+    <h1 class="w14-title">Licensing is a frontier we have to survey, and it is far more than a checkbox we tick</h1>
+    <p class="w14-subtitle">Suppose we have found ten datasets and want to assemble them into a training corpus. Each
+      one arrives with a <b>claimed</b> license, and because a license is really an <b>obligation</b> that we take on,
+      a single source with no real provenance is enough to render the whole blend unusable. As we toggle sources in and
+      out, we can read each tier by its color, where <b>green</b> means a permissive source, <b>amber</b> means a source
+      that carries a condition we must honor, and <b>red</b> means a source whose origin is unknown or scraped, and we
+      can watch what even one red source does to the mixture.</p>
+
+    <!-- SOURCE PICKER -->
+    <div class="w14-panel">
+      <div class="w14-ptitle">Step 1 · assemble the corpus</div>
+      <div class="w14-phint">Each row is a dataset that we could pull, and flipping it on adds its tokens to the
+        blend. The license shown here is what the dataset <b>claims</b> about itself, and Step 2 is where we check
+        whether that claim actually holds.</div>
+      <table class="w14-tbl">
+        <colgroup><col class="c-pick"><col class="c-name"><col class="c-claim"><col class="c-tok"></colgroup>
+        <thead>
+          <tr><th>Include</th><th>Dataset</th><th>Claimed license</th><th class="r">Tokens</th></tr>
+        </thead>
+        <tbody id="w14-rows"></tbody>
+      </table>
+    </div>
+
+    <!-- CORPUS METER + VERDICT -->
+    <div class="w14-panel">
+      <div class="w14-meter-head">
+        <span class="w14-ptitle">Step 2 · the blend &amp; its obligations</span>
+        <span class="w14-mbig" id="w14-total">0<small>B tokens selected</small></span>
+      </div>
+      <div class="w14-stack" id="w14-stack"></div>
+      <div class="w14-legend">
+        <span class="w14-lg"><i class="g"></i>permissive <b id="w14-lg-g">0B</b></span>
+        <span class="w14-lg"><i class="a"></i>strings attached <b id="w14-lg-a">0B</b></span>
+        <span class="w14-lg"><i class="r"></i>unknown / scraped <b id="w14-lg-r">0B</b></span>
+      </div>
+      <div class="w14-verdict v-g" id="w14-verdict">
+        <div class="w14-vhead"><span id="w14-vlabel">No sources selected</span><span class="pill" id="w14-vpill">empty</span></div>
+        <div id="w14-vbody">Turning on a source above shows us what shipping it would commit us to.</div>
+      </div>
+      <div class="w14-obl" id="w14-obl"></div>
+    </div>
+
+    <!-- REVEAL -->
+    <div class="w14-panel">
+      <div class="w14-ptitle" style="margin-bottom:4px">Step 3 · audit the claim</div>
+      <div class="w14-phint">A claimed license is only a self-report about a dataset. When the <b>Data Provenance
+        Initiative</b> audited more than 1,800 popular datasets, it found that license information was <b>frequently
+        missing or mislabeled</b>, so it is worth revealing the audited license for these well-known cases.</div>
+      <div class="w14-revbtn-row">
+        <button class="w14-btn v" id="w14-reveal-btn">Reveal audited licenses</button>
+        <span class="w14-mut">what is claimed set against what an audit actually finds</span>
+      </div>
+      <div class="w14-reveal" id="w14-reveal">
+        <table class="w14-rtbl">
+          <colgroup><col class="rc-name"><col class="rc-claim"><col class="rc-act"><col class="rc-flag"></colgroup>
+          <thead><tr><th>Dataset</th><th>Claimed</th><th>Audited / actual</th><th></th></tr></thead>
+          <tbody id="w14-revrows"></tbody>
+        </table>
+        <div class="w14-rate">
+          <div class="num"><span class="g" id="w14-misnum">0</span> / <span id="w14-misden">0</span><small>cases mislabeled in this sample</small></div>
+          <div class="txt">Provenance is the one thing standing between us and a corpus that we cannot legally ship,
+            which is why it deserves to be treated as real engineering rather than paperwork. The remedy is a mechanical
+            habit of tracking <b>license, source, and audit status at the level of each shard</b> instead of the corpus
+            as a whole, and whenever we cannot name where a token came from we treat it as <b>red</b>.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEGAL REALITY -->
+    <div class="w14-panel">
+      <div class="w14-ptitle" style="margin-bottom:11px">The 2023–2026 legal reality</div>
+      <div class="w14-grid2">
+        <div class="w14-fact">
+          <div class="ft">NYT v. OpenAI (filed Dec 2023)</div>
+          <div class="fb">This case alleges that millions of articles were used without permission and reproduced almost
+            verbatim, which shows us that scraped news sits squarely inside active <b>litigation</b> rather than in
+            some comfortable grey area.</div>
+        </div>
+        <div class="w14-fact">
+          <div class="ft">Books3 taken down (Aug 2023)</div>
+          <div class="fb">Around 196k pirated books inside <b>The Pile</b> were removed after copyright complaints, which
+            reminds us that the mere fact of something appearing in a famous corpus never amounts to a license.</div>
+        </div>
+        <div class="w14-fact">
+          <div class="ft">Licensed-data deals</div>
+          <div class="fb">Labs now <b>pay</b> publishers and forums for training rights, so clean provenance carries a
+            real market price, and that price is exactly the reason unknown data becomes a liability on our books.</div>
+        </div>
+        <div class="w14-fact">
+          <div class="ft">EU AI Act · GPAI Code (2025)</div>
+          <div class="fb">Providers are now required to publish a <b>"sufficiently detailed summary"</b> of their training
+            content through a Commission template, and once that obligation applies, per-source provenance turns into a
+            legal deliverable that we have to be able to produce.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="w14-footer">
+      <span class="w14-foot-txt">A single red source is enough to poison the blend, because the corpus is only ever as
+        shippable as its worst-documented shard, so we track provenance for every source from the very moment we
+        collect it.</span>
+      <span class="w14-badge">illustrative cases · real legal events</span>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+    (function () {
+      const $ = id => document.getElementById(id);
+
+      // tier: g = permissive/safe, a = attribution/share-alike/NC (strings attached), r = unknown/scraped/no provenance
+      // Token counts are illustrative (rounded, B = billion). Well-known license facts only.
+      const SOURCES = [
+        { id: "s1", name: "Sangraha (AI4Bharat)", sub: "Indic web + curated", claim: "CC-BY-4.0", tier: "a", tok: 251, on: true },
+        { id: "s2", name: "FineWeb-2", sub: "multilingual web", claim: "ODC-By", tier: "g", tok: 300, on: true },
+        { id: "s3", name: "FineWeb-Edu", sub: "educational web subset", claim: "ODC-By", tier: "g", tok: 130, on: false },
+        { id: "s4", name: "The Stack v2 (perm.)", sub: "permissive-licensed code", claim: "MIT / Apache-2.0", tier: "g", tok: 90, on: false },
+        { id: "s5", name: "Wikipedia dump", sub: "encyclopedia text", claim: "CC-BY-SA-4.0", tier: "a", tok: 20, on: false },
+        { id: "s6", name: "Public-domain books", sub: "pre-1929 / Gutenberg-style", claim: "CC0 / public-domain", tier: "g", tok: 12, on: false },
+        { id: "s7", name: "Image alt-text dump", sub: "web-scraped captions", claim: "CC-BY-NC", tier: "a", tok: 8, on: false },
+        { id: "s8", name: "Scraped news archive", sub: "no license stated", claim: "unknown / scraped", tier: "r", tok: 40, on: false },
+        { id: "s9", name: '"Books" torrent shard', sub: "provenance unclear", claim: "unknown / scraped", tier: "r", tok: 30, on: false },
+        { id: "s10", name: "Forum dump (no ToS)", sub: "re-hosted, no source", claim: "unknown / scraped", tier: "r", tok: 18, on: false }
+      ];
+
+      // Audited reveal: claimed license set against what an audit actually finds. Well-known, conservative cases only.
+      const AUDIT = [
+        { name: "Sangraha (AI4Bharat)", claim: "CC-BY-4.0", claimT: "a", act: "CC-BY-4.0 (holds)", actT: "a", match: true },
+        { name: "FineWeb-2", claim: "ODC-By", claimT: "g", act: "ODC-By, but source docs vary", actT: "g", match: true },
+        { name: "Wikipedia dump", claim: "CC-BY-SA-4.0", claimT: "a", act: "CC-BY-SA → share-alike binds", actT: "a", match: true },
+        { name: "Image alt-text dump", claim: "CC-BY-NC", claimT: "a", act: "NC = no commercial training", actT: "a", match: true },
+        { name: "Scraped news archive", claim: "(none stated)", claimT: "r", act: "all-rights-reserved news", actT: "r", match: false },
+        { name: '"Books" torrent shard', claim: "unknown", claimT: "r", act: "pirated, copyright-infringing", actT: "r", match: false },
+        { name: "Forum dump (no ToS)", claim: "unknown", claimT: "r", act: "no grant, unusable", actT: "r", match: false }
+      ];
+
+      const TIER = {
+        g: { word: "permissive", chip: "g" },
+        a: { word: "strings attached", chip: "a" },
+        r: { word: "unknown / scraped", chip: "r" }
+      };
+      const fmtB = n => (n >= 1000 ? (n / 1000).toFixed(2) + "T" : n + "B");
+
+      // ---- build source rows
+      const rowsEl = $("w14-rows");
+      SOURCES.forEach(s => {
+        const tr = document.createElement("tr");
+        tr.dataset.id = s.id;
+        tr.innerHTML =
+          '<td><label class="w14-tg"><input type="checkbox" ' + (s.on ? "checked" : "") + '>' +
+          '<span class="sl"></span></label></td>' +
+          '<td><div class="w14-srcname">' + s.name + '</div><div class="w14-srcsub">' + s.sub + '</div></td>' +
+          '<td><span class="w14-chip ' + s.tier + '"><i></i>' + s.claim + '</span></td>' +
+          '<td class="w14-tok">' + s.tok + '<small>B tok</small></td>';
+        tr.querySelector("input").addEventListener("change", e => { s.on = e.target.checked; recompute(); });
+        rowsEl.appendChild(tr);
+      });
+
+      // ---- build audit rows (hidden until reveal)
+      const revEl = $("w14-revrows");
+      AUDIT.forEach(a => {
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          '<td class="nm">' + a.name + '</td>' +
+          '<td><span class="w14-chip ' + a.claimT + '"><i></i>' + a.claim + '</span></td>' +
+          '<td><span class="w14-chip ' + a.actT + '"><i></i>' + a.act + '</span></td>' +
+          '<td class="w14-flag ' + (a.match ? "match" : "mis") + '">' + (a.match ? "✓" : "✗") + '</td>';
+        revEl.appendChild(tr);
+      });
+      const mis = AUDIT.filter(a => !a.match).length;
+      $("w14-misnum").textContent = mis;
+      $("w14-misden").textContent = AUDIT.length;
+
+      let revealed = false;
+      $("w14-reveal-btn").addEventListener("click", () => {
+        revealed = !revealed;
+        $("w14-reveal").classList.toggle("show", revealed);
+        $("w14-reveal-btn").textContent = revealed ? "Hide audited licenses" : "Reveal audited licenses";
+      });
+
+      function recompute() {
+        const on = SOURCES.filter(s => s.on);
+        const sum = t => on.filter(s => s.tier === t).reduce((a, s) => a + s.tok, 0);
+        const g = sum("g"), a = sum("a"), r = sum("r"), total = g + a + r;
+
+        // highlight active rows
+        document.querySelectorAll("#w14-rows tr").forEach(tr => {
+          const s = SOURCES.find(x => x.id === tr.dataset.id);
+          tr.classList.toggle("w14-on", !!(s && s.on));
+        });
+
+        $("w14-total").innerHTML = (total === 0 ? "0" : fmtB(total)) + '<small>tokens selected</small>';
+        $("w14-lg-g").textContent = fmtB(g);
+        $("w14-lg-a").textContent = fmtB(a);
+        $("w14-lg-r").textContent = fmtB(r);
+
+        const stack = $("w14-stack");
+        if (total === 0) {
+          stack.innerHTML = "";
+        } else {
+          const pct = v => (v / total * 100);
+          stack.innerHTML =
+            '<div class="w14-seg g" style="width:' + pct(g) + '%">' + (pct(g) > 11 ? Math.round(pct(g)) + "%" : "") + '</div>' +
+            '<div class="w14-seg a" style="width:' + pct(a) + '%">' + (pct(a) > 11 ? Math.round(pct(a)) + "%" : "") + '</div>' +
+            '<div class="w14-seg r" style="width:' + pct(r) + '%">' + (pct(r) > 11 ? Math.round(pct(r)) + "%" : "") + '</div>';
+        }
+
+        // verdict: the worst tier present dominates the whole blend
+        const v = $("w14-verdict");
+        const rPct = total ? (r / total * 100) : 0;
+        let cls, label, pill, body;
+        if (total === 0) {
+          cls = "v-g"; label = "No sources selected"; pill = "empty";
+          body = "Turning on a source above shows us what shipping it would commit us to.";
+        } else if (r > 0) {
+          cls = "v-r"; label = "Whole corpus is do-not-ship"; pill = "blocked";
+          body = "A single <b>red</b> source, holding " + fmtB(r) + " tokens (" + rPct.toFixed(0) + "% of the blend), has no real " +
+            "provenance. Since we cannot prove a license for it, the <b>entire mixed corpus inherits its risk</b>, so one " +
+            "unaudited shard is enough to make the whole thing unshippable, and that is why we track provenance <b>per source</b> rather than per corpus.";
+        } else if (a > 0) {
+          cls = "v-a"; label = "Shippable, with obligations"; pill = "strings attached";
+          body = "Every source here is licensed, though <b>" + fmtB(a) + " tokens carry conditions</b> such as attribution, " +
+            "share-alike, or non-commercial limits, so the blend is shippable only when we actually honor each one, since even a single NC source can " +
+            "block commercial use of the whole blend.";
+        } else {
+          cls = "v-g"; label = "Clean &amp; permissive"; pill = "ship it";
+          body = "All <b>" + fmtB(g) + " tokens</b> are permissively licensed with traceable provenance " +
+            "(CC0, CC-BY, ODC-By, MIT/Apache), so this is the corpus that we can train on and release without keeping a lawyer on call.";
+        }
+        v.className = "w14-verdict " + cls;
+        $("w14-vlabel").innerHTML = label;
+        $("w14-vpill").textContent = pill;
+        $("w14-vbody").innerHTML = body;
+
+        // obligations list
+        const obl = $("w14-obl");
+        obl.innerHTML = "";
+        const add = (t, txt) => {
+          const d = document.createElement("div");
+          d.className = "ob " + t;
+          d.innerHTML = '<i>' + (t === "r" ? "✗" : t === "a" ? "!" : "✓") + '</i><span>' + txt + '</span>';
+          obl.appendChild(d);
+        };
+        on.forEach(s => {
+          if (s.tier === "g") add("g", "<b>" + s.name + "</b> is permissive (" + s.claim + "), so we attribute the source as a courtesy and it raises no blocker.");
+          else if (s.tier === "a") {
+            const nc = /NC/.test(s.claim);
+            const sa = /SA/.test(s.claim);
+            const note = nc ? "carries a non-commercial condition that <b>blocks commercial release</b> of any blend it touches"
+              : sa ? "carries a share-alike condition, so a derivative corpus may have to be released under the same license"
+              : "requires attribution, so we keep a per-shard credit record";
+            add("a", "<b>" + s.name + "</b> (" + s.claim + ") " + note + ".");
+          } else add("r", "<b>" + s.name + "</b> has no usable license or provenance, so we <b>do not use</b> it until it is cleared.");
+        });
+        if (on.length === 0) obl.innerHTML = "";
+      }
+
+      recompute();
+    })();
+  </script>
+</body>
+
+</html>

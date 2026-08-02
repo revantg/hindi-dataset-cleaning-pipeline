@@ -1,0 +1,34 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# marimo local session/checkpoint cache (editor runtime state, not source)
+__marimo__/
+
+# Local dataset samples: raw corpora under data/ are gitignored by default
+# (large scraped web/PDF text; most are not implementation deliverables).
+# The Sangraha Hindi raw cache and extraction-output JSONLs are NOT
+# published: only a compact, deterministic sample plus the download
+# script/README/manifest under data/sangraha_hi_verified_30m/ are tracked
+# (see that directory's README.md). The C4 evaluation raw HTML sample
+# stays excluded too.
+data/*
+!data/c4_en_html_evaluation/
+!data/sangraha_hi_verified_30m/
+data/*/raw.jsonl
+data/*/raw_html.jsonl
+data/*/extraction_only/*.jsonl
+data/*/extraction_only/impl/*.jsonl
+*.parquet
+.hf_cache/
+
+# Local Netlify folder
+.netlify
+

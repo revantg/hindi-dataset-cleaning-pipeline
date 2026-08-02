@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Token Budget and Scaling Explorer</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --surface: #ffffff;
+      --surface-alt: #fbfdff;
+      --ink: #102338;
+      --ink-body: #1f3850;
+      --ink-muted: #60768d;
+      --muted-2: #7d90a5;
+      --rule: #e2e9f0;
+      --rule-strong: #cfdbe6;
+      --accent: #00a7d8;
+      --accent-soft: #eafaff;
+      --accent-ink: #0f6e8c;
+      --green: #24b36b;
+      --green-soft: #e7fff2;
+      --green-ink: #19824e;
+      --amber: #d99a13;
+      --amber-soft: #fff7df;
+      --amber-ink: #8a5c06;
+      --violet: #7b61ff;
+      --violet-soft: #eeeaff;
+      --violet-ink: #5a44c8;
+      --red: #e05f6e;
+      --red-soft: #ffeef0;
+      --red-ink: #c0455a;
+      --slate: #5b6b7d;
+      --shadow-soft: 0 8px 22px rgba(16, 35, 56, .05);
+      --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box }
+    html, body { margin: 0; padding: 0; overflow-x: hidden }
+
+    body {
+      background: linear-gradient(180deg, #f8fafc 0%, #f3f6fa 100%);
+      color: var(--ink-body);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.55;
+      padding: 14px;
+    }
+
+    .tb-wrap { max-width: 900px; margin: 0 auto }
+
+    .tb-title {
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(26px, 2.8vw, 40px);
+      font-weight: 800;
+      letter-spacing: -.035em;
+      line-height: 1.08;
+    }
+    .tb-sub {
+      max-width: 820px;
+      margin: 10px 0 16px;
+      color: var(--ink-muted);
+      font-size: 15px;
+      line-height: 1.62;
+    }
+    .tb-sub b { color: var(--ink-body) }
+
+    .tb-panel {
+      margin-bottom: 14px;
+      padding: 15px 17px;
+      border: 1px solid var(--rule);
+      border-radius: 18px;
+      background: var(--surface-alt);
+      box-shadow: var(--shadow-soft);
+    }
+    .tb-ptitle { color: var(--ink); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase }
+
+    /* sliders */
+    .tb-sliders { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px 22px }
+    @media(max-width:620px){ .tb-sliders { grid-template-columns: minmax(0, 1fr) } }
+    .tb-sl-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 2px }
+    .tb-sl-lbl { font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--muted-2) }
+    .tb-sl-val { font-family: var(--font-mono); font-size: 20px; font-weight: 800; color: var(--accent-ink); letter-spacing: -.02em; line-height: 1 }
+    .tb-sl-val small { font-size: 12px; color: var(--muted-2); font-weight: 700; margin-left: 5px }
+    input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; margin: 8px 0 5px }
+    .tb-ticks { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: var(--muted-2) }
+
+    /* readout row */
+    .tb-readrow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 14px; margin-top: 14px }
+    @media(max-width:620px){ .tb-readrow { grid-template-columns: minmax(0, 1fr) } }
+    .tb-tpp { border: 1px solid var(--rule); border-radius: 14px; background: #fff; padding: 13px 15px; text-align: left }
+    .tb-tpp .tb-k { font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--muted-2) }
+    .tb-tpp .tb-big { font-family: var(--font-mono); font-size: 30px; font-weight: 800; letter-spacing: -.02em; line-height: 1.05; margin-top: 4px; color: var(--accent-ink) }
+    .tb-tpp .tb-big small { font-size: 13px; color: var(--muted-2); font-weight: 700; margin-left: 5px }
+    .tb-tpp .tb-eq { font-family: var(--font-mono); font-size: 11px; color: var(--ink-muted); margin-top: 6px; overflow-wrap: anywhere }
+
+    .tb-verdict { border-radius: 14px; padding: 13px 15px; border: 1px solid var(--rule); display: flex; flex-direction: column; gap: 5px }
+    .tb-verdict .tb-vtag { display: inline-flex; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase }
+    .tb-verdict .tb-vtag i { width: 10px; height: 10px; border-radius: 3px; flex: none }
+    .tb-verdict .tb-vtxt { font-size: 13px; line-height: 1.55 }
+    .tb-verdict .tb-vtxt b { font-weight: 800 }
+    .tb-verdict.green { background: var(--green-soft); border-color: #b6eccd } .tb-verdict.green .tb-vtag, .tb-verdict.green b { color: var(--green-ink) } .tb-verdict.green i { background: var(--green) }
+    .tb-verdict.amber { background: var(--amber-soft); border-color: #f0ddaf } .tb-verdict.amber .tb-vtag, .tb-verdict.amber b { color: var(--amber-ink) } .tb-verdict.amber i { background: var(--amber) }
+    .tb-verdict.red   { background: var(--red-soft);   border-color: #f3c9d0 } .tb-verdict.red .tb-vtag, .tb-verdict.red b { color: var(--red-ink) } .tb-verdict.red i { background: var(--red) }
+
+    /* plane */
+    .tb-planewrap { position: relative }
+    .tb-plane { width: 100%; height: auto; display: block; touch-action: none }
+    .tb-plane text { font-family: var(--font-sans) }
+    .tb-hint { font-size: 12px; color: var(--ink-muted); margin-top: 9px; line-height: 1.5; display: flex; align-items: center; gap: 8px; flex-wrap: wrap }
+    .tb-hint b { color: var(--violet-ink); font-weight: 800 }
+    .tb-leg { display: flex; gap: 15px 18px; flex-wrap: wrap; margin-top: 10px }
+    .tb-lg { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink-body) }
+    .tb-lg i { width: 11px; height: 11px; border-radius: 999px; flex: none; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--rule-strong) }
+
+    /* payoff */
+    .tb-payoff { border: 1px solid #d8d0ff; background: linear-gradient(180deg, #fbfaff, #f7f4ff) }
+    .tb-po-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap }
+    .tb-po-num { font-family: var(--font-mono); font-weight: 800; color: var(--violet-ink); line-height: 1 }
+    .tb-po-num .g { font-size: 38px; letter-spacing: -.03em }
+    .tb-po-num small { display: block; margin-top: 5px; font-size: 11px; font-weight: 700; color: var(--muted-2); letter-spacing: .03em }
+    .tb-po-txt { flex: 1 1 320px; font-size: 13.5px; line-height: 1.6; color: var(--ink-body) }
+    .tb-po-txt b { color: var(--violet-ink) }
+    .tb-po-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px }
+    .tb-po-btns button { border: 1px solid var(--rule); border-radius: 10px; background: #fff; color: var(--ink-body); font-family: var(--font-mono); font-size: 12px; font-weight: 800; padding: 8px 13px; cursor: pointer; transition: .16s ease }
+    .tb-po-btns button:hover { border-color: #cdc2f6; color: var(--violet-ink); background: #f6f3ff }
+
+    .tb-foot { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 6px; padding-top: 12px; flex-wrap: wrap }
+    .tb-foot-txt { color: var(--ink-muted); font-size: 12px; max-width: 720px; line-height: 1.55 }
+    .tb-foot-txt b { color: var(--ink-body) }
+    .tb-badge { display: inline-flex; align-items: center; white-space: nowrap; padding: 6px 12px; border: 1px solid #d8d0ff; border-radius: 999px; background: var(--violet-soft); color: var(--violet-ink); font-family: var(--font-mono); font-size: 11.5px; font-weight: 700 }
+  </style>
+</head>
+
+<body>
+  <div class="tb-wrap">
+    <h1 class="tb-title">Token budget &amp; scaling explorer</h1>
+    <p class="tb-sub">When we hold a compute budget fixed, Chinchilla tells us that training on roughly <b>20 tokens per parameter</b>
+      sits on the compute-optimal frontier, and once we begin to weigh <b>inference cost</b> we start over-training a smaller model
+      on far more tokens, which is how Llama 3 8B ended up seeing about 1,900 tokens/param. As we slide the two dials we can watch
+      the dot travel across the log-log plane, and by dragging the <b>V5</b> marker we can feel how the regime shifts underneath us.</p>
+
+    <!-- sliders -->
+    <div class="tb-panel">
+      <div class="tb-ptitle" style="margin-bottom:12px">The two dials</div>
+      <div class="tb-sliders">
+        <div>
+          <div class="tb-sl-head">
+            <span class="tb-sl-lbl">Model size · parameters</span>
+            <span class="tb-sl-val" id="tbPVal">8.0<small>B</small></span>
+          </div>
+          <input type="range" id="tbPSlider" min="2" max="6" step="0.001" value="3.903">
+          <div class="tb-ticks"><span>100M</span><span>1B</span><span>10B</span><span>100B</span><span>1T</span></div>
+        </div>
+        <div>
+          <div class="tb-sl-head">
+            <span class="tb-sl-lbl">Training tokens</span>
+            <span class="tb-sl-val" id="tbTVal">200<small>B</small></span>
+          </div>
+          <input type="range" id="tbTSlider" min="1" max="5" step="0.001" value="3.301">
+          <div class="tb-ticks"><span>10B</span><span>100B</span><span>1T</span><span>10T</span><span>100T</span></div>
+        </div>
+      </div>
+
+      <div class="tb-readrow">
+        <div class="tb-tpp">
+          <div class="tb-k">Tokens / parameter</div>
+          <div class="tb-big" id="tbTPP">25<small>tok/param</small></div>
+          <div class="tb-eq" id="tbEq"></div>
+        </div>
+        <div class="tb-verdict" id="tbVerdict">
+          <span class="tb-vtag"><i></i><span id="tbVName"></span></span>
+          <span class="tb-vtxt" id="tbVTxt"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- log-log plane -->
+    <div class="tb-panel">
+      <div class="tb-ptitle" style="margin-bottom:10px">The scaling plane · log params × log tokens</div>
+      <div class="tb-planewrap">
+        <svg class="tb-plane" id="tbPlane" viewBox="0 0 860 520" xmlns="http://www.w3.org/2000/svg" aria-label="log-log scaling plane"></svg>
+      </div>
+      <div class="tb-hint">
+        <span>The <b>violet</b> V5 marker can be dragged around the plane, and when we hover over any of the <b>32 real models</b> plotted here we can read off that model together with its tokens/param, while a <b>dashed ring</b> tells us that a token count is <b>estimated</b> because the lab never disclosed it.</span>
+      </div>
+      <div class="tb-leg">
+        <span class="tb-lg"><i style="background:var(--accent)"></i>our current (params, tokens)</span>
+        <span class="tb-lg"><i style="background:var(--violet)"></i>V5 (draggable)</span>
+        <span class="tb-lg"><i style="background:#aab7c4"></i>2020–22</span>
+        <span class="tb-lg"><i style="background:#7bb4cf"></i>2024</span>
+        <span class="tb-lg"><i style="background:var(--accent-ink)"></i>2025–26</span>
+        <span class="tb-lg"><i style="background:var(--violet)"></i>Sarvam · Indic</span>
+        <span class="tb-lg"><i style="background:transparent;border-color:var(--accent);box-shadow:none"></i>Chinchilla ~20 frontier</span>
+      </div>
+    </div>
+
+    <!-- payoff -->
+    <div class="tb-panel tb-payoff">
+      <div class="tb-po-row">
+        <div class="tb-po-num"><span class="g" id="tbPoX">×100</span><small id="tbPoSub">tok/param jump</small></div>
+        <div class="tb-po-txt" id="tbPoTxt">As we drag V5 from the <b>Chinchilla point</b> across to the <b>Llama-3 point</b> the tokens/param multiplier explodes, and even though the compute philosophy stays the same the appetite for data grows enormously. That extra data is precisely the labor this course exists to teach.</div>
+      </div>
+      <div class="tb-po-btns">
+        <button data-snap="chin">Snap V5 → Chinchilla regime (~20)</button>
+        <button data-snap="llama">Snap V5 → Llama-3 regime (~1,900)</button>
+        <button data-snap="v5">Reset V5 → planned 10–30T</button>
+      </div>
+    </div>
+
+    <div class="tb-foot">
+      <span class="tb-foot-txt">The Chinchilla <b>~20 tokens/param</b> frontier and every tokens/param readout are <b>computed live in JS</b>
+        from the slider values, and <b>32 real models</b> are plotted here. All but one of them carry an <b>officially disclosed pretraining-token count</b>
+        taken from tech reports and model cards, which covers GPT-3 and Chinchilla as the canonical anchors, DeepSeek V2/V3, Qwen2.5 and Qwen3, <b>Gemma 2 and 3</b>,
+        <b>Llama 4 Scout and Maverick</b>, Phi-3.5/Phi-4, Nemotron-4, Granite 3.0, OLMo 2, SmolLM2, Falcon 3, GLM-4.5, Kimi K2,
+        along with <b>Sarvam 1 / 30B / 105B</b>. MoE models are plotted on their <b>total</b> params, and Falcon 3 10B shows cumulative exposure
+        of 14T inherited plus 2T continued. <b>Mistral Large 2</b> carries a <b>dashed ring</b> because Mistral does not disclose its token
+        count, so the ~15T figure is an <b>estimate</b> that we flag in its tooltip. Any model for which we could find no defensible figure, such as MiniMax-01, Command A,
+        and Yi-Lightning, we have <b>omitted rather than guessed</b>.</span>
+      <span class="tb-badge">~20 = optimal · far above = over-trained</span>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+    (function () {
+      const $ = id => document.getElementById(id);
+
+      // ---------- plane geometry (log-log) ----------
+      // x = log10(params), y = log10(tokens). Params 1e8..1e12, tokens 1e10..1e14.
+      const PX0 = 8, PX1 = 12;        // log10 params range  (100M .. 1T)
+      const TY0 = 10, TY1 = 14;       // log10 tokens range  (10B .. 100T)
+      // svg drawing box
+      const M = { l: 64, r: 24, t: 22, b: 46 };
+      const VW = 860, VH = 520;
+      const PW = VW - M.l - M.r, PH = VH - M.t - M.b;
+
+      const sx = lp => M.l + (lp - PX0) / (PX1 - PX0) * PW;            // log10 params -> px
+      const sy = lt => M.t + (TY1 - lt) / (TY1 - TY0) * PH;            // log10 tokens -> px (inverted)
+      const xs = px => PX0 + (px - M.l) / PW * (PX1 - PX0);            // px -> log10 params
+      const ys = py => TY1 - (py - M.t) / PH * (TY1 - TY0);            // px -> log10 tokens
+
+      const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+      const fmtCount = n => {
+        if (n >= 1e12) return (n / 1e12).toFixed(n >= 1e13 ? 0 : 1).replace(/\.0$/, "") + "T";
+        if (n >= 1e9) return (n / 1e9).toFixed(n >= 1e11 ? 0 : 1).replace(/\.0$/, "") + "B";
+        if (n >= 1e6) return (n / 1e6).toFixed(0) + "M";
+        return Math.round(n).toLocaleString("en-US");
+      };
+      const fmtRatio = r => r >= 100 ? Math.round(r).toLocaleString("en-US") : r >= 10 ? r.toFixed(0) : r.toFixed(1);
+
+      // ---------- reference models (params = total for MoE; tokens) ----------
+      // Sources: GPT-3 (175B,300B) canonical; Chinchilla (70B,1.4T) canonical;
+      // Llama 3 8B (8B,15T => ~1,900 tok/param) Appendix A; DeepSeek-V3 (671B total,14.8T) Appendix A;
+      // Qwen3 235B-A22B (235B total, 36T) with an illustrative param basis.
+      // 24 real models with OFFICIALLY DISCLOSED pretraining-token counts (tech reports / model cards).
+      // era: o=2020–22, m=2024, n=2025–26. fam:"indic" highlights the Sarvam family. MoE plotted on TOTAL params.
+      const REFS = [
+        // canonical anchors
+        { name: "GPT-3", p: 175e9, t: 300e9, era: "o", key: true, dx: 6, dy: -12, anchor: "end" },
+        { name: "Chinchilla", p: 70e9, t: 1.4e12, era: "o", key: true, dx: -8, dy: 18, anchor: "end" },
+        { name: "Llama 3 8B", p: 8e9, t: 15e12, era: "m", key: true, dx: 10, dy: 4, anchor: "start" },
+        // 2024 wave
+        { name: "Qwen2.5 72B", p: 72e9, t: 18e12, era: "m" },
+        { name: "Qwen2.5 7B", p: 7e9, t: 18e12, era: "m" },
+        { name: "DeepSeek-V2", p: 236e9, t: 8.1e12, era: "m" },
+        { name: "Phi-3.5-mini", p: 3.8e9, t: 3.4e12, era: "m" },
+        { name: "Phi-4", p: 14e9, t: 9.8e12, era: "m" },
+        { name: "Nemotron-4 340B", p: 340e9, t: 9e12, era: "m" },
+        { name: "Granite 3.0 8B", p: 8e9, t: 12e12, era: "m" },
+        { name: "OLMo 2 7B", p: 7e9, t: 4.05e12, era: "m" },
+        { name: "OLMo 2 13B", p: 13e9, t: 5.6e12, era: "m" },
+        { name: "OLMo 2 32B", p: 32e9, t: 6.4e12, era: "n" },
+        { name: "SmolLM2 1.7B", p: 1.7e9, t: 11e12, era: "m" },
+        { name: "Falcon 3 10B", p: 10e9, t: 16e12, era: "m" },
+        // 2025–26 frontier
+        { name: "DeepSeek-V3", p: 671e9, t: 14.8e12, era: "n", key: true, dx: -8, dy: 18, anchor: "end" },
+        { name: "Qwen3 235B", p: 235e9, t: 36e12, era: "n", key: true, dx: 9, dy: -9, anchor: "start" },
+        { name: "Qwen3 32B", p: 32e9, t: 36e12, era: "n" },
+        { name: "Qwen3 30B-A3B", p: 30e9, t: 36e12, era: "n" },
+        { name: "GLM-4.5", p: 355e9, t: 22e12, era: "n" },
+        { name: "Kimi K2", p: 1e12, t: 15.5e12, era: "n", key: true, dx: -6, dy: -12, anchor: "end" },
+        // Indic family that carries the sovereign-thesis highlight
+        { name: "Sarvam-1", p: 2.5e9, t: 4e12, era: "n", fam: "indic" },
+        { name: "Sarvam-30B", p: 30e9, t: 16e12, era: "n", fam: "indic" },
+        { name: "Sarvam-105B", p: 105e9, t: 12e12, era: "n", fam: "indic", key: true, dx: 8, dy: 15, anchor: "start" },
+        // Gemma (Google, disclosed in tech reports)
+        { name: "Gemma 2 9B", p: 9e9, t: 8e12, era: "m" },
+        { name: "Gemma 2 27B", p: 27e9, t: 13e12, era: "m" },
+        { name: "Gemma 3 4B", p: 4e9, t: 4e12, era: "n" },
+        { name: "Gemma 3 12B", p: 12e9, t: 12e12, era: "n" },
+        { name: "Gemma 3 27B", p: 27e9, t: 14e12, era: "n", key: true, dx: 9, dy: -10, anchor: "start" },
+        // Llama 4 (Meta, disclosed; MoE, total params)
+        { name: "Llama 4 Scout", p: 109e9, t: 40e12, era: "n", key: true, dx: -9, dy: -9, anchor: "end" },
+        { name: "Llama 4 Maverick", p: 400e9, t: 22e12, era: "n" },
+        // Mistral, token count NOT disclosed by Mistral; estimate, flagged in tooltip
+        { name: "Mistral Large 2", p: 123e9, t: 15e12, era: "m", spec: true }
+      ];
+
+      // state: current dot (from sliders) + V5 marker (draggable, log space)
+      let lpCur = Math.log10(8e9), ltCur = Math.log10(200e9);
+      let v5lp = Math.log10(1e12 / 1000 * 0 + 1e12) ; // placeholder, set below
+      // V5 target is a range of 10 to 30T TOKENS, not a fixed number. The draggable marker defaults into that band (~20T)
+      // and the student moves it to feel how tokens/param shifts across the plane.
+      let v5 = { lp: Math.log10(3e9), lt: Math.log10(20e12) };
+
+      // ---------- slider <-> value ----------
+      // P slider: exponent 8..12 maps to log10(params) directly (100M..1T) but we expose 100M..1T via exp 8..12
+      // T slider: exponent 10..14 -> 10B..100T
+      function pFromSlider(v) { return Math.pow(10, +v); }     // v is log10 exponent? we set min/max as exponents
+      // Simpler: slider min/max already in exponent space.
+
+      function readSliders() {
+        const pe = +$("tbPSlider").value;   // exponent in [8,12]? we set 2..6 in HTML for 100M..1T mapping below
+        const te = +$("tbTSlider").value;
+        // map slider [2..6] -> log10 params [8..12]; [1..5] -> log10 tokens [10..14]
+        lpCur = pe + 6;            // 2 -> 8 (100M), 6 -> 12 (1T)
+        ltCur = te + 9;            // 1 -> 10 (10B), 5 -> 14 (100T)
+      }
+
+      // ---------- draw static layers once, dynamic on update ----------
+      const svg = $("tbPlane");
+      const SVGNS = "http://www.w3.org/2000/svg";
+      function el(tag, attrs, txt) {
+        const e = document.createElementNS(SVGNS, tag);
+        for (const k in attrs) e.setAttribute(k, attrs[k]);
+        if (txt != null) e.textContent = txt;
+        return e;
+      }
+
+      function drawStatic() {
+        // grid + axis labels
+        const g = el("g", {});
+        // background frame
+        g.appendChild(el("rect", { x: M.l, y: M.t, width: PW, height: PH, fill: "#ffffff", stroke: "var(--rule)", "stroke-width": 1, rx: 8 }));
+
+        // vertical gridlines (params decades 1e8..1e12)
+        const pLabels = { 8: "100M", 9: "1B", 10: "10B", 11: "100B", 12: "1T" };
+        for (let lp = PX0; lp <= PX1; lp++) {
+          const x = sx(lp);
+          g.appendChild(el("line", { x1: x, y1: M.t, x2: x, y2: M.t + PH, stroke: "var(--rule)", "stroke-width": lp === PX0 ? 0 : 1, "stroke-dasharray": "3 4", opacity: .7 }));
+          g.appendChild(el("text", { x: x, y: M.t + PH + 18, "text-anchor": "middle", "font-size": 11, "font-weight": 700, fill: "var(--muted-2)" }, pLabels[lp]));
+        }
+        // horizontal gridlines (tokens decades 1e10..1e14)
+        const tLabels = { 10: "10B", 11: "100B", 12: "1T", 13: "10T", 14: "100T" };
+        for (let lt = TY0; lt <= TY1; lt++) {
+          const y = sy(lt);
+          g.appendChild(el("line", { x1: M.l, y1: y, x2: M.l + PW, y2: y, stroke: "var(--rule)", "stroke-width": lt === TY0 ? 0 : 1, "stroke-dasharray": "3 4", opacity: .7 }));
+          g.appendChild(el("text", { x: M.l - 10, y: y + 4, "text-anchor": "end", "font-size": 11, "font-weight": 700, fill: "var(--muted-2)" }, tLabels[lt]));
+        }
+        // axis titles
+        g.appendChild(el("text", { x: M.l + PW / 2, y: VH - 6, "text-anchor": "middle", "font-size": 12, "font-weight": 800, fill: "var(--ink-muted)" }, "model parameters  (log scale)"));
+        const yt = el("text", { x: 16, y: M.t + PH / 2, "text-anchor": "middle", "font-size": 12, "font-weight": 800, fill: "var(--ink-muted)", transform: `rotate(-90 16 ${M.t + PH / 2})` }, "training tokens  (log scale)");
+        g.appendChild(yt);
+
+        // Chinchilla frontier line: tokens = 20 * params  =>  lt = lp + log10(20)
+        const k = Math.log10(20);
+        // clip line to plot box
+        function frontierPts(mult) {
+          const lk = Math.log10(mult);
+          let pts = [];
+          // sample lp across range, keep where lt in [TY0,TY1]
+          for (let lp = PX0; lp <= PX1; lp += 0.02) {
+            const lt = lp + lk;
+            if (lt >= TY0 - 0.5 && lt <= TY1 + 0.5) pts.push([sx(lp), sy(clamp(lt, TY0, TY1)), lt]);
+          }
+          return pts.filter(p => p[2] >= TY0 - 1e-6 && p[2] <= TY1 + 1e-6).map(p => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
+        }
+        // shaded over-trained zone (above 20x line, up to plot top) as an amber soft band. Over-trained means MORE tokens for given params, so it sits ABOVE the line on our axis. Lightly tint.
+        g.appendChild(el("polyline", { points: frontierPts(20), fill: "none", stroke: "var(--accent)", "stroke-width": 2.5, "stroke-linecap": "round" }));
+        // label on the frontier
+        const flp = 10.4, flt = flp + k;
+        g.appendChild(el("text", { x: sx(flp) + 6, y: sy(flt) - 8, "font-size": 11.5, "font-weight": 800, fill: "var(--accent-ink)", transform: `rotate(-31 ${sx(flp)} ${sy(flt)})` }, "Chinchilla optimal · ~20 tok/param"));
+
+        // faint guide lines for 200x (over-trained marker)
+        g.appendChild(el("polyline", { points: frontierPts(2000), fill: "none", stroke: "var(--amber)", "stroke-width": 1.4, "stroke-dasharray": "5 5", opacity: .7 }));
+        const olp = 8.2, olt = olp + Math.log10(2000);
+        if (olt <= TY1) g.appendChild(el("text", { x: sx(olp) + 4, y: sy(olt) - 6, "font-size": 10.5, "font-weight": 800, fill: "var(--amber-ink)", transform: `rotate(-31 ${sx(olp)} ${sy(olt)})`, opacity: .85 }, "~2,000× · deep over-training"));
+
+        svg.appendChild(g);
+
+        // dynamic group on top
+        svg.appendChild(el("g", { id: "tbDyn" }));
+      }
+
+      function drawDynamic() {
+        const dyn = $("tbDyn");
+        while (dyn.firstChild) dyn.removeChild(dyn.firstChild);
+
+        // reference dots, where hovering any dot reveals name + tokens/param
+        let hoverNode = null;
+        const eraCol = { o: "#aab7c4", m: "#7bb4cf", n: "var(--accent-ink)" };
+        const dotCol = r => r.fam === "indic" ? "var(--violet)" : (eraCol[r.era] || "#94a6b8");
+        const hideHover = () => { if (hoverNode && hoverNode.parentNode) hoverNode.parentNode.removeChild(hoverNode); hoverNode = null; };
+        const showHover = (x, y, name, tpp, spec) => {
+          hideHover();
+          const label = name + "   ·   " + fmtRatio(tpp) + " tok/param" + (spec ? "   ·  est. (undisclosed)" : "");
+          const w = label.length * 5.9 + 16;
+          const bx = clamp(x - w / 2, M.l + 2, M.l + PW - w - 2);
+          const by = (y - 30 < M.t + 4) ? y + 14 : y - 30;
+          const g2 = el("g", { "pointer-events": "none" });
+          g2.appendChild(el("rect", { x: bx, y: by, width: w, height: 20, rx: 6, fill: "var(--ink)", opacity: .93 }));
+          g2.appendChild(el("text", { x: bx + w / 2, y: by + 13.5, "text-anchor": "middle", "font-size": 10.5, "font-weight": 800, fill: "#fff" }, label));
+          dyn.appendChild(g2); hoverNode = g2;
+        };
+        REFS.forEach(r => {
+          const lp = Math.log10(r.p), lt = Math.log10(r.t);
+          const x = clamp(sx(lp), M.l + 2, M.l + PW - 2), y = clamp(sy(lt), M.t + 2, M.t + PH - 2);
+          const tpp = r.t / r.p;
+          const baseSW = r.spec ? 2 : 1.4;
+          const dot = el("circle", { cx: x, cy: y, r: 4.5, fill: dotCol(r), stroke: r.spec ? "var(--amber)" : "#fff", "stroke-width": baseSW, style: "cursor:pointer" });
+          if (r.spec) dot.setAttribute("stroke-dasharray", "2.5 2");
+          dot.addEventListener("mouseenter", () => { dot.setAttribute("r", 7); dot.setAttribute("stroke-width", baseSW + 0.8); showHover(x, y, r.name, tpp, r.spec); });
+          dot.addEventListener("mouseleave", () => { dot.setAttribute("r", 4.5); dot.setAttribute("stroke-width", baseSW); hideHover(); });
+          dyn.appendChild(dot);
+          if (r.key) dyn.appendChild(el("text", { x: x + (r.dx || 0), y: y + (r.dy || 0), "text-anchor": r.anchor || "start", "font-size": 10.5, "font-weight": 800, fill: r.fam === "indic" ? "var(--violet-ink)" : "var(--slate)" }, r.name));
+        });
+
+        // current dot (cyan) from sliders
+        {
+          const x = clamp(sx(lpCur), M.l + 2, M.l + PW - 2), y = clamp(sy(ltCur), M.t + 2, M.t + PH - 2);
+          dyn.appendChild(el("circle", { cx: x, cy: y, r: 12, fill: "var(--accent)", opacity: .14 }));
+          dyn.appendChild(el("circle", { cx: x, cy: y, r: 7, fill: "var(--accent)", stroke: "#fff", "stroke-width": 2.2 }));
+          dyn.appendChild(el("text", { x: x, y: y - 14, "text-anchor": "middle", "font-size": 10.5, "font-weight": 800, fill: "var(--accent-ink)" }, "ours"));
+        }
+
+        // V5 marker (violet, draggable)
+        {
+          const x = clamp(sx(v5.lp), M.l + 2, M.l + PW - 2), y = clamp(sy(v5.lt), M.t + 2, M.t + PH - 2);
+          dyn.appendChild(el("circle", { cx: x, cy: y, r: 15, fill: "var(--violet)", opacity: .13 }));
+          const c = el("circle", { cx: x, cy: y, r: 9, fill: "var(--violet)", stroke: "#fff", "stroke-width": 2.4, id: "tbV5", style: "cursor:grab" });
+          dyn.appendChild(c);
+          dyn.appendChild(el("text", { x: x, y: y - 17, "text-anchor": "middle", "font-size": 11.5, "font-weight": 800, fill: "var(--violet-ink)" }, "V5"));
+          const v5tpp = Math.pow(10, v5.lt) / Math.pow(10, v5.lp);
+          dyn.appendChild(el("text", { x: x, y: y + 24, "text-anchor": "middle", "font-size": 10.5, "font-weight": 800, fill: "var(--violet-ink)" }, fmtRatio(v5tpp) + " tok/param"));
+        }
+      }
+
+      // ---------- verdict from tokens/param ----------
+      function verdict(tpp) {
+        if (tpp < 8) return { cls: "amber", name: "Under-trained", txt: "With fewer than roughly 8 tokens/param the model is starved of data and leaves real capability on the table, so we could comfortably feed it a great deal more." };
+        if (tpp <= 40) return { cls: "green", name: "Compute-optimal", txt: "We are sitting near Chinchilla's <b>~20 tokens/param</b>, which gives the best loss for a fixed training budget, and this is where we want to be whenever training FLOPs are the binding constraint." };
+        if (tpp <= 300) return { cls: "amber", name: "Over-trained (inference-aware)", txt: "We have moved well past 20 tokens/param, which means we are spending extra training so that we end up with a <b>smaller model that is cheaper to serve</b>, and this has become the modern default." };
+        return { cls: "red", name: "Deep over-train", txt: "We are now in the range of hundreds and even thousands of tokens/param, which is Llama-3-8B and Qwen territory, where the returns per additional token keep shrinking even though a tiny model that runs everywhere can still be well worth it. <b>At this point the data is what we need most.</b>" };
+      }
+
+      // ---------- update ----------
+      function update() {
+        const params = Math.pow(10, lpCur), tokens = Math.pow(10, ltCur);
+        const tpp = tokens / params;                     // COMPUTED tokens-per-param
+        $("tbPVal").innerHTML = fmtCount(params).replace(/([BTM])$/, "<small>$1</small>");
+        $("tbTVal").innerHTML = fmtCount(tokens).replace(/([BTM])$/, "<small>$1</small>");
+        $("tbTPP").innerHTML = fmtRatio(tpp) + "<small>tok/param</small>";
+        $("tbEq").textContent = fmtCount(tokens) + " tokens ÷ " + fmtCount(params) + " params = " + fmtRatio(tpp) + "×";
+        // optimal token count for these params (Chinchilla 20x)
+        const v = verdict(tpp);
+        const vEl = $("tbVerdict");
+        vEl.className = "tb-verdict " + v.cls;
+        $("tbVName").textContent = v.name;
+        const optTok = params * 20;
+        let extra = "";
+        if (tpp > 40) extra = ` Chinchilla-optimal for ${fmtCount(params)} params would be only <b>${fmtCount(optTok)} tokens</b>, which places us at <b>${fmtRatio(tpp / 20)}× that amount</b>.`;
+        else if (tpp < 8) extra = ` Chinchilla-optimal here would be <b>${fmtCount(optTok)} tokens</b>, roughly <b>${fmtRatio(20 / tpp)}× more</b> than where we are now.`;
+        $("tbVTxt").innerHTML = v.txt + extra;
+
+        drawDynamic();
+        attachDrag();
+      }
+
+      // ---------- drag V5 ----------
+      let dragging = false;
+      function clientToSvg(evt) {
+        const pt = svg.createSVGPoint();
+        const t = evt.touches ? evt.touches[0] : evt;
+        pt.x = t.clientX; pt.y = t.clientY;
+        const ctm = svg.getScreenCTM().inverse();
+        return pt.matrixTransform(ctm);
+      }
+      function moveV5(evt) {
+        if (!dragging) return;
+        evt.preventDefault();
+        const p = clientToSvg(evt);
+        const px = clamp(p.x, M.l, M.l + PW), py = clamp(p.y, M.t, M.t + PH);
+        v5.lp = clamp(xs(px), PX0, PX1);
+        v5.lt = clamp(ys(py), TY0, TY1);
+        drawDynamic();
+        attachDrag();
+        updatePayoff();
+      }
+      function attachDrag() {
+        const handle = $("tbV5");
+        if (!handle) return;
+        const start = e => { dragging = true; handle.style.cursor = "grabbing"; e.preventDefault(); };
+        handle.addEventListener("mousedown", start);
+        handle.addEventListener("touchstart", start, { passive: false });
+      }
+      window.addEventListener("mousemove", moveV5);
+      window.addEventListener("touchmove", moveV5, { passive: false });
+      const endDrag = () => { dragging = false; const h = $("tbV5"); if (h) h.style.cursor = "grab"; };
+      window.addEventListener("mouseup", endDrag);
+      window.addEventListener("touchend", endDrag);
+
+      // ---------- payoff ----------
+      function updatePayoff() {
+        const tpp = Math.pow(10, v5.lt) / Math.pow(10, v5.lp);
+        // distance to the two regimes, drive headline
+        const chinTpp = 20, llamaTpp = 1900;
+        $("tbPoX").textContent = "×" + fmtRatio(tpp / chinTpp);
+        $("tbPoSub").textContent = "vs Chinchilla (÷20)";
+        let msg;
+        if (tpp <= 40) {
+          msg = `V5 is sitting in the <b>Chinchilla regime</b> at about ${fmtRatio(tpp)} tok/param, and as we drag it up the plane toward the <b>Llama-3 point</b> we keep the model size the same while pouring in far more tokens, so the multiplier climbs toward <b>~1,900</b>. That roughly 100× increase in data is exactly the labor this course exists to teach.`;
+        } else if (tpp <= 300) {
+          msg = `V5 is now <b>over-trained</b> at <b>~${fmtRatio(tpp)} tok/param</b>, which is ${fmtRatio(tpp / chinTpp)}× past Chinchilla, and if we keep dragging toward Llama-3's ~1,900 we can watch the full inference-aware regime unfold.`;
+        } else {
+          msg = `V5 is deep into over-training at <b>~${fmtRatio(tpp)} tok/param</b>, roughly <b>${fmtRatio(tpp / chinTpp)}× past Chinchilla</b> and close to the Llama-3 regime, where a small model has been trained on a mountain of data so that it stays cheap to serve even though it was expensive to feed. <b>This is why so many labs over-train today.</b>`;
+        }
+        $("tbPoTxt").innerHTML = msg;
+      }
+
+      // snap buttons: keep V5 params fixed, move tokens to hit a target tok/param
+      function snap(mode) {
+        if (mode === "v5") { v5 = { lp: Math.log10(3e9), lt: Math.log10(20e12) }; }
+        else {
+          const target = mode === "chin" ? 20 : 1900;
+          // anchor at a representative small model size for the story (8B), set tokens = target*params
+          const params = 8e9;
+          v5.lp = Math.log10(params);
+          v5.lt = clamp(Math.log10(params * target), TY0, TY1);
+        }
+        drawDynamic(); attachDrag(); updatePayoff();
+      }
+      document.querySelector(".tb-po-btns").addEventListener("click", e => {
+        const b = e.target.closest("button"); if (!b) return;
+        snap(b.dataset.snap);
+      });
+
+      // ---------- wiring ----------
+      $("tbPSlider").addEventListener("input", () => { readSliders(); update(); });
+      $("tbTSlider").addEventListener("input", () => { readSliders(); update(); });
+
+      // init
+      drawStatic();
+      readSliders();
+      update();
+      updatePayoff();
+    })();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111111">
+  <meta name="description" content="A concise visual guide to extraction techniques for Hindi and Indic training data.">
+  <title>Extract / Hindi & Indic data</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+    :root {
+      --ink: #111111;
+      --white: #ffffff;
+      --cloud: #f5f5f5;
+      --charcoal: #39393b;
+      --mute: #707072;
+      --stone: #9e9ea0;
+      --line: #cacacb;
+      --soft-line: #e5e5e5;
+      --teal: #0a7281;
+      --teal-soft: #dff1f2;
+      --blue: #1151ff;
+      --pink: #ed1aa0;
+      --green: #007d48;
+      --red: #d30005;
+      --max: 1440px;
+      --pad: clamp(20px, 5vw, 80px);
+      --section: clamp(56px, 8vw, 112px);
+      --display: 'Barlow Condensed', 'Arial Narrow', Impact, sans-serif;
+      --body: Inter, Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--white); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5; }
+    body::selection { background: var(--ink); color: var(--white); }
+    a { color: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button { font: inherit; }
+    svg { display: block; max-width: 100%; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+    .utility { min-height: 36px; padding: 0 var(--pad); display: flex; align-items: center; justify-content: space-between; gap: 16px; background: var(--cloud); border-bottom: 1px solid var(--soft-line); color: var(--mute); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .utility span:last-child { color: var(--ink); }
+    .nav { position: sticky; top: 0; z-index: 10; min-height: 64px; padding: 0 var(--pad); display: flex; align-items: center; gap: 32px; background: rgba(255,255,255,.96); border-bottom: 1px solid var(--soft-line); backdrop-filter: blur(12px); }
+    .mark { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font-size: 14px; font-weight: 900; letter-spacing: -.04em; }
+    .mark-shape { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: var(--ink); color: var(--white); font-family: var(--display); font-size: 17px; line-height: 1; }
+    .nav-links { display: flex; align-items: center; gap: 24px; margin-left: auto; }
+    .nav-links a { color: var(--mute); font-size: 12px; font-weight: 700; text-decoration: none; text-transform: uppercase; letter-spacing: .08em; }
+    .nav-links a:hover, .nav-links a:focus-visible { color: var(--ink); }
+    .nav-cta { display: inline-flex; min-height: 40px; align-items: center; padding: 0 18px; border-radius: 999px; background: var(--ink); color: var(--white) !important; }
+    .nav-menu { display: none; margin-left: auto; border: 0; background: transparent; color: var(--ink); cursor: pointer; }
+
+    .wrap { width: min(100%, var(--max)); margin: 0 auto; padding-inline: var(--pad); }
+    .hero { min-height: min(820px, calc(100vh - 100px)); display: grid; grid-template-columns: minmax(0, .92fr) minmax(420px, 1.08fr); align-items: end; gap: clamp(30px, 6vw, 100px); padding-top: clamp(70px, 10vw, 145px); padding-bottom: clamp(52px, 8vw, 112px); }
+    .eyebrow { margin: 0 0 18px; color: var(--mute); font-size: 11px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+    .hero h1 { max-width: 740px; margin: 0; font-family: var(--display); font-size: clamp(72px, 11.5vw, 170px); font-weight: 800; line-height: .83; letter-spacing: -.025em; text-transform: uppercase; }
+    .hero h1 em { color: var(--teal); font-style: normal; }
+    .hero-copy { max-width: 530px; margin: 28px 0 0; color: var(--charcoal); font-size: clamp(17px, 1.4vw, 21px); line-height: 1.45; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
+    .pill { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; gap: 9px; padding: 0 24px; border: 1px solid var(--ink); border-radius: 999px; font-size: 14px; font-weight: 700; text-decoration: none; cursor: pointer; transition: transform .18s ease, background .18s ease, color .18s ease; }
+    .pill:hover, .pill:focus-visible { transform: translateY(-2px); }
+    .pill-primary { background: var(--ink); color: var(--white); }
+    .pill-secondary { background: var(--white); color: var(--ink); }
+    .pill-teal { border-color: var(--teal); background: var(--teal); color: var(--white); }
+    .hero-note { display: flex; flex-wrap: wrap; gap: 22px; margin-top: 48px; color: var(--mute); font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    .hero-note strong { color: var(--ink); }
+
+    .hero-visual { min-height: 560px; display: flex; align-items: stretch; background: var(--ink); overflow: hidden; }
+    .hero-visual svg { width: 100%; height: 100%; min-height: 560px; }
+    .hero-visual .svg-label { font-family: var(--body); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .hero-visual .svg-display { font-family: var(--display); font-size: 76px; font-weight: 800; letter-spacing: -.02em; text-transform: uppercase; }
+
+    .signal-bar { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+    .signal { min-height: 126px; display: flex; flex-direction: column; justify-content: center; padding: 18px 24px 18px 0; border-right: 1px solid var(--line); }
+    .signal:not(:first-child) { padding-left: 24px; }
+    .signal:last-child { border-right: 0; }
+    .signal-index { color: var(--mute); font-size: 11px; font-weight: 800; letter-spacing: .12em; }
+    .signal strong { margin-top: 4px; font-size: 20px; line-height: 1.1; }
+    .signal span:last-child { margin-top: 5px; color: var(--mute); font-size: 13px; }
+
+    .section { padding-block: var(--section); }
+    .section + .section { border-top: 1px solid var(--soft-line); }
+    .section-kicker { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; color: var(--mute); font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    .section-kicker b { color: var(--ink); }
+    .section-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, .65fr); align-items: end; gap: 32px; margin-bottom: 40px; }
+    .section h2 { max-width: 850px; margin: 0; font-family: var(--display); font-size: clamp(48px, 7vw, 96px); font-weight: 800; line-height: .9; letter-spacing: -.02em; text-transform: uppercase; }
+    .section-lede { max-width: 460px; margin: 0 0 4px; color: var(--charcoal); font-size: 17px; }
+    .black-section { background: var(--ink); color: var(--white); }
+    .black-section .section-kicker, .black-section .section-lede { color: var(--stone); }
+    .black-section .section-kicker b { color: var(--white); }
+
+    .flow-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(280px, .5fr); gap: 24px; align-items: stretch; }
+    .diagram { min-height: 430px; background: var(--cloud); border: 1px solid var(--line); }
+    .diagram svg { width: 100%; height: 100%; min-height: 430px; }
+    .principle { display: flex; flex-direction: column; justify-content: space-between; padding: 26px; background: var(--teal); color: var(--white); }
+    .principle h3 { max-width: 260px; margin: 0; font-family: var(--display); font-size: 48px; line-height: .9; text-transform: uppercase; }
+    .principle p { max-width: 300px; margin: 22px 0 0; color: #e7ffff; font-size: 15px; }
+    .principle .rule { display: inline-flex; margin-top: 26px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.4); color: var(--white); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+
+    .route-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    .route-tab, .filter-tab { min-height: 40px; padding: 0 16px; border: 1px solid var(--line); border-radius: 999px; background: var(--white); color: var(--ink); font-size: 13px; font-weight: 700; cursor: pointer; }
+    .route-tab[aria-selected="true"], .filter-tab[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--white); }
+    .route-panels { border-top: 1px solid var(--ink); }
+    .route-panel { display: none; grid-template-columns: minmax(0, .75fr) minmax(300px, 1.25fr); gap: 32px; padding-block: 30px; }
+    .route-panel.is-active { display: grid; }
+    .route-panel h3 { margin: 0 0 8px; font-size: 28px; line-height: 1.05; }
+    .route-panel p { max-width: 510px; margin: 0; color: var(--charcoal); }
+    .route-points { display: grid; gap: 0; margin: 24px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--soft-line); }
+    .route-points li { display: grid; grid-template-columns: 24px 1fr; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--soft-line); color: var(--charcoal); font-size: 14px; }
+    .route-points b { color: var(--teal); }
+    .route-art { min-height: 320px; display: grid; place-items: center; background: var(--cloud); border: 1px solid var(--line); }
+    .route-art svg { width: 100%; min-height: 320px; }
+    .route-art text { font-family: var(--body); }
+
+    .technique-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 24px; }
+    .technique-toolbar p { margin: 0; color: var(--mute); font-size: 13px; }
+    .filter-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+    .technique-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+    .tech-card { min-height: 360px; display: flex; flex-direction: column; padding: 22px; background: var(--white); }
+    .tech-card[hidden] { display: none; }
+    .tech-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .tech-tag { display: inline-flex; align-items: center; min-height: 24px; padding: 0 9px; border-radius: 999px; background: var(--cloud); color: var(--mute); font-size: 10px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+    .tech-icon { width: 34px; height: 34px; color: var(--ink); }
+    .tech-card h3 { margin: 20px 0 8px; font-size: 20px; line-height: 1.1; }
+    .tech-card p { margin: 0; color: var(--mute); font-size: 14px; }
+    .tech-facts { display: grid; gap: 0; margin-top: 18px; border-top: 1px solid var(--soft-line); }
+    .tech-fact { display: grid; grid-template-columns: 54px 1fr; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--soft-line); font-size: 11px; line-height: 1.25; }
+    .tech-fact b { color: var(--teal); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+    .tech-card details { margin-top: auto; padding-top: 16px; }
+    .tech-card summary { color: var(--ink); cursor: pointer; font-size: 12px; font-weight: 800; letter-spacing: .08em; list-style: none; text-transform: uppercase; }
+    .tech-card summary::-webkit-details-marker { display: none; }
+    .tech-card summary::after { content: '+'; float: right; font-size: 16px; line-height: 12px; }
+    .tech-card details[open] summary::after { content: '−'; }
+    .detail-copy { padding-top: 12px; color: var(--charcoal); font-size: 13px; }
+    .detail-copy strong { color: var(--ink); }
+
+    .dark-grid { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(30px, 7vw, 100px); align-items: center; }
+    .dark-grid h2 { max-width: 650px; }
+    .guardrail-list { display: grid; gap: 0; margin: 30px 0 0; padding: 0; list-style: none; }
+    .guardrail-list li { display: grid; grid-template-columns: 28px 1fr; gap: 12px; padding: 13px 0; border-top: 1px solid #39393b; color: #dedede; font-size: 14px; }
+    .guardrail-list b { color: var(--teal); }
+    .guardrail-list em { color: var(--white); font-style: normal; font-weight: 700; }
+    .glyph-art { min-height: 480px; display: grid; place-items: center; border: 1px solid #39393b; }
+    .glyph-art svg { width: 100%; min-height: 480px; }
+
+    .validation-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(300px, .9fr); gap: 24px; }
+    .metric-art { min-height: 420px; display: grid; place-items: center; background: var(--cloud); border: 1px solid var(--line); }
+    .metric-art svg { width: 100%; min-height: 420px; }
+    .metric-cards { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); }
+    .metric-card { padding: 22px; background: var(--white); }
+    .metric-card .metric-label { display: flex; align-items: center; justify-content: space-between; color: var(--mute); font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    .metric-card strong { display: block; margin-top: 10px; font-family: var(--display); font-size: 42px; line-height: .9; text-transform: uppercase; }
+    .metric-card p { margin: 10px 0 0; color: var(--charcoal); font-size: 13px; }
+    .metric-card .bar { height: 5px; margin-top: 18px; background: var(--cloud); }
+    .metric-card .bar i { display: block; height: 100%; background: var(--teal); }
+
+    .boundary { background: var(--cloud); }
+    .boundary-grid { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 24px; align-items: stretch; }
+    .boundary-copy { padding: 30px; background: var(--ink); color: var(--white); }
+    .boundary-copy h2 { max-width: 550px; margin: 0; font-family: var(--display); font-size: clamp(46px, 6vw, 82px); line-height: .88; text-transform: uppercase; }
+    .boundary-copy p { max-width: 520px; margin: 24px 0 0; color: var(--stone); font-size: 15px; }
+    .boundary-copy .pill { margin-top: 26px; border-color: var(--white); background: var(--white); color: var(--ink); }
+    .boundary-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+    .boundary-stat { display: flex; min-height: 180px; flex-direction: column; justify-content: flex-end; padding: 22px; background: var(--white); }
+    .boundary-stat strong { font-family: var(--display); font-size: clamp(46px, 6vw, 84px); line-height: .8; }
+    .boundary-stat span { margin-top: 13px; color: var(--mute); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; }
+    .boundary-foot { grid-column: 1 / -1; padding: 16px 22px; background: var(--white); color: var(--mute); font-size: 13px; }
+    .boundary-foot b { color: var(--red); }
+
+    .source-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: 28px; background: var(--line); border: 1px solid var(--line); }
+    .source-card { min-height: 150px; padding: 20px; background: var(--white); }
+    .source-card small { color: var(--mute); font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    .source-card h3 { margin: 14px 0 8px; font-size: 17px; line-height: 1.1; }
+    .source-card p { margin: 0; color: var(--mute); font-size: 13px; }
+    .source-card a { display: inline-block; margin-top: 14px; color: var(--ink); font-size: 12px; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+
+    footer { padding: 28px var(--pad) 46px; border-top: 1px solid var(--ink); color: var(--mute); font-size: 11px; }
+    .footer-inner { width: min(100%, var(--max)); margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; }
+    footer strong { color: var(--ink); }
+
+    [data-reveal] { opacity: 1; transform: none; transition: opacity .55s ease, transform .55s ease; }
+    [data-reveal].is-visible { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } [data-reveal] { opacity: 1; transform: none; } }
+
+    @media (max-width: 980px) {
+      .hero { grid-template-columns: 1fr; align-items: start; }
+      .hero-visual { min-height: 440px; }
+      .hero-visual svg { min-height: 440px; }
+      .section-head, .flow-grid, .dark-grid, .validation-grid, .boundary-grid { grid-template-columns: 1fr; }
+      .principle { min-height: 300px; }
+      .route-panel { grid-template-columns: 1fr; }
+      .route-art { order: -1; }
+      .technique-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 680px) {
+      .utility { padding-inline: 16px; font-size: 9px; }
+      .nav { padding-inline: 16px; }
+      .nav-links { display: none; position: absolute; left: 16px; right: 16px; top: 58px; flex-direction: column; align-items: stretch; gap: 0; padding: 8px; background: var(--white); border: 1px solid var(--ink); }
+      .nav-links.is-open { display: flex; }
+      .nav-links a { padding: 12px; }
+      .nav-cta { justify-content: center; }
+      .nav-menu { display: block; width: 40px; height: 40px; }
+      .hero { padding-top: 60px; }
+      .hero h1 { font-size: clamp(60px, 18vw, 112px); }
+      .hero-visual, .hero-visual svg { min-height: 360px; }
+      .signal-bar { grid-template-columns: 1fr; }
+      .signal, .signal:not(:first-child) { min-height: 94px; padding: 16px 0; border-right: 0; border-bottom: 1px solid var(--line); }
+      .signal:last-child { border-bottom: 0; }
+      .section { padding-block: 64px; }
+      .section h2 { font-size: clamp(48px, 15vw, 80px); }
+      .technique-toolbar { align-items: flex-start; flex-direction: column; }
+      .technique-grid { grid-template-columns: 1fr; }
+      .boundary-stats { grid-template-columns: 1fr; }
+      .boundary-foot { grid-column: auto; }
+      .source-list { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="utility"><span>Session 4 / data cleaning & deduplication</span><span>Stage 01 / extract</span></div>
+  <nav class="nav" aria-label="Primary navigation">
+    <a class="mark" href="#top" aria-label="Back to top"><span class="mark-shape">01</span><span>EXTRACT / INDIC</span></a>
+    <button class="nav-menu" type="button" aria-expanded="false" aria-controls="nav-links"><span class="sr-only">Open menu</span>☰</button>
+    <div class="nav-links" id="nav-links">
+      <a href="#flow">The move</a>
+      <a href="#techniques">Techniques</a>
+      <a href="#routes">Routes</a>
+      <a href="#safety">Indic safety</a>
+      <a href="#validation">Validation</a>
+      <a class="nav-cta" href="../extraction/EXTRACTION_TECHNIQUES.md">Long form ↗</a>
+    </div>
+  </nav>
+
+  <main id="top">
+    <section class="wrap hero" data-reveal>
+      <div>
+        <p class="eyebrow">Technique atlas / Hindi + Indic training data</p>
+        <h1>How to<br><em>extract.</em></h1>
+        <p class="hero-copy">A route-by-route guide to turning HTML, PDFs, and speech into faithful training documents. Each technique below explains what it receives, what it preserves, and where it breaks.</p>
+        <div class="hero-actions">
+          <a class="pill pill-primary" href="#techniques">See all techniques <span aria-hidden="true">↓</span></a>
+          <a class="pill pill-secondary" href="#routes">Compare source routes</a>
+        </div>
+        <div class="hero-note"><span><strong>12</strong> techniques</span><span><strong>3</strong> source worlds</span><span><strong>1</strong> evidence rule</span></div>
+      </div>
+      <div class="hero-visual" aria-label="Abstract diagram showing raw artifacts becoming typed document blocks">
+        <svg viewBox="0 0 680 560" role="img" aria-labelledby="hero-title hero-desc">
+          <title id="hero-title">From raw artifact to typed document</title>
+          <desc id="hero-desc">Three source lanes enter a block selection system and leave as a structured, auditable document.</desc>
+          <rect width="680" height="560" fill="#111111"/>
+          <g fill="none" stroke="#39393b" stroke-width="1"><path d="M40 74H640M40 140H640M40 206H640M40 272H640M40 338H640M40 404H640M40 470H640"/></g>
+          <g class="svg-label" fill="#9e9ea0"><text x="40" y="44">SOURCE / RAW</text><text x="285" y="44">SELECT / MAP</text><text x="514" y="44">OUTPUT / TRACE</text></g>
+          <g stroke-linecap="round" fill="none" stroke-width="3">
+            <path d="M48 106H224" stroke="#ffffff"/><path d="M48 172H224" stroke="#0a7281"/><path d="M48 238H224" stroke="#ed1aa0"/>
+            <path d="M304 106H430" stroke="#ffffff"/><path d="M304 172H430" stroke="#0a7281"/><path d="M304 238H430" stroke="#ed1aa0"/>
+            <path d="M486 106H630" stroke="#ffffff"/><path d="M486 172H630" stroke="#ffffff"/><path d="M486 238H630" stroke="#ffffff"/>
+          </g>
+          <g fill="#ffffff"><rect x="48" y="94" width="58" height="24"/><rect x="48" y="160" width="96" height="24"/><rect x="48" y="226" width="76" height="24"/></g>
+          <g fill="#0a7281"><rect x="304" y="94" width="54" height="24"/><rect x="304" y="160" width="90" height="24"/><rect x="304" y="226" width="64" height="24"/></g>
+          <g fill="#ffffff"><rect x="486" y="94" width="110" height="24"/><rect x="486" y="160" width="76" height="24"/><rect x="486" y="226" width="126" height="24"/></g>
+          <g class="svg-label" fill="#9e9ea0"><text x="48" y="310">HTML / PDF / AUDIO</text><text x="304" y="310">BLOCKS + LOCATORS</text><text x="486" y="310">TEXT + EVIDENCE</text></g>
+          <g stroke="#cacacb" stroke-width="1" fill="none"><rect x="48" y="350" width="174" height="130"/><rect x="282" y="350" width="174" height="130"/><rect x="516" y="350" width="114" height="130"/></g>
+          <g fill="#ffffff"><rect x="66" y="374" width="84" height="7"/><rect x="66" y="392" width="126" height="7"/><rect x="66" y="410" width="108" height="7"/><rect x="66" y="428" width="96" height="7"/><rect x="300" y="374" width="114" height="7"/><rect x="300" y="392" width="76" height="7"/><rect x="300" y="410" width="128" height="7"/><rect x="300" y="428" width="94" height="7"/><rect x="534" y="374" width="64" height="7"/><rect x="534" y="392" width="78" height="7"/><rect x="534" y="410" width="50" height="7"/><rect x="534" y="428" width="70" height="7"/></g>
+          <text x="48" y="526" class="svg-display" fill="#ffffff">NO HALLUCINATION</text>
+          <circle cx="632" cy="46" r="5" fill="#0a7281"/><circle cx="612" cy="46" r="5" fill="#ed1aa0"/>
+        </svg>
+      </div>
+    </section>
+
+    <section class="wrap signal-bar" aria-label="Extraction principles" data-reveal>
+      <div class="signal"><span class="signal-index">01 / boundary</span><strong>Select the document.</strong><span>Not every visible node belongs in the corpus.</span></div>
+      <div class="signal"><span class="signal-index">02 / representation</span><strong>Keep the shape.</strong><span>Blocks, tables, timestamps, and boxes carry meaning.</span></div>
+      <div class="signal"><span class="signal-index">03 / evidence</span><strong>Make it reviewable.</strong><span>Every span needs a source locator and a reason.</span></div>
+    </section>
+    <section class="wrap section" id="flow" data-reveal>
+      <div class="section-kicker"><b>01</b> the move</div>
+      <div class="section-head"><h2>Extraction is a boundary decision.</h2><p class="section-lede">The guide's core rule: preserve raw bytes first, route by artifact, select source regions, then serialize. Cleanup is downstream.</p></div>
+      <div class="flow-grid">
+        <div class="diagram" aria-label="Diagram showing raw artifact, block selection, and typed output">
+          <svg viewBox="0 0 940 430" role="img" aria-labelledby="flow-title flow-desc">
+            <title id="flow-title">Selection before serialization</title>
+            <desc id="flow-desc">Raw artifact is parsed into source-mapped blocks, then converted into a typed document.</desc>
+            <rect width="940" height="430" fill="#f5f5f5"/>
+            <g stroke="#cacacb" stroke-width="1"><path d="M40 70H900M40 140H900M40 210H900M40 280H900M40 350H900"/></g>
+            <g fill="#707072" font-family="Inter,Arial,sans-serif" font-size="11" font-weight="800" letter-spacing="1.6"><text x="40" y="42">RAW BYTES</text><text x="365" y="42">BLOCK MAP</text><text x="700" y="42">TYPED DOCUMENT</text></g>
+            <g fill="#111111"><rect x="40" y="92" width="210" height="28"/><rect x="40" y="162" width="260" height="28"/><rect x="40" y="232" width="180" height="28"/><rect x="40" y="302" width="230" height="28"/></g>
+            <g fill="#0a7281"><rect x="365" y="92" width="150" height="28"/><rect x="365" y="162" width="214" height="28"/><rect x="365" y="232" width="120" height="28"/><rect x="365" y="302" width="184" height="28"/></g>
+            <g fill="#111111"><rect x="700" y="92" width="156" height="28"/><rect x="700" y="162" width="118" height="28"/><rect x="700" y="232" width="180" height="28"/><rect x="700" y="302" width="142" height="28"/></g>
+            <g stroke="#111111" stroke-width="2" fill="none"><path d="M270 106H350"/><path d="M270 176H350"/><path d="M270 246H350"/><path d="M270 316H350"/><path d="M615 106H685"/><path d="M615 176H685"/><path d="M615 246H685"/><path d="M615 316H685"/></g>
+            <g fill="#111111"><circle cx="350" cy="106" r="5"/><circle cx="350" cy="176" r="5"/><circle cx="350" cy="246" r="5"/><circle cx="350" cy="316" r="5"/><circle cx="685" cy="106" r="5"/><circle cx="685" cy="176" r="5"/><circle cx="685" cy="246" r="5"/><circle cx="685" cy="316" r="5"/></g>
+            <g font-family="Inter,Arial,sans-serif" font-size="12" font-weight="700" fill="#39393b"><text x="40" y="382">HTML / PDF / MEDIA</text><text x="365" y="382">DOM PATH · PAGE · TIME</text><text x="700" y="382">TEXT + CONFIDENCE + HASH</text></g>
+          </svg>
+        </div>
+        <aside class="principle"><div><h3>Select.<br>Map.<br>Preserve.</h3><p>A good extractor does not just return a string. It returns the string's origin, type, order, confidence, and discarded neighbors.</p></div><span class="rule">Hard anti-hallucination check / output ↔ source</span></aside>
+      </div>
+    </section>
+    <section class="wrap section" id="techniques" data-reveal>
+      <div class="section-kicker"><b>02</b> technique index</div>
+      <div class="section-head"><h2>What each technique does.</h2><p class="section-lede">This is the working map. Each card names the input, the mechanism, the structure it protects, and the failure mode that should trigger review.</p></div>
+      <div class="technique-toolbar"><p><strong id="technique-count">12</strong> techniques shown / filter by source</p><div class="filter-tabs" role="group" aria-label="Filter extraction techniques"><button class="filter-tab" type="button" data-family-filter="all" aria-pressed="true">All</button><button class="filter-tab" type="button" data-family-filter="web" aria-pressed="false">Web / HTML</button><button class="filter-tab" type="button" data-family-filter="pdf" aria-pressed="false">PDF / OCR</button><button class="filter-tab" type="button" data-family-filter="speech" aria-pressed="false">Audio / speech</button><button class="filter-tab" type="button" data-family-filter="indic" aria-pressed="false">Indic safety</button></div></div>
+      <div class="technique-grid">
+        <article class="tech-card" data-family="web"><div class="tech-top"><span class="tech-tag">web / explicit</span><svg class="tech-icon" viewBox="0 0 36 36" aria-hidden="true"><rect x="4" y="6" width="28" height="24" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 12h28M11 6v24M18 12v18" fill="none" stroke="currentColor" stroke-width="2"/></svg></div><h3>Selectors &amp; APIs</h3><p>A source-specific rule selects a known article, feed, JSON-LD object, or body subtree.</p><div class="tech-facts"><div class="tech-fact"><b>Input</b><span>DOM, JSON, CSS/XPath</span></div><div class="tech-fact"><b>Keep</b><span>Known fields and source order</span></div><div class="tech-fact"><b>Fails</b><span>Template drift, localization, missing fields</span></div></div><details><summary>Why use it</summary><div class="detail-copy"><strong>Best precision:</strong> use when the source contract is known. Log selector version and unmatched pages rather than silently falling back.</div></details></article>
+        <article class="tech-card" data-family="web"><div class="tech-top"><span class="tech-tag">web / baseline</span><svg class="tech-icon" viewBox="0 0 36 36" aria-hidden="true"><path d="M5 8h26M5 15h20M5 22h25M5 29h15" fill="none" stroke="currentColor" stroke-width="2"/></svg></div><h3>Trafilatura / Resiliparse</h3><p>Fast tree-based extraction removes page furniture while retaining a main-content candidate.</p><div class="tech-facts"><div class="tech-fact"><b>Input</b><span>Raw HTML and tolerant DOM</span></div><div class="tech-fact"><b>Keep</b><span>Headings, paragraphs, lists, links</span></div><div class="tech-fact"><b>Fails</b><span>Hard layouts, formulas, dynamic-only pages</span></div></div><details><summary>Why use it</summary><div class="detail-copy"><strong>Cheap first pass:</strong> deterministic and fast. Preserve the raw page so uncertain output can be escalated instead of guessed.</div></details></article>
+        <article class="tech-card" data-family="web"><div class="tech-top"><span class="tech-tag">web / heuristic</span><svg class="tech-icon" viewBox="0 0 36 36" aria-hidden="true"><path d="M5 9h26M5 18h18M5 27h23" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="29" cy="18" r="3" fill="#0a7281"/></svg></div><h3>JusText density</h3><p>Paragraph classes use link density, stopword density, tags, and neighboring context.</p><div class="tech-facts"><div class="tech-fact"><b>Input</b><span>HTML paragraph blocks</span></div><div class="tech-fact"><b>Keep</b><span>Content-like blocks and context</span></div><div class="tech-fact"><b>Fails</b><span>English thresholds on Hindi, code, dialogue</span></div></div><details><summary>Why use it</summary><div class="detail-copy"><strong>Heuristic trade-off:</strong> useful when templates vary, but thresholds need Indic calibration and a review set.</div></details></article>
+        <article class="tech-card" data-family="web"><div class="tech-top"><span class="tech-tag">web / scoring</span><svg class="tech-icon" viewBox="0 0 36 36" aria-hidden="true"><rect x="5" y="6" width="26" height="24" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 24l5-7 4 4 5-9 4 12" fill="none" stroke="currentColor" stroke-width="2"/></svg></div><h3>Readability</h3><p>Candidate containers are scored by text amount, content shape, and link-to-text balance.</p><div class="tech-facts"><div class="tech-fact"><b>Input</b><span>DOM candidates and text nodes</span></div><div class="tech-fact"><b>Keep</b><span>One likely article subtree</span></div><div class="tech-fact"><b>Fails</b><span>Lists, forums, multi-column pages</span></div></div><details><summary>Why use it</summary><div class="detail-copy"><strong>Use as a comparator:</strong> disagreement with another extractor is a review signal, not permission to choose the longest result.</div></details></article>
+        <article class="tech-card" data-family="web"><div class="tech-top"><span class="tech-tag">web / learned</span><svg class="tech-icon" viewBox="0 0 36 36" aria-hidden="true"><circle cx="9" cy="9" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="27" cy="18" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="27" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11l11 5M12 25l11-5" fill="none" stroke="currentColor" stroke-width="2"/></svg></div><h3>MinerU-HTML / AICC</h3><p>Constrained semantic labels reconstruct the selected DOM as typed, source-aligned blocks.</p><div class="tech-facts"><div class="tech-fact"><b>Input</b><span>Simplified + mapping HTML</span></div><div class="tech-fact"><b>Keep</b><span>Tables, formulas, code, block roles</span></div><div class="tech-fact"><b>Fails</b><span>Model transfer, annotation and label errors</span></div></div><details><summary>Why use it</summary><div class="detail-copy"><strong>Escalation route:</strong> use for layouts where heuristics lose semantics. Validate on Hindi pages; source mapping is the guardrail.</div></details></article>
+        <article class="tech-card" data-family="web"><div class="tech-top"><span class="tech-tag">web / dynamic</span><svg class="tech-icon" viewBox="0 0 36 36" aria-hidden="true"><path d="M6 8h24v20H6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 13h16M10 19h10M10 25h13" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="28" cy="8" r="3" fill="#ed1aa0"/></svg></div><h3>Browser rendering</h3><p>A real browser reveals content that exists only after JavaScript, consent, or client-side routing runs.</p><div class="tech-facts"><div class="tech-fact"><b>Input</b><span>URL plus render state</span></div><div class="tech-fact"><b>Keep</b><span>Post-render DOM with timing</span></div><div class="tech-fact"><b>Fails</b><span>Cookies, ads, nondeterministic state</span></div></div><details><summary>Why use it</summary><div class="detail-copy"><strong>Last web resort:</strong> record URL, viewport, network state, and wait condition. Never treat a browser snapshot as reproducible by default.</div></details></article>
+        <article class="tech-card" data-family="pdf"><div class="tech-top"><span class="tech-tag">pdf / native</span><svg class="tech-icon" viewBox="0 0 36 36" aria-hidden="true"><rect x="8" y="4" width="20" height="28" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11h12M12 17h12M12 23h8" fill="none" stroke="currentColor" stroke-width="2"/></svg></div><h3>PyMuPDF text layer</h3><p>Native PDF extraction exposes spans, blocks, words, coordinates, and page order.</p><div class="tech-facts"><div class="tech-fact"><b>Input</b><span>Digital PDF text objects</span></div><div class="tech-fact"><b>Keep</b><span>Boxes, columns, page IDs, order</span></div><div class="tech-fact"><b>Fails</b><span>Bad font maps, scrambled reading order</span></div></div><details><summary>Why use it</summary><div class="detail-copy"><strong>Probe first:</strong> native text preserves more evidence than OCR when it is trustworthy. Compare coordinates before flattening.</div></details></article>
+        <article class="tech-card" data-family="pdf"><div class="tech-top"><span class="tech-tag">pdf / raster</span><svg class="tech-icon" viewBox="0 0 36 36" aria-hidden="true"><rect x="4" y="7" width="28" height="22" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="13" cy="15" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 25l7-6 5 4 4-3 6 5" fill="none" stroke="currentColor" stroke-width="2"/></svg></div><h3>Tesseract OCR</h3><p>Local LSTM recognition turns rendered page images into text with confidence signals.</p><div class="tech-facts"><div class="tech-fact"><b>Input</b><span>Rendered page image</span></div><div class="tech-fact"><b>Keep</b><span>Words, boxes, confidence</span></div><div class="tech-fact"><b>Fails</b><span>Noise, small type, Indic glyph splits</span></div></div><details><summary>Why use it</summary><div class="detail-copy"><strong>Fallback route:</strong> keep the image, OCR version, language model, and configuration together so a correction can be traced.</div></details></article>
+        <article class="tech-card" data-family="pdf"><div class="tech-top"><span class="tech-tag">pdf / layout</span><svg class="tech-icon" viewBox="0 0 36 36" aria-hidden="true"><path d="M5 7h26v22H5zM5 18h26M17 7v22" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 12h5M21 23h6" stroke="currentColor" stroke-width="2"/></svg></div><h3>PP-Structure</h3><p>Layout, table, formula, and reading-order models rebuild structure around OCR text.</p><div class="tech-facts"><div class="tech-fact"><b>Input</b><span>Page image and OCR tokens</span></div><div class="tech-fact"><b>Keep</b><span>Regions, cells, formulas, boxes</span></div><div class="tech-fact"><b>Fails</b><span>Complex scripts, dense pages, wrong order</span></div></div><details><summary>Why use it</summary><div class="detail-copy"><strong>Structure matters:</strong> a flat transcription can contain every word and still destroy a table's meaning.</div></details></article>
+        <article class="tech-card" data-family="speech"><div class="tech-top"><span class="tech-tag">speech / segment</span><svg class="tech-icon" viewBox="0 0 36 36" aria-hidden="true"><path d="M5 18h4l3-10 5 20 4-14 3 8h7" fill="none" stroke="currentColor" stroke-width="2"/></svg></div><h3>WebRTC VAD</h3><p>Short PCM frames are classified as voiced or non-voiced before recognition.</p><div class="tech-facts"><div class="tech-fact"><b>Input</b><span>10–30 ms PCM frames</span></div><div class="tech-fact"><b>Keep</b><span>Speech intervals and padding</span></div><div class="tech-fact"><b>Fails</b><span>Quiet speech, noise, clipped boundaries</span></div></div><details><summary>Why use it</summary><div class="detail-copy"><strong>Segment, do not erase:</strong> save frame settings and raw audio. Aggressive mode can remove precisely the speech you need.</div></details></article>
+        <article class="tech-card" data-family="speech"><div class="tech-top"><span class="tech-tag">speech / ASR</span><svg class="tech-icon" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="12" fill="none" stroke="currentColor" stroke-width="2"/><path d="M18 6v24M6 18h24M10 10l16 16M26 10L10 26" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></div><h3>Conformer / Whisper</h3><p>Acoustic context becomes multilingual text while timestamps keep the source interval attached.</p><div class="tech-facts"><div class="tech-fact"><b>Input</b><span>Audio segments + language hint</span></div><div class="tech-fact"><b>Keep</b><span>Transcript, time, confidence</span></div><div class="tech-fact"><b>Fails</b><span>Names, code-mixing, dialect, overlap</span></div></div><details><summary>Why use it</summary><div class="detail-copy"><strong>Measure:</strong> score WER/CER on Hindi-literate examples and keep raw ASR separate from punctuation or speaker post-processing.</div></details></article>
+        <article class="tech-card" data-family="indic"><div class="tech-top"><span class="tech-tag">Indic / safety</span><svg class="tech-icon" viewBox="0 0 36 36" aria-hidden="true"><path d="M18 4l12 6v8c0 7-5 11-12 14C11 29 6 25 6 18v-8z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 18l5 5 9-10" fill="none" stroke="#0a7281" stroke-width="2"/></svg></div><h3>Unicode guardrails</h3><p>A validation layer protects meaningful script components instead of treating invisible code points as garbage.</p><div class="tech-facts"><div class="tech-fact"><b>Input</b><span>Code points and normalized text</span></div><div class="tech-fact"><b>Keep</b><span>ZWJ, ZWNJ, virama, nukta, matras</span></div><div class="tech-fact"><b>Fails</b><span>Overbroad Cf stripping, ASCII gates</span></div></div><details><summary>Why use it</summary><div class="detail-copy"><strong>Boundary:</strong> remove only what source comparison proves is an artifact. Valid Hinglish and code-mixed text can be in scope.</div></details></article>
+      </div>
+    </section>
+
+
+    <section class="wrap section" id="routes" data-reveal>
+      <div class="section-kicker"><b>03</b> choose the route</div>
+      <div class="section-head"><h2>One principle.<br>Three source worlds.</h2><p class="section-lede">The artifact tells you which evidence exists. Use the route that can still see the structure.</p></div>
+      <div class="route-tabs" role="tablist" aria-label="Artifact routes">
+        <button class="route-tab" role="tab" aria-selected="true" aria-controls="route-web" data-route-tab="web">Web / HTML</button>
+        <button class="route-tab" role="tab" aria-selected="false" aria-controls="route-pdf" data-route-tab="pdf">PDF / image</button>
+        <button class="route-tab" role="tab" aria-selected="false" aria-controls="route-speech" data-route-tab="speech">Audio / speech</button>
+      </div>
+      <div class="route-panels">
+        <article class="route-panel is-active" id="route-web" role="tabpanel" data-route-panel="web">
+          <div><h3>Parse the tree.<br>Select the body.</h3><p>Start with a selector or a deterministic DOM baseline. Preserve headings, lists, tables, code, formulas, and source spans. Render JavaScript pages only when the static artifact is incomplete.</p><ul class="route-points"><li><b>01</b><span><strong>Mechanics:</strong> bytes → tolerant DOM → blocks → candidate scoring → typed subtree.</span></li><li><b>02</b><span><strong>Best first pass:</strong> Trafilatura or Resiliparse; compare uncertain pages with JusText or Readability.</span></li><li><b>03</b><span><strong>Escalate:</strong> browser render or constrained MinerU-HTML block labelling.</span></li></ul></div>
+          <div class="route-art"><svg viewBox="0 0 640 320" role="img" aria-label="Web extraction tree diagram"><rect width="640" height="320" fill="#f5f5f5"/><g stroke="#cacacb" fill="none"><path d="M40 48H600M40 108H600M40 168H600M40 228H600"/></g><g fill="#111111"><rect x="44" y="72" width="118" height="22"/><rect x="44" y="132" width="206" height="22"/><rect x="44" y="192" width="94" height="22"/></g><g fill="#ed1aa0"><rect x="288" y="72" width="74" height="22"/><rect x="288" y="132" width="146" height="22"/></g><g fill="#0a7281"><rect x="486" y="72" width="112" height="22"/><rect x="486" y="132" width="84" height="22"/><rect x="486" y="192" width="96" height="22"/></g><g stroke="#111111" fill="none" stroke-width="2"><path d="M168 83H274"/><path d="M256 143H274"/><path d="M368 83H472"/><path d="M440 143H472"/></g><g fill="#111111" font-family="Inter,Arial,sans-serif" font-size="11" font-weight="800" letter-spacing="1"><text x="44" y="42">DOM NODES</text><text x="288" y="42">SELECT</text><text x="486" y="42">MAIN-HTML</text><text x="44" y="278">SOURCE MAPPING SURVIVES THE CUT</text></g></svg></div>
+        </article>
+        <article class="route-panel" id="route-pdf" role="tabpanel" data-route-panel="pdf" hidden>
+          <div><h3>Read the geometry.<br>Then trust the text.</h3><p>A PDF may look selectable while its text layer is scrambled. Probe native blocks first; render and OCR only when geometry, font mapping, or reading order fails.</p><ul class="route-points"><li><b>01</b><span><strong>Native:</strong> PyMuPDF exposes text, blocks, words, coordinates, and sorting.</span></li><li><b>02</b><span><strong>Scanned:</strong> render → layout detection → OCR → boxes/confidence → reading order.</span></li><li><b>03</b><span><strong>Review:</strong> compare native/OCR output and inspect Indic matras, conjuncts, and nukta.</span></li></ul></div>
+          <div class="route-art"><svg viewBox="0 0 640 320" role="img" aria-label="PDF extraction geometry diagram"><rect width="640" height="320" fill="#f5f5f5"/><rect x="55" y="42" width="190" height="234" fill="#ffffff" stroke="#111111"/><g fill="#111111"><rect x="76" y="67" width="140" height="9"/><rect x="76" y="89" width="62" height="8"/><rect x="150" y="89" width="66" height="8"/><rect x="76" y="116" width="140" height="7"/><rect x="76" y="133" width="140" height="7"/><rect x="76" y="167" width="58" height="7"/><rect x="150" y="167" width="66" height="7"/><rect x="76" y="184" width="140" height="7"/></g><g fill="none" stroke="#ed1aa0" stroke-width="2"><rect x="66" y="54" width="165" height="56"/><rect x="66" y="150" width="165" height="58"/></g><g stroke="#111111" stroke-width="2" fill="none"><path d="M270 91H372"/><path d="M270 179H372"/></g><g fill="#0a7281"><rect x="396" y="62" width="158" height="22"/><rect x="396" y="98" width="118" height="22"/><rect x="396" y="158" width="178" height="22"/><rect x="396" y="194" width="136" height="22"/></g><g fill="#111111" font-family="Inter,Arial,sans-serif" font-size="11" font-weight="800" letter-spacing="1"><text x="55" y="300">PAGE + BOXES</text><text x="396" y="44">ORDERED BLOCKS</text></g></svg></div>
+        </article>
+        <article class="route-panel" id="route-speech" role="tabpanel" data-route-panel="speech" hidden>
+          <div><h3>Find the voice.<br>Keep the time.</h3><p>Speech extraction is inference, not transcription magic. Detect voiced frames, transcribe with a Hindi-capable model, then keep timestamps and confidence beside the text.</p><ul class="route-points"><li><b>01</b><span><strong>Segment:</strong> WebRTC VAD works on short PCM frames and proposes speech intervals.</span></li><li><b>02</b><span><strong>Recognize:</strong> Conformer joins local convolution with global attention; Whisper is a multilingual fallback.</span></li><li><b>03</b><span><strong>Audit:</strong> score WER/CER, chunk seams, code-mixing, names, numerals, and overlap.</span></li></ul></div>
+          <div class="route-art"><svg viewBox="0 0 640 320" role="img" aria-label="Speech extraction waveform diagram"><rect width="640" height="320" fill="#f5f5f5"/><g stroke="#cacacb" fill="none"><path d="M40 160H600M40 80H600M40 240H600"/></g><path d="M40 160 C58 160 58 82 76 82 S94 238 112 238 S130 148 148 148 S166 116 184 116 S202 198 220 198 S238 160 256 160 S274 68 292 68 S310 246 328 246 S346 156 364 156 S382 96 400 96 S418 214 436 214 S454 160 472 160 S490 120 508 120 S526 190 544 190 S562 160 580 160" fill="none" stroke="#111111" stroke-width="3"/><g fill="#0a7281"><rect x="56" y="270" width="132" height="16"/><rect x="250" y="270" width="168" height="16"/><rect x="488" y="270" width="86" height="16"/></g><g fill="#111111" font-family="Inter,Arial,sans-serif" font-size="11" font-weight="800" letter-spacing="1"><text x="40" y="42">PCM / WAVEFORM</text><text x="40" y="300">VAD SPANS → ASR SEGMENTS → TIMED UTTERANCES</text></g></svg></div>
+        </article>
+      </div>
+    </section>
+
+
+    <section class="black-section section" id="safety" data-reveal>
+      <div class="wrap dark-grid">
+        <div><div class="section-kicker"><b>04</b> keep the signal</div><h2>Do not clean away the language.</h2><p class="section-lede">Indic extraction needs restraint. Invisible does not mean irrelevant. Latin script does not mean noise.</p><ul class="guardrail-list"><li><b>01</b><span><em>Preserve ZWJ / ZWNJ</em> when they carry Brahmic orthography.</span></li><li><b>02</b><span><em>Keep virama, nukta, matras, danda</em> and valid combining sequences.</span></li><li><b>03</b><span><em>Retain Hinglish and Romanized Indic</em> when the scope includes natural code-mixing.</span></li><li><b>04</b><span><em>Do not hard-gate on English punctuation</em>, stopwords, or ASCII ratio.</span></li></ul></div>
+        <div class="glyph-art" aria-label="Indic safety diagram"><svg viewBox="0 0 600 480" role="img" aria-labelledby="glyph-title glyph-desc"><title id="glyph-title">Preserve meaningful Unicode signals</title><desc id="glyph-desc">A grid showing Indic marks, joiners, and code-mixed text as signals to preserve.</desc><rect width="600" height="480" fill="#111111"/><g stroke="#39393b" fill="none"><path d="M40 70H560M40 150H560M40 230H560M40 310H560M40 390H560"/><path d="M120 30V440M220 30V440M320 30V440M420 30V440M520 30V440"/></g><g fill="#ffffff" font-family="Inter,Arial,sans-serif" font-size="11" font-weight="800" letter-spacing="1"><text x="42" y="48">ORTHOGRAPHY IS EVIDENCE</text><text x="52" y="124">ZWJ</text><text x="152" y="124">ZWNJ</text><text x="252" y="124">VIRAMA</text><text x="352" y="124">NUKTA</text><text x="452" y="124">MIX</text></g><g fill="#0a7281" font-family="Arial,sans-serif" font-size="48"><text x="52" y="205">‍</text><text x="152" y="205">‌</text><text x="252" y="205">्</text><text x="352" y="205">़</text><text x="452" y="205">Hi</text></g><g fill="#ffffff" font-family="Arial,sans-serif" font-size="36"><text x="52" y="285">क्ष</text><text x="152" y="285">फ़</text><text x="252" y="285">क्‍ष</text><text x="352" y="285">हिन्दी</text><text x="452" y="285">Hinglish</text></g><g fill="#9e9ea0" font-family="Inter,Arial,sans-serif" font-size="12" font-weight="700"><text x="42" y="352">REMOVE ONLY WHAT SOURCE COMPARISON PROVES IS ARTIFACT</text><text x="42" y="414">NOT ALL Cf · NOT ALL LATIN · NOT ALL SHORT TEXT</text></g><circle cx="550" cy="48" r="5" fill="#ed1aa0"/></svg></div>
+      </div>
+    </section>
+
+    <section class="wrap section" id="validation" data-reveal>
+      <div class="section-kicker"><b>05</b> prove the extraction</div>
+      <div class="section-head"><h2>Measure the miss.</h2><p class="section-lede">A long output is not a good output. Compare against a Hindi-literate gold set and score omission, leakage, structure, and source coverage.</p></div>
+      <div class="validation-grid">
+        <div class="metric-art" aria-label="Extraction validation chart"><svg viewBox="0 0 720 420" role="img" aria-labelledby="metric-title metric-desc"><title id="metric-title">Validation metrics</title><desc id="metric-desc">A chart comparing retained output, source mapping, and review confidence.</desc><rect width="720" height="420" fill="#f5f5f5"/><g stroke="#cacacb" stroke-width="1"><path d="M70 70H660M70 150H660M70 230H660M70 310H660"/><path d="M70 48V350M190 48V350M310 48V350M430 48V350M550 48V350M660 48V350"/></g><g fill="#111111" font-family="Inter,Arial,sans-serif" font-size="11" font-weight="800" letter-spacing="1"><text x="70" y="32">EVALUATE THE OUTPUT, NOT THE VIBE</text><text x="70" y="382">WEB / BLOCK F1</text><text x="280" y="382">PDF / CER</text><text x="480" y="382">ASR / WER</text></g><g fill="#0a7281"><rect x="90" y="116" width="88" height="156"/><rect x="300" y="94" width="88" height="178"/><rect x="510" y="138" width="88" height="134"/></g><g fill="#ed1aa0"><circle cx="134" cy="88" r="7"/><circle cx="344" cy="74" r="7"/><circle cx="554" cy="112" r="7"/></g><g fill="#111111" font-family="Inter,Arial,sans-serif" font-size="12" font-weight="700"><text x="98" y="104">SPAN MAP</text><text x="300" y="82">CODE-POINTS</text><text x="504" y="100">TIMESTAMPS</text></g><path d="M90 286 C150 250 196 305 250 262 S340 250 402 274 S510 226 598 256" fill="none" stroke="#111111" stroke-width="2"/></svg></div>
+        <div class="metric-cards"><article class="metric-card"><div class="metric-label"><span>Source coverage</span><span>hard check</span></div><strong>Map it</strong><p>Every emitted block should point back to a DOM path, page box, or audio interval.</p><div class="bar"><i style="width: 92%"></i></div></article><article class="metric-card"><div class="metric-label"><span>Leakage</span><span>web</span></div><strong>Separate</strong><p>Boilerplate leakage and main-content omission are different errors. Report both.</p><div class="bar"><i style="width: 64%; background:#ed1aa0"></i></div></article><article class="metric-card"><div class="metric-label"><span>Indic safety</span><span>review</span></div><strong>Preserve</strong><p>Track ZWJ/ZWNJ, virama, nukta, replacement characters, and code-mixed spans.</p><div class="bar"><i style="width: 84%; background:#111111"></i></div></article></div>
+      </div>
+    </section>
+
+    <section class="boundary section" data-reveal>
+      <div class="wrap boundary-grid">
+        <div class="boundary-copy"><div class="section-kicker"><b>06</b> project boundary</div><h2>What this cache can honestly claim.</h2><p>The local Sangraha sample is already flattened JSONL. The residual audit can remove visible tags and explicit boilerplate. It cannot recreate the original DOM, PDF geometry, or speech alignment.</p><a class="pill" href="../data/sangraha_hi_verified_30m/extraction_only/01_residual_extract_summary.json">Open run summary ↗</a></div>
+        <div class="boundary-stats"><div class="boundary-stat"><strong>50,952</strong><span>raw documents</span></div><div class="boundary-stat"><strong>30M</strong><span>estimated raw tokens</span></div><div class="boundary-stat"><strong>26</strong><span>documents changed by residual audit</span></div><div class="boundary-stat"><strong>0</strong><span>observed ZWJ / ZWNJ before and after</span></div><div class="boundary-foot"><b>LIMIT:</b> no source artifacts means no fair Trafilatura vs OCR vs ASR extraction comparison. Reacquire paired sources for that claim.</div></div>
+      </div>
+    </section>
+
+    <section class="wrap section" id="sources" data-reveal>
+      <div class="section-kicker"><b>07</b> go deeper</div>
+      <div class="section-head"><h2>Keep this page.<br>Use the manual.</h2><p class="section-lede">The visual layer is a map. The linked guide contains the full mechanics, source boundaries, and modality-specific references.</p></div>
+      <div class="source-list"><article class="source-card"><small>Local evidence</small><h3>Session 3 + 4 lectures</h3><p>Extraction definition, widget behavior, and the eight-stage pipeline boundary.</p><a href="../axiom-fetched/session4_lecture.md">Read lecture notes ↗</a></article><article class="source-card"><small>Primary research</small><h3>IndicLLMSuite + AICC</h3><p>Setu's multi-modal routes and MinerU-HTML's constrained source selection.</p><a href="https://arxiv.org/html/2403.06350">Open research ↗</a></article><article class="source-card"><small>Full reference</small><h3>Extraction techniques</h3><p>Web, PDF/OCR, speech, Indic safety, validation, and the complete cascade.</p><a href="../extraction/EXTRACTION_TECHNIQUES.md">Open long form ↗</a></article></div>
+    </section>
+  </main>
+
+  <footer><div class="footer-inner"><span><strong>EXTRACT / INDIC</strong> · Session 4 visual guide</span><span>Source-grounded · no document text or PII values published</span></div></footer>
+
+  <script>
+    (function () {
+      const navButton = document.querySelector('.nav-menu');
+      const navLinks = document.querySelector('#nav-links');
+      if (navButton && navLinks) {
+        navButton.addEventListener('click', function () {
+          const open = navLinks.classList.toggle('is-open');
+          navButton.setAttribute('aria-expanded', String(open));
+        });
+        navLinks.querySelectorAll('a').forEach(function (link) {
+          link.addEventListener('click', function () { navLinks.classList.remove('is-open'); navButton.setAttribute('aria-expanded', 'false'); });
+        });
+      }
+
+      const routeTabs = document.querySelectorAll('[data-route-tab]');
+      const routePanels = document.querySelectorAll('[data-route-panel]');
+      routeTabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          const route = tab.dataset.routeTab;
+          routeTabs.forEach(function (item) { item.setAttribute('aria-selected', String(item === tab)); });
+          routePanels.forEach(function (panel) {
+            const active = panel.dataset.routePanel === route;
+            panel.classList.toggle('is-active', active);
+            panel.hidden = !active;
+          });
+        });
+      });
+
+      const filters = document.querySelectorAll('[data-family-filter]');
+      const cards = document.querySelectorAll('.tech-card');
+      const count = document.querySelector('#technique-count');
+      filters.forEach(function (filter) {
+        filter.addEventListener('click', function () {
+          const family = filter.dataset.familyFilter;
+          filters.forEach(function (item) { item.setAttribute('aria-pressed', String(item === filter)); });
+          let visible = 0;
+          cards.forEach(function (card) {
+            const active = family === 'all' || card.dataset.family === family;
+            card.hidden = !active;
+            if (active) visible += 1;
+          });
+          count.textContent = visible;
+        });
+      });
+
+      const revealItems = document.querySelectorAll('[data-reveal]');
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) { entry.target.classList.add('is-visible'); observer.unobserve(entry.target); }
+          });
+        }, { threshold: 0.12 });
+        revealItems.forEach(function (item) { observer.observe(item); });
+      } else {
+        revealItems.forEach(function (item) { item.classList.add('is-visible'); });
+      }
+    }());
+  </script>
+</body>
+</html>

@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>The Data Wall, and how we run out of high-quality public text</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --surface: #ffffff;
+      --surface-alt: #fbfdff;
+      --ink: #102338;
+      --ink-body: #1f3850;
+      --ink-muted: #60768d;
+      --muted-2: #7d90a5;
+      --rule: #e2e9f0;
+      --rule-strong: #cfdbe6;
+      --accent: #00a7d8;
+      --accent-soft: #eafaff;
+      --accent-ink: #0f6e8c;
+      --green: #24b36b;
+      --green-soft: #e7fff2;
+      --green-ink: #19824e;
+      --amber: #d99a13;
+      --amber-soft: #fff7df;
+      --amber-ink: #8a5c06;
+      --violet: #7b61ff;
+      --violet-soft: #eeeaff;
+      --violet-ink: #5a44c8;
+      --red: #e05f6e;
+      --red-soft: #ffeef0;
+      --red-ink: #c0455a;
+      --slate: #5b6b7d;
+      --shadow-soft: 0 8px 22px rgba(16, 35, 56, .05);
+      --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box }
+    html, body { margin: 0; padding: 0; overflow-x: hidden }
+
+    body {
+      background: linear-gradient(180deg, #f8fafc 0%, #f3f6fa 100%);
+      color: var(--ink-body);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.55;
+      padding: 14px;
+    }
+
+    .w5-wrap { max-width: 900px; margin: 0 auto }
+
+    .w5-title {
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(26px, 2.8vw, 40px);
+      font-weight: 800;
+      letter-spacing: -.035em;
+      line-height: 1.08;
+    }
+    .w5-sub {
+      max-width: 820px;
+      margin: 10px 0 16px;
+      color: var(--ink-muted);
+      font-size: 15px;
+      line-height: 1.62;
+    }
+    .w5-sub b { color: var(--ink-body) }
+
+    .w5-panel {
+      margin-bottom: 14px;
+      padding: 15px 17px;
+      border: 1px solid var(--rule);
+      border-radius: 18px;
+      background: var(--surface-alt);
+      box-shadow: var(--shadow-soft);
+    }
+    .w5-ptitle { color: var(--ink); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase }
+    .w5-phead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px }
+
+    /* chart */
+    .w5-chartwrap { position: relative; width: 100%; }
+    .w5-chartwrap svg { display: block; width: 100%; height: auto }
+
+    .w5-cross-read {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--red-ink);
+    }
+    .w5-cross-read b { font-size: 16px; font-weight: 800 }
+    .w5-cross-read.pushed { color: var(--green-ink) }
+    .w5-proj { font-family: var(--font-mono); font-size: 10.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--amber-ink); background: var(--amber-soft); border: 1px solid #f0ddaf; border-radius: 8px; padding: 4px 9px; white-space: nowrap }
+
+    /* legend */
+    .w5-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px }
+    .w5-lg { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-body) }
+    .w5-lg i { width: 16px; height: 4px; border-radius: 999px; flex: none }
+    .w5-lg i.w5-demand { background: var(--amber) }
+    .w5-lg i.w5-supply { background: var(--accent) }
+    .w5-lg i.w5-extra { background: var(--violet) }
+    .w5-lg b { font-weight: 800; color: var(--ink) }
+    .w5-lg .w5-mut { color: var(--muted-2) }
+
+    /* supply toggles */
+    .w5-toggrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px }
+    @media(max-width:620px) { .w5-toggrid { grid-template-columns: minmax(0, 1fr) } }
+
+    .w5-tog {
+      text-align: left; cursor: pointer; font-family: inherit;
+      border: 1px solid var(--rule); border-radius: 13px; background: #fff;
+      padding: 12px 13px; transition: .16s ease;
+    }
+    .w5-tog:hover { border-color: var(--rule-strong); box-shadow: var(--shadow-soft) }
+    .w5-tog.on { box-shadow: inset 0 0 0 2px var(--violet); border-color: transparent; background: linear-gradient(180deg, #fbfaff, #f5f3ff) }
+    .w5-tog .w5-th { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; color: var(--ink); letter-spacing: -.01em }
+    .w5-tog .w5-tdot { width: 11px; height: 11px; border-radius: 4px; flex: none; background: var(--muted-2); transition: .16s ease }
+    .w5-tog.on .w5-tdot { background: var(--violet) }
+    .w5-tog .w5-tnum { font-family: var(--font-mono); font-size: 16px; font-weight: 800; color: var(--violet-ink); margin: 7px 0 4px; line-height: 1 }
+    .w5-tog .w5-tdesc { font-size: 11.5px; color: var(--ink-muted); line-height: 1.45 }
+    .w5-tog .w5-tdesc b { color: var(--ink-body) }
+    .w5-tog .w5-tstate { font-family: var(--font-mono); font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--muted-2); margin-top: 8px }
+    .w5-tog.on .w5-tstate { color: var(--violet-ink) }
+
+    /* verdict strip */
+    .w5-verdict { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 13px 15px; border-radius: 13px; margin-top: 13px; transition: .25s ease }
+    .w5-verdict.w5-wall { border: 1px solid #f3c9d0; background: var(--red-soft) }
+    .w5-verdict.w5-eased { border: 1px solid #c7ecd6; background: var(--green-soft) }
+    .w5-vnum { font-family: var(--font-mono); font-weight: 800; line-height: 1; flex: none }
+    .w5-vnum .w5-g { font-size: 34px; letter-spacing: -.02em }
+    .w5-vnum small { display: block; margin-top: 5px; font-size: 10.5px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase }
+    .w5-verdict.w5-wall .w5-vnum { color: var(--red-ink) }
+    .w5-verdict.w5-eased .w5-vnum { color: var(--green-ink) }
+    .w5-vtxt { flex: 1 1 360px; font-size: 13.5px; line-height: 1.55 }
+    .w5-verdict.w5-wall .w5-vtxt { color: var(--red-ink) }
+    .w5-verdict.w5-eased .w5-vtxt { color: var(--green-ink) }
+    .w5-vtxt b { font-weight: 800 }
+
+    /* V5 callout */
+    .w5-v5 { border: 1px solid #d8d0ff; background: linear-gradient(180deg, #fbfaff, #f7f4ff) }
+    .w5-v5-row { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap }
+    .w5-v5-tag { font-family: var(--font-mono); font-weight: 800; color: var(--violet-ink); font-size: 13px; letter-spacing: .04em; flex: none; padding-top: 2px }
+    .w5-v5-txt { flex: 1 1 360px; font-size: 13.5px; line-height: 1.6; color: var(--ink-body) }
+    .w5-v5-txt b { color: var(--violet-ink) }
+
+    .w5-foot { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 6px; padding-top: 12px; flex-wrap: wrap }
+    .w5-foot-txt { color: var(--ink-muted); font-size: 12px; max-width: 600px; line-height: 1.55 }
+    .w5-foot-txt b { color: var(--ink-body) }
+    .w5-badge { display: inline-flex; align-items: center; white-space: nowrap; padding: 6px 12px; border: 1px solid #f0ddaf; border-radius: 999px; background: var(--amber-soft); color: var(--amber-ink); font-family: var(--font-mono); font-size: 11.5px; font-weight: 700 }
+  </style>
+</head>
+
+<body>
+  <div class="w5-wrap">
+    <h1 class="w5-title">The data wall</h1>
+    <p class="w5-sub">High-quality public text is <b>finite</b>, and here we are watching two curves at once, where one traces the
+      <b>stock of usable tokens on the open web</b> while the other traces <b>how many tokens a frontier training run wants</b>
+      as that appetite climbs quickly. The point where they cross is what we call the wall, the moment when simply scraping more
+      of the web stops carrying us forward, and as we turn on the three escapes we can watch that crossing <b>slide later</b> in
+      time. <b>All dates are projections.</b></p>
+
+    <!-- CHART -->
+    <div class="w5-panel">
+      <div class="w5-phead">
+        <span class="w5-ptitle">Available high-quality public text vs frontier demand</span>
+        <span class="w5-proj">dates = projection</span>
+      </div>
+      <div class="w5-chartwrap">
+        <svg id="w5svg" viewBox="0 0 860 430" role="img" aria-label="Supply vs demand curves crossing in the late 2020s">
+          <!-- gridlines + axes drawn by JS -->
+          <g id="w5grid"></g>
+          <!-- exhaustion band -->
+          <rect id="w5band" x="0" y="20" width="0" height="350" fill="#ffeef0" opacity="0.55"></rect>
+          <text id="w5bandlbl" x="0" y="38" font-family="var(--font-mono)" font-size="10.5" font-weight="800" fill="#c0455a" text-anchor="middle"></text>
+          <!-- demand curve (amber) -->
+          <path id="w5demand" fill="none" stroke="#d99a13" stroke-width="3" stroke-linecap="round"></path>
+          <!-- base supply curve (cyan) -->
+          <path id="w5supplybase" fill="none" stroke="#9fc6d6" stroke-width="2" stroke-dasharray="5 5" stroke-linecap="round"></path>
+          <!-- boosted supply curve (cyan->violet) -->
+          <path id="w5supply" fill="none" stroke="#00a7d8" stroke-width="3" stroke-linecap="round"></path>
+          <!-- crossing marker -->
+          <g id="w5cross"></g>
+          <!-- axis labels -->
+          <g id="w5axislbl"></g>
+        </svg>
+      </div>
+      <div class="w5-phead" style="margin:10px 0 0">
+        <span class="w5-cross-read" id="w5crossread">The crossing is where we meet the wall</span>
+      </div>
+      <div class="w5-legend">
+        <span class="w5-lg"><i class="w5-demand"></i><b>Frontier demand</b><span class="w5-mut">tokens one run wants</span></span>
+        <span class="w5-lg"><i class="w5-supply"></i><b>Usable public text</b><span class="w5-mut">high-quality stock</span></span>
+        <span class="w5-lg"><i class="w5-extra"></i><b>+ escapes</b><span class="w5-mut">lift the supply curve</span></span>
+      </div>
+    </div>
+
+    <!-- THE THREE ESCAPES -->
+    <div class="w5-panel">
+      <div class="w5-ptitle" style="margin-bottom:12px">The three escapes that we turn on to lift supply</div>
+      <div class="w5-toggrid">
+        <button class="w5-tog" id="togSyn" data-k="syn">
+          <div class="w5-th"><span class="w5-tdot"></span>Synthetic data</div>
+          <div class="w5-tnum">≈ 1.9T</div>
+          <div class="w5-tdesc">This is model-generated and rephrased text, and <b>Nemotron-CC</b> shows how it works, since its 6.3T tokens came from 4.4T of real text amplified with 1.9T of synthetic.</div>
+          <div class="w5-tstate">click to add</div>
+        </button>
+        <button class="w5-tog" id="togIndic" data-k="indic">
+          <div class="w5-th"><span class="w5-tdot"></span>Multilingual / Indic</div>
+          <div class="w5-tnum">22 langs</div>
+          <div class="w5-tdesc">Non-English stock remains barely touched, and <b>Sangraha</b> alone holds 251B tokens across 22 languages, which is the sovereign lever we reach for.</div>
+          <div class="w5-tstate">click to add</div>
+        </button>
+        <button class="w5-tog" id="togLic" data-k="lic">
+          <div class="w5-th"><span class="w5-tdot"></span>Licensed / proprietary</div>
+          <div class="w5-tnum">deals</div>
+          <div class="w5-tdesc">Here we buy books, archives, and news under license, and because this text sits off the open web it sidesteps the public stock entirely.</div>
+          <div class="w5-tstate">click to add</div>
+        </button>
+      </div>
+
+      <div class="w5-verdict w5-wall" id="w5verdict">
+        <div class="w5-vnum"><span class="w5-g" id="w5vyear">~2028</span><small id="w5vlbl">projected crossing</small></div>
+        <div class="w5-vtxt" id="w5vtxt"></div>
+      </div>
+    </div>
+
+    <!-- V5 CALLOUT -->
+    <div class="w5-panel w5-v5">
+      <div class="w5-v5-row">
+        <span class="w5-v5-tag">V5 →</span>
+        <div class="w5-v5-txt" id="w5v5txt">This is exactly why V5 moves beyond the idea of scraping ever more English web. The open high-quality
+          stock is a closing window, so V5 leans on the levers that sit off that curve, which means <b>synthetic</b> amplification
+          of scarce text together with <b>Indic and multilingual</b> data that the English-centric web never counted. V4 already
+          lived this reality, since 162B of its Indic corpus was machine-translated synthetic and its Indic scripts were protected
+          at every stage.</div>
+      </div>
+    </div>
+
+    <div class="w5-foot">
+      <span class="w5-foot-txt">Stock estimate <b>~300T effective tokens</b> (90% CI 100T–1000T); full-utilisation window
+        <b>2026–2032</b> (80% CI), pulled earlier by over-training. <b>Source:</b> Epoch AI / Villalobos et&nbsp;al.,
+        ICML 2024 (arXiv:2211.04325). Curve shapes are <b>illustrative</b>; the crossing dates are <b>projections</b>.</span>
+      <span class="w5-badge">finite supply, rising demand</span>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+    (function () {
+      const $ = id => document.getElementById(id);
+      const NS = "http://www.w3.org/2000/svg";
+
+      // ---- chart geometry ----
+      const W = 860, H = 430;
+      const M = { l: 64, r: 22, t: 20, b: 46 };
+      const plotW = W - M.l - M.r, plotH = H - M.t - M.b;
+      const X0 = 2020, X1 = 2032;             // time axis
+      // y-axis: log scale of tokens (T). 0.1T .. 1000T
+      const YLOG_MIN = Math.log10(0.1), YLOG_MAX = Math.log10(1000);
+
+      const xPix = yr => M.l + (yr - X0) / (X1 - X0) * plotW;
+      const yPix = tok => {            // tok in trillions
+        const lg = Math.log10(Math.max(0.05, tok));
+        const f = (lg - YLOG_MIN) / (YLOG_MAX - YLOG_MIN);
+        return M.t + (1 - f) * plotH;
+      };
+
+      // ---- DEMAND curve (illustrative, drawn to the over-training trend) ----
+      // This is EFFECTIVE demand on the public stock under the over-training regime:
+      // frontier runs now consume tokens far past compute-optimal (Llama3 8B ~75-100x
+      // Chinchilla), and demand compounds across the field. Anchored to verified
+      // single-run milestones (Llama3 ~15T 2024, Qwen3 ~36T 2025) then scaled up to
+      // reflect aggregate over-trained appetite pressing on the ~300T stock.
+      const demandAt = yr => {
+        const pts = [[2020, 1], [2022, 6], [2023, 14], [2024, 40], [2025, 90], [2026, 160], [2028, 320], [2030, 600], [2032, 1100]];
+        return interp(pts, yr);
+      };
+
+      // ---- SUPPLY: usable public high-quality text stock (illustrative shape, flattening) ----
+      // Epoch: ~300T effective stock, growing slowly (web grows, quality slice grows slower).
+      const supplyBaseAt = yr => {
+        const pts = [[2020, 130], [2022, 180], [2024, 230], [2026, 270], [2028, 295], [2030, 310], [2032, 320]];
+        return interp(pts, yr);
+      };
+
+      function interp(pts, x) {
+        if (x <= pts[0][0]) return pts[0][1];
+        if (x >= pts[pts.length - 1][0]) return pts[pts.length - 1][1];
+        for (let i = 0; i < pts.length - 1; i++) {
+          const [x0, y0] = pts[i], [x1, y1] = pts[i + 1];
+          if (x >= x0 && x <= x1) {
+            const f = (x - x0) / (x1 - x0);
+            return y0 * Math.pow(y1 / y0, f);   // log-linear interp
+          }
+        }
+        return pts[pts.length - 1][1];
+      }
+
+      // escape multipliers on the supply curve (illustrative lift)
+      const ESCAPES = {
+        syn: { mult: 1.55, label: "synthetic" },
+        indic: { mult: 1.35, label: "Indic / multilingual" },
+        lic: { mult: 1.25, label: "licensed" }
+      };
+      const state = { syn: false, indic: false, lic: false };
+
+      function supplyMult() {
+        let m = 1;
+        for (const k in state) if (state[k]) m *= ESCAPES[k].mult;
+        return m;
+      }
+
+      // find crossing year of demand vs (boosted) supply
+      function crossingYear(mult) {
+        let prev = null;
+        for (let yr = X0; yr <= X1; yr += 0.02) {
+          const d = demandAt(yr), s = supplyBaseAt(yr) * mult;
+          const diff = d - s;
+          if (prev !== null && prev <= 0 && diff > 0) return yr;
+          prev = diff;
+        }
+        return null; // never crosses within window
+      }
+
+      // ---- build static grid + axes once ----
+      function buildGrid() {
+        const g = $("w5grid"), al = $("w5axislbl");
+        g.innerHTML = ""; al.innerHTML = "";
+        // y gridlines at decades
+        [0.1, 1, 10, 100, 1000].forEach(t => {
+          const y = yPix(t);
+          const line = document.createElementNS(NS, "line");
+          line.setAttribute("x1", M.l); line.setAttribute("x2", W - M.r);
+          line.setAttribute("y1", y); line.setAttribute("y2", y);
+          line.setAttribute("stroke", "#e2e9f0"); line.setAttribute("stroke-width", "1");
+          g.appendChild(line);
+          const lbl = document.createElementNS(NS, "text");
+          lbl.setAttribute("x", M.l - 9); lbl.setAttribute("y", y + 3.5);
+          lbl.setAttribute("text-anchor", "end");
+          lbl.setAttribute("font-family", "var(--font-mono)");
+          lbl.setAttribute("font-size", "10.5"); lbl.setAttribute("fill", "#7d90a5");
+          lbl.textContent = (t < 1 ? t : t) + "T";
+          al.appendChild(lbl);
+        });
+        // y axis title
+        const yt = document.createElementNS(NS, "text");
+        yt.setAttribute("transform", `translate(15,${M.t + plotH / 2}) rotate(-90)`);
+        yt.setAttribute("text-anchor", "middle");
+        yt.setAttribute("font-family", "var(--font-sans)"); yt.setAttribute("font-size", "11");
+        yt.setAttribute("font-weight", "800"); yt.setAttribute("fill", "#60768d");
+        yt.textContent = "tokens  (log scale)";
+        al.appendChild(yt);
+        // x ticks every 2 years
+        for (let yr = X0; yr <= X1; yr += 2) {
+          const x = xPix(yr);
+          const tick = document.createElementNS(NS, "line");
+          tick.setAttribute("x1", x); tick.setAttribute("x2", x);
+          tick.setAttribute("y1", M.t); tick.setAttribute("y2", M.t + plotH);
+          tick.setAttribute("stroke", "#eef3f7"); tick.setAttribute("stroke-width", "1");
+          g.appendChild(tick);
+          const lbl = document.createElementNS(NS, "text");
+          lbl.setAttribute("x", x); lbl.setAttribute("y", M.t + plotH + 18);
+          lbl.setAttribute("text-anchor", "middle");
+          lbl.setAttribute("font-family", "var(--font-mono)"); lbl.setAttribute("font-size", "10.5");
+          lbl.setAttribute("fill", "#7d90a5");
+          lbl.textContent = yr;
+          al.appendChild(lbl);
+        }
+      }
+
+      function pathFor(fn, step) {
+        let d = "";
+        for (let yr = X0; yr <= X1 + 0.001; yr += (step || 0.25)) {
+          const x = xPix(yr).toFixed(1), y = yPix(fn(yr)).toFixed(1);
+          d += (d ? " L" : "M") + x + " " + y;
+        }
+        return d;
+      }
+
+      function render() {
+        const mult = supplyMult();
+        // curves
+        $("w5demand").setAttribute("d", pathFor(demandAt));
+        $("w5supplybase").setAttribute("d", pathFor(supplyBaseAt));
+        $("w5supply").setAttribute("d", pathFor(yr => supplyBaseAt(yr) * mult));
+        // boosted curve color shifts toward violet when escapes are on
+        const anyOn = state.syn || state.indic || state.lic;
+        $("w5supply").setAttribute("stroke", anyOn ? "#7b61ff" : "#00a7d8");
+
+        // exhaustion band: the verified 2026-2032 window
+        const bx0 = xPix(2026), bx1 = xPix(2032);
+        $("w5band").setAttribute("x", bx0);
+        $("w5band").setAttribute("width", bx1 - bx0);
+        $("w5band").setAttribute("y", M.t);
+        $("w5band").setAttribute("height", plotH);
+        $("w5bandlbl").setAttribute("x", (bx0 + bx1) / 2);
+        $("w5bandlbl").setAttribute("y", M.t + 14);
+        $("w5bandlbl").textContent = "exhaustion window 2026–2032 (projected)";
+
+        // crossing
+        const yr = crossingYear(mult);
+        const cg = $("w5cross"); cg.innerHTML = "";
+        const read = $("w5crossread");
+        const verdict = $("w5verdict");
+
+        if (yr === null || yr > X1) {
+          // no crossing in window, escapes pushed it out past 2032
+          read.className = "w5-cross-read pushed";
+          read.innerHTML = "No crossing arrives before <b>2032</b>, because the escapes carry usable supply past the projection window.";
+          $("w5vyear").textContent = "> 2032";
+          $("w5vlbl").textContent = "crossing pushed out (proj.)";
+          verdict.className = "w5-verdict w5-eased";
+        } else {
+          const tok = demandAt(yr);
+          const x = xPix(yr), y = yPix(tok);
+          // vertical drop line
+          const vline = document.createElementNS(NS, "line");
+          vline.setAttribute("x1", x); vline.setAttribute("x2", x);
+          vline.setAttribute("y1", y); vline.setAttribute("y2", M.t + plotH);
+          vline.setAttribute("stroke", "#e05f6e"); vline.setAttribute("stroke-width", "1.5");
+          vline.setAttribute("stroke-dasharray", "4 4"); cg.appendChild(vline);
+          // marker dot
+          const dot = document.createElementNS(NS, "circle");
+          dot.setAttribute("cx", x); dot.setAttribute("cy", y); dot.setAttribute("r", "6");
+          dot.setAttribute("fill", "#fff"); dot.setAttribute("stroke", "#e05f6e");
+          dot.setAttribute("stroke-width", "3"); cg.appendChild(dot);
+          // label
+          const yrInt = Math.round(yr);
+          const lbl = document.createElementNS(NS, "text");
+          lbl.setAttribute("x", x); lbl.setAttribute("y", y - 12);
+          lbl.setAttribute("text-anchor", x > W - 100 ? "end" : "middle");
+          lbl.setAttribute("font-family", "var(--font-mono)"); lbl.setAttribute("font-size", "12");
+          lbl.setAttribute("font-weight", "800"); lbl.setAttribute("fill", "#c0455a");
+          lbl.textContent = "≈ " + yrInt;
+          cg.appendChild(lbl);
+
+          const anyOn2 = state.syn || state.indic || state.lic;
+          read.className = anyOn2 ? "w5-cross-read pushed" : "w5-cross-read";
+          read.innerHTML = "Demand overtakes usable public text around <b>≈ " + yrInt + "</b> (projected).";
+          $("w5vyear").textContent = "≈ " + yrInt;
+          $("w5vlbl").textContent = "projected crossing";
+          verdict.className = anyOn2 ? "w5-verdict w5-eased" : "w5-verdict w5-wall";
+        }
+
+        // verdict text
+        const onList = Object.keys(state).filter(k => state[k]).map(k => ESCAPES[k].label);
+        const vtxt = $("w5vtxt");
+        if (onList.length === 0) {
+          vtxt.innerHTML = "With <b>only the open web</b> to draw on, frontier appetite outruns the high-quality public stock inside " +
+            "the Epoch window, and once we are past the wall the extra scraping returns mostly duplicates and noise, so raw quantity stops being the lever we can rely on.";
+        } else {
+          vtxt.innerHTML = "Adding <b>" + onList.join(" + ") + "</b> lifts the usable supply and pushes the crossing " +
+            (yr === null || yr > X1 ? "<b>past 2032</b>" : "<b>later</b>") +
+            ". This is the strategy we follow, so that when the open web flattens we keep growing supply with data the curve never counted.";
+        }
+      }
+
+      // wiring
+      document.querySelectorAll(".w5-tog").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const k = btn.dataset.k;
+          state[k] = !state[k];
+          btn.classList.toggle("on", state[k]);
+          btn.querySelector(".w5-tstate").textContent = state[k] ? "added to supply" : "click to add";
+          render();
+        });
+      });
+
+      buildGrid();
+      render();
+    })();
+  </script>
+</body>
+
+</html>

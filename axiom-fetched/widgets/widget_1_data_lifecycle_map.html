@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Data Lifecycle Map, one pipeline across many datasets</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --surface: #ffffff;
+      --surface-alt: #fbfdff;
+      --ink: #102338;
+      --ink-body: #1f3850;
+      --ink-muted: #60768d;
+      --muted-2: #7d90a5;
+      --rule: #e2e9f0;
+      --rule-strong: #cfdbe6;
+      --accent: #00a7d8;
+      --accent-soft: #eafaff;
+      --accent-ink: #0f6e8c;
+      --green: #24b36b;
+      --green-soft: #e7fff2;
+      --green-ink: #19824e;
+      --amber: #d99a13;
+      --amber-soft: #fff7df;
+      --amber-ink: #8a5c06;
+      --violet: #7b61ff;
+      --violet-soft: #eeeaff;
+      --violet-ink: #5a44c8;
+      --red: #e05f6e;
+      --red-soft: #ffeef0;
+      --red-ink: #c0455a;
+      --slate: #5b6b7d;
+      --shadow-soft: 0 8px 22px rgba(16, 35, 56, .05);
+      --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box }
+    html, body { margin: 0; padding: 0; overflow-x: hidden }
+
+    body {
+      background: linear-gradient(180deg, #f8fafc 0%, #f3f6fa 100%);
+      color: var(--ink-body);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.55;
+      padding: 14px;
+    }
+
+    .dl-wrap { max-width: 1260px; margin: 0 auto }
+
+    .dl-title {
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(26px, 2.8vw, 40px);
+      font-weight: 800;
+      letter-spacing: -.035em;
+      line-height: 1.08;
+    }
+    .dl-sub {
+      max-width: 900px;
+      margin: 10px 0 16px;
+      color: var(--ink-muted);
+      font-size: 15px;
+      line-height: 1.62;
+    }
+    .dl-sub b { color: var(--ink-body) }
+
+    .dl-panel {
+      margin-bottom: 14px;
+      padding: 15px 17px;
+      border: 1px solid var(--rule);
+      border-radius: 18px;
+      background: var(--surface-alt);
+      box-shadow: var(--shadow-soft);
+    }
+    .dl-ptitle { color: var(--ink); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase }
+
+    /* modality toggle */
+    .dl-modrow { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 4px }
+    .dl-clbl { font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--muted-2) }
+    .dl-seg { display: inline-flex; padding: 3px; gap: 3px; border: 1px solid var(--rule); border-radius: 11px; background: #fff }
+    .dl-seg button { border: 0; border-radius: 8px; background: transparent; color: var(--ink-muted); font-family: var(--font-sans); font-size: 12.5px; font-weight: 800; padding: 7px 14px; cursor: pointer; transition: .16s ease }
+    .dl-seg button:hover { color: var(--accent-ink); background: #f2fbfe }
+    .dl-seg button.on { background: linear-gradient(180deg, #f2fcff, #e7f9ff); color: var(--accent-ink); box-shadow: inset 0 0 0 1px #bcefff }
+
+    /* pipeline rail */
+    .dl-rail { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 12px }
+    .dl-stage { position: relative; text-align: left; cursor: pointer; border: 1px solid var(--rule); border-radius: 13px; background: #fff; padding: 11px 11px 12px; transition: .16s ease; font-family: inherit }
+    .dl-stage:hover { border-color: var(--rule-strong); box-shadow: var(--shadow-soft) }
+    .dl-stage.sel { box-shadow: inset 0 0 0 2px var(--accent); border-color: transparent }
+    .dl-stage .dl-snum { font-family: var(--font-mono); font-size: 10px; font-weight: 800; color: var(--muted-2) }
+    .dl-stage .dl-sname { font-size: 13.5px; font-weight: 800; color: var(--ink); letter-spacing: -.01em; line-height: 1.2; margin-top: 2px }
+    .dl-stage .dl-svol { font-family: var(--font-mono); font-size: 11px; font-weight: 700; margin-top: 7px }
+    .dl-bar-mini { height: 6px; border-radius: 999px; background: #eef3f7; margin-top: 7px; overflow: hidden }
+    .dl-bar-mini i { display: block; height: 100%; border-radius: 999px; transition: width .45s cubic-bezier(.2,.7,.2,1) }
+
+    /* eval rail */
+    .dl-eval { margin-top: 9px; display: flex; align-items: center; gap: 11px; flex-wrap: wrap; padding: 10px 13px; border: 1px dashed var(--rule-strong); border-radius: 13px; background: #fff }
+    .dl-eval .dl-etag { font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--slate) }
+    .dl-eval .dl-etxt { font-size: 12.5px; color: var(--ink-muted); line-height: 1.5; flex: 1 1 320px; min-width: 0 }
+    .dl-eval .dl-etxt b { color: var(--ink-body) }
+    .dl-eval .dl-enever { font-family: var(--font-mono); font-size: 11px; font-weight: 800; color: var(--red-ink); background: var(--red-soft); border: 1px solid #f3c9d0; border-radius: 8px; padding: 4px 9px; white-space: nowrap }
+
+    /* detail */
+    .dl-detail { display: grid; grid-template-columns: minmax(0, 210px) minmax(0, 1fr); gap: 18px }
+    @media(max-width:760px){ .dl-detail { grid-template-columns: minmax(0,1fr) } }
+
+    .dl-glyphcard { border: 1px solid var(--rule); border-radius: 14px; background: #fff; padding: 15px; text-align: center; align-self: start }
+    .dl-glyphcard svg { width: 100%; height: 130px; display: block }
+    .dl-unit-lbl { font-size: 12px; color: var(--ink-muted); margin-top: 8px; line-height: 1.45 }
+    .dl-unit-lbl b { color: var(--ink-body) }
+
+    .dl-scalebox { margin-top: 13px; border-top: 1px solid var(--rule); padding-top: 12px; text-align: left }
+    .dl-mlbl { font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--muted-2); margin-bottom: 5px }
+    .dl-mbar { height: 10px; border-radius: 999px; background: #eef3f7; overflow: hidden }
+    .dl-mbar i { display: block; height: 100%; border-radius: 999px; transition: width .4s ease }
+    .dl-mbar i.vol { background: linear-gradient(90deg, #36c0e6, #00a7d8) }
+    .dl-mbar i.noise { background: linear-gradient(90deg, #f1c97a, #d99a13) }
+    .dl-mval { font-family: var(--font-mono); font-size: 11px; color: var(--ink-body); margin-top: 4px }
+
+    .dl-rows { align-self: start }
+    .dl-dh { display: flex; align-items: center; gap: 9px; margin-bottom: 6px }
+    .dl-dh .dl-ddot { width: 12px; height: 12px; border-radius: 3px; flex: none }
+    .dl-dh h3 { margin: 0; font-size: 18px; font-weight: 800; color: var(--ink); letter-spacing: -.01em }
+    .dl-purpose { font-size: 13.5px; color: var(--ink-body); line-height: 1.55; margin: 0 0 12px }
+    .dl-purpose b { color: var(--ink); font-weight: 800 }
+
+    .dl-loss { display: flex; align-items: center; gap: 9px; font-family: var(--font-mono); font-size: 12.5px; background: var(--accent-soft); border: 1px solid #cceefa; border-radius: 10px; padding: 9px 12px; color: var(--accent-ink); margin-bottom: 13px; overflow-wrap: anywhere }
+    .dl-loss .dl-lk { font-weight: 800; letter-spacing: .03em; flex: none }
+
+    .dl-ds { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px }
+    .dl-dscol { border: 1px solid var(--rule); border-radius: 11px; background: #fff; padding: 10px 12px }
+    .dl-dscol .dl-dk { font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 6px }
+    .dl-dscol.strong .dl-dk { color: var(--green-ink) }
+    .dl-dscol.weak .dl-dk { color: var(--amber-ink) }
+    .dl-dscol.sota .dl-dk { color: var(--violet-ink) }
+    .dl-chips { display: flex; gap: 7px; flex-wrap: wrap }
+    .dl-chip { font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; padding: 4px 9px; border-radius: 8px; border: 1px solid var(--rule); background: var(--surface-alt); color: var(--ink-body) }
+    .dl-dscol.weak .dl-chip { background: var(--amber-soft); border-color: #f0ddaf; color: var(--amber-ink) }
+    .dl-sotatxt { font-size: 12.5px; color: var(--ink-body); line-height: 1.5 }
+    .dl-sotatxt b { color: var(--violet-ink); font-weight: 800 }
+
+    .dl-collect { margin-top: 13px; padding: 11px 14px; border-radius: 12px; border: 1px solid var(--rule); background: var(--surface-alt); font-size: 12.5px; color: var(--ink-muted); line-height: 1.55 }
+    .dl-collect b { color: var(--ink) }
+    .dl-collect .dl-verb { font-family: var(--font-mono); font-weight: 800; color: var(--accent-ink) }
+
+    .dl-foot { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 6px; padding-top: 12px; flex-wrap: wrap }
+    .dl-foot-txt { color: var(--ink-muted); font-size: 12px; max-width: 760px; line-height: 1.55 }
+    .dl-foot-txt b { color: var(--ink-body) }
+    .dl-badge { display: inline-flex; align-items: center; white-space: nowrap; padding: 6px 12px; border: 1px solid #bcefff; border-radius: 999px; background: var(--accent-soft); color: var(--accent-ink); font-family: var(--font-mono); font-size: 11.5px; font-weight: 700 }
+  </style>
+</head>
+
+<body>
+  <div class="dl-wrap">
+    <h1 class="dl-title">One pipeline, many datasets</h1>
+    <p class="dl-sub">"Data" means something different at every phase of training. As the model moves left to right, the <b>shape of a single
+      data point</b> changes while the <b>loss</b> changes with it, the <b>volume collapses by a million times</b>, and the <b>tolerance
+      for noise</b> inverts along the way. When we pick a modality and walk the stages, we can watch the data point morph as the volume bar shrinks.</p>
+
+    <!-- modality + pipeline -->
+    <div class="dl-panel">
+      <div class="dl-modrow">
+        <span class="dl-clbl">modality</span>
+        <div class="dl-seg" id="dlMod">
+          <button data-m="text" class="on">Text</button>
+          <button data-m="code">Code</button>
+          <button data-m="audio">Audio</button>
+          <button data-m="vision">Vision / Video</button>
+        </div>
+      </div>
+
+      <div class="dl-rail" id="dlRail"></div>
+
+      <div class="dl-eval">
+        <span class="dl-etag">Held-out / Eval rail</span>
+        <span class="dl-etxt" id="dlEvalTxt"></span>
+        <span class="dl-enever">never trained on</span>
+      </div>
+    </div>
+
+    <!-- detail -->
+    <div class="dl-panel">
+      <div class="dl-detail">
+        <div class="dl-glyphcard">
+          <div id="dlGlyph"></div>
+          <div class="dl-unit-lbl" id="dlUnitLbl"></div>
+          <div class="dl-scalebox">
+            <div class="dl-mlbl">Volume of data</div>
+            <div class="dl-mbar"><i class="vol" id="dlVolBar"></i></div>
+            <div class="dl-mval" id="dlVolVal"></div>
+            <div class="dl-mlbl" style="margin-top:11px">Tolerance for noise</div>
+            <div class="dl-mbar"><i class="noise" id="dlNoiseBar"></i></div>
+            <div class="dl-mval" id="dlNoiseVal"></div>
+          </div>
+        </div>
+
+        <div class="dl-rows">
+          <div class="dl-dh"><span class="dl-ddot" id="dlDot"></span><h3 id="dlName"></h3></div>
+          <p class="dl-purpose" id="dlPurpose"></p>
+          <div class="dl-loss"><span class="dl-lk">LOSS</span><span id="dlLoss"></span></div>
+          <div class="dl-ds">
+            <div class="dl-dscol strong"><div class="dl-dk">Strong exemplars</div><div class="dl-chips" id="dlStrong"></div></div>
+            <div class="dl-dscol weak"><div class="dl-dk">Weakest / cautionary</div><div class="dl-chips" id="dlWeak"></div></div>
+            <div class="dl-dscol sota"><div class="dl-dk">What SOTA labs do</div><div class="dl-sotatxt" id="dlSota"></div></div>
+          </div>
+          <div class="dl-collect" id="dlCollect"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dl-foot">
+      <span class="dl-foot-txt">The <b>Text</b> and <b>Code</b> figures come from published results (FineWeb, DCLM, Nemotron-CC, OLMo 2), while the
+        <b>Audio</b> and <b>Vision/Video</b> figures are <b>illustrative</b>, since what we want to learn from them is the shape of the lifecycle rather than any exact count.</span>
+      <span class="dl-badge" id="dlCollapse">~10⁶× volume collapse</span>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+    (function () {
+      const $ = id => document.getElementById(id);
+
+      // ----- glyphs (morph the "unit" of data) -----
+      const GLYPH = {
+        doc: `<svg viewBox="0 0 120 120"><g fill="none" stroke="#00a7d8" stroke-width="2.5"><rect x="34" y="20" width="52" height="68" rx="5" fill="#eafaff"/><line x1="44" y1="36" x2="76" y2="36"/><line x1="44" y1="48" x2="76" y2="48"/><line x1="44" y1="60" x2="70" y2="60"/><line x1="44" y1="72" x2="76" y2="72"/></g></svg>`,
+        funnel: `<svg viewBox="0 0 120 120"><g fill="none" stroke="#00a7d8" stroke-width="2.5"><rect x="30" y="16" width="46" height="58" rx="5" fill="#eafaff"/><line x1="39" y1="30" x2="67" y2="30"/><line x1="39" y1="42" x2="67" y2="42"/><line x1="39" y1="54" x2="60" y2="54"/></g><path d="M70 70 L104 70 L92 86 L92 102 L82 96 L82 86 Z" fill="#fff7df" stroke="#d99a13" stroke-width="2.5" stroke-linejoin="round"/></svg>`,
+        pair: `<svg viewBox="0 0 120 120"><rect x="20" y="26" width="58" height="26" rx="9" fill="#eafaff" stroke="#00a7d8" stroke-width="2.5"/><rect x="42" y="64" width="58" height="30" rx="9" fill="#e7fff2" stroke="#24b36b" stroke-width="2.5"/><text x="30" y="44" font-family="monospace" font-size="13" fill="#0f6e8c" font-weight="700">Q</text><text x="52" y="84" font-family="monospace" font-size="13" fill="#19824e" font-weight="700">A</text></svg>`,
+        triplet: `<svg viewBox="0 0 120 120"><rect x="30" y="14" width="60" height="22" rx="8" fill="#eafaff" stroke="#00a7d8" stroke-width="2.4"/><rect x="14" y="48" width="58" height="24" rx="8" fill="#e7fff2" stroke="#24b36b" stroke-width="2.4"/><rect x="50" y="84" width="58" height="24" rx="8" fill="#ffeef0" stroke="#e05f6e" stroke-width="2.4"/><text x="62" y="29" font-family="monospace" font-size="11" fill="#0f6e8c" font-weight="700">prompt</text><text x="22" y="64" font-family="monospace" font-size="12" fill="#19824e" font-weight="700">✓ chosen</text><text x="58" y="100" font-family="monospace" font-size="12" fill="#c0455a" font-weight="700">✗ rejected</text></svg>`,
+        verifier: `<svg viewBox="0 0 120 120"><rect x="20" y="24" width="58" height="26" rx="9" fill="#eafaff" stroke="#00a7d8" stroke-width="2.5"/><text x="29" y="42" font-family="monospace" font-size="11" fill="#0f6e8c" font-weight="700">prompt</text><path d="M60 58 L60 72" stroke="#7b61ff" stroke-width="2.5"/><circle cx="74" cy="86" r="22" fill="#eeeaff" stroke="#7b61ff" stroke-width="2.5"/><path d="M64 86 l7 8 l13 -16" fill="none" stroke="#5a44c8" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><text x="18" y="112" font-family="monospace" font-size="10.5" fill="#5a44c8" font-weight="700">verifier reward</text></svg>`
+      };
+
+      // ----- stages -----
+      const STAGES = [
+        {
+          key: "pre", name: "Pretraining", color: "#00a7d8", glyph: "doc",
+          volLabel: "~1–15T tokens", volMag: 13.2, noise: 85,
+          loss: "next-token cross-entropy over every token",
+          collect: { verb: "scrape → filter", txt: "we harvest the open web at massive scale and then filter it for quality using model-based classifiers." }
+        },
+        {
+          key: "mid", name: "Mid-train / Anneal", color: "#2bb6dd", glyph: "funnel",
+          volLabel: "~50–800B tokens", volMag: 11.6, noise: 60,
+          loss: "the same next-token CE, now computed over an upsampled high-quality and synthetic mix during the LR cooldown",
+          collect: { verb: "re-weight + synthesize", txt: "we upsample the cleanest data and inject targeted synthetic math and code during the learning-rate cooldown." }
+        },
+        {
+          key: "sft", name: "SFT", color: "#7b61ff", glyph: "pair",
+          volLabel: "~100K–1M examples", volMag: 6, noise: 30,
+          loss: "cross-entropy on the response tokens only, with the prompt masked out",
+          collect: { verb: "curate", txt: "we hand-curate or filter instruction→response pairs, because quality and diversity matter far more than volume at this stage." }
+        },
+        {
+          key: "pref", name: "Preference", color: "#5a44c8", glyph: "triplet",
+          volLabel: "~50–500K pairs", volMag: 5.3, noise: 20,
+          loss: "a DPO or ranking loss that pushes the chosen response above the rejected one",
+          collect: { verb: "rank", txt: "we collect chosen-versus-rejected judgements, whether from humans or from a model, over the same prompt." }
+        },
+        {
+          key: "rl", name: "RL / RLVR", color: "#24b36b", glyph: "verifier",
+          volLabel: "~10–100K prompts", volMag: 4.7, noise: 8,
+          loss: "a policy gradient or GRPO objective driven by a verifier reward together with a KL term to the reference",
+          collect: { verb: "build a verifier", txt: "the data here is a prompt paired with an automatic checker such as a unit test or a math grader, so the reward is computed for us rather than labelled by hand." }
+        }
+      ];
+
+      // ----- per-modality content -----
+      const MOD = {
+        text: {
+          unit: { pre: "a <b>document</b> (a filtered web page)", mid: "a <b>document</b> from the upsampled mix", sft: "an <b>instruction → response</b> pair", pref: "a <b>chosen / rejected</b> triplet on one prompt", rl: "a <b>prompt + verifier</b> (reward signal)" },
+          purpose: {
+            pre: "Learn the shape of language itself, from grammar through facts to reasoning patterns, out of raw scale.",
+            mid: "Sharpen the model on the highest-quality slice and patch capability gaps in math and code right before the LR decays.",
+            sft: "Teach the model to <b>follow instructions</b> and answer in the assistant format.",
+            pref: "Align <b>style and helpfulness</b> to what people actually prefer.",
+            rl: "Optimise directly for <b>correctness</b> on tasks where an answer can be checked."
+          },
+          ds: {
+            pre: { strong: ["FineWeb 15T", "DCLM-Baseline 2.6T", "Nemotron-CC 6.3T"], weak: "raw CommonCrawl (unfiltered)", sota: "<b>model-based quality filtering</b>, following FineWeb-Edu's LLM-label→classifier recipe, where Llama 3 even trained its filter on Llama 2 labels." },
+            mid: { strong: ["OLMo 2 Dolmino Mix", "DolminoSynthMath", "MathCoder2"], weak: "more of the same web (no re-weighting)", sota: "<b>anneal on a curated cooldown mix</b>, an approach with which OLMo 2 lifted GSM8K from 24 to 67 using a Dolmino cooldown." },
+            sft: { strong: ["SmolTalk2", "Tülu-3 SFT", "OpenHermes"], weak: "unfiltered ShareGPT scrapes", sota: "<b>heavily filtered, deduped, decontaminated</b> instructions, where a small and clean set wins." },
+            pref: { strong: ["UltraFeedback", "HelpSteer3", "Skywork-Reward"], weak: "noisy crowd votes", sota: "<b>on-policy preferences</b> sampled from the model itself and scored by a reward model." },
+            rl: { strong: ["GSM8K / MATH + graders", "NuminaMath", "code unit tests"], weak: "rewards from an unverified judge", sota: "<b>RLVR</b> in the DeepSeek-R1 style, running GRPO against automatic verifiers with no human in the loop." }
+          },
+          eval: "MMLU, GSM8K, HumanEval and MILU benchmark test splits. In V4 this served as the <b>Golden Proxy</b> of 6.8M tokens that steered selection while never entering a single training batch."
+        },
+        code: {
+          unit: { pre: "a <b>source file</b> from a repo", mid: "a <b>source file</b> from the curated mix", sft: "an <b>instruction → code</b> pair", pref: "two solutions, the <b>better one chosen</b>", rl: "a problem + <b>unit tests</b> (pass/fail)" },
+          purpose: {
+            pre: "Absorb syntax, APIs and idioms across many languages, and note that code also lifts general reasoning.",
+            mid: "Upsample high-quality, permissively-licensed code and reasoning traces in the cooldown.",
+            sft: "Teach the model to write code to spec and explain it.",
+            pref: "Prefer correct, readable, idiomatic solutions over ones that merely look plausible.",
+            rl: "Reward code that <b>actually runs and passes tests</b>, which gives us the cleanest verifier there is."
+          },
+          ds: {
+            pre: { strong: ["The Stack v2 (dedup)", "StarCoder", "code_tab/crlf (V4)"], weak: "scraped gists, no license check", sota: "<b>permissive-license-only</b> data with dedup, where V4 added 74 GitHub repos to cover 758 unseen tokens." },
+            mid: { strong: ["OpenCodeReasoning-2", "high-star repos", "Ling-Coder"], weak: "auto-generated boilerplate", sota: "<b>reasoning-trace upsampling</b> in the anneal phase." },
+            sft: { strong: ["Self-OSS-Instruct", "Ling-Coder-SFT", "CodeFeedback"], weak: "answers that never compiled", sota: "<b>execution-filtered</b> instructions, where we keep only the samples that run." },
+            pref: { strong: ["code preference pairs", "exec-scored pairs"], weak: "style-only votes", sota: "<b>execution-grounded preferences</b>, in which the runnable solution wins." },
+            rl: { strong: ["CodeContests + tests", "TACO", "APPS"], weak: "no test harness", sota: "<b>RLVR on unit tests</b>, where the reward equals the fraction of tests passed." }
+          },
+          eval: "HumanEval, MBPP and LiveCodeBench, all held out. The verifier <b>is</b> the eval here, since what matters is whether the code passes the hidden tests."
+        },
+        audio: {
+          unit: { pre: "an <b>audio clip + transcript</b>", mid: "a curated <b>speech</b> segment", sft: "an <b>instruction → spoken/text</b> pair", pref: "preferred vs dispreferred <b>output</b>", rl: "a task + <b>quality/ASR score</b>" },
+          purpose: {
+            pre: "Learn acoustic + linguistic structure from large speech/audio corpora.",
+            mid: "Upsample clean, well-aligned speech and underrepresented languages.",
+            sft: "Teach spoken-instruction following / transcription / generation to spec.",
+            pref: "Align to preferred voice, fluency and faithfulness.",
+            rl: "Optimise against measurable signals (WER, intelligibility)."
+          },
+          ds: {
+            pre: { strong: ["large speech corpora", "aligned audio-text", "multilingual speech"], weak: "misaligned / mislabelled audio", sota: "<b>alignment + language-balanced filtering</b> (illustrative)." },
+            mid: { strong: ["clean read-speech", "low-resource languages"], weak: "noisy field recordings", sota: "<b>quality + coverage re-weighting</b> (illustrative)." },
+            sft: { strong: ["spoken-instruction sets", "transcription pairs"], weak: "auto-captions, uncorrected", sota: "<b>human-verified transcripts</b> (illustrative)." },
+            pref: { strong: ["listener preference pairs"], weak: "single-rater scores", sota: "<b>MOS-style preference</b> (illustrative)." },
+            rl: { strong: ["WER / intelligibility reward"], weak: "no objective metric", sota: "<b>metric-grounded RL</b> (illustrative)." }
+          },
+          eval: "Held-out ASR and generation benchmarks (illustrative), kept entirely separate from the training audio."
+        },
+        vision: {
+          unit: { pre: "an <b>image/frame + caption</b>", mid: "a curated <b>image-text</b> pair", sft: "an <b>image + instruction → answer</b>", pref: "preferred vs dispreferred <b>answer</b>", rl: "a visual task + <b>checkable answer</b>" },
+          purpose: {
+            pre: "Learn visual concepts and their grounding in language from web-scale image/video-text.",
+            mid: "Upsample high-quality, well-aligned pairs and recaption weak ones.",
+            sft: "Teach visual-question answering and instruction following.",
+            pref: "Align to preferred, faithful, non-hallucinated answers.",
+            rl: "Reward verifiable visual answers (counts, OCR, grounded facts)."
+          },
+          ds: {
+            pre: { strong: ["web image-text pairs", "video-text", "recaptioned sets"], weak: "alt-text scrapes (noisy)", sota: "<b>synthetic recaptioning</b> + CLIP-style filtering (illustrative)." },
+            mid: { strong: ["high-res curated pairs", "doc/chart images"], weak: "duplicate stock images", sota: "<b>quality re-weighting + dedup</b> (illustrative)." },
+            sft: { strong: ["VQA instruction sets", "chart/doc QA"], weak: "templated, low-diversity QA", sota: "<b>diverse, human-checked VQA</b> (illustrative)." },
+            pref: { strong: ["answer preference pairs"], weak: "style-only votes", sota: "<b>faithfulness-scored preference</b> (illustrative)." },
+            rl: { strong: ["OCR / counting verifiers", "grounded QA"], weak: "no ground truth", sota: "<b>verifiable visual reward</b> (illustrative)." }
+          },
+          eval: "Held-out VQA and grounding benchmarks (illustrative), which are never shown during training."
+        }
+      };
+
+      let mod = "text", sel = 0;
+      const VOL_MAX = 13.2;
+
+      // build rail
+      function buildRail() {
+        $("dlRail").innerHTML = STAGES.map((s, i) => {
+          const h = Math.round(s.volMag / VOL_MAX * 100);
+          return `<button class="dl-stage" data-i="${i}">
+            <div class="dl-snum">STAGE ${i + 1}</div>
+            <div class="dl-sname">${s.name}</div>
+            <div class="dl-svol" style="color:${s.color}">${s.volLabel}</div>
+            <div class="dl-bar-mini"><i style="width:${h}%;background:linear-gradient(90deg,${s.color}99,${s.color})"></i></div>
+          </button>`;
+        }).join("");
+      }
+      buildRail();
+
+      function render() {
+        const s = STAGES[sel], m = MOD[mod];
+        // rail selection
+        document.querySelectorAll(".dl-stage").forEach((b, i) => b.classList.toggle("sel", i === sel));
+        // glyph + unit
+        $("dlGlyph").innerHTML = GLYPH[s.glyph];
+        $("dlUnitLbl").innerHTML = "one data point = " + m.unit[s.key];
+        // scale bars
+        $("dlVolBar").style.width = Math.round(s.volMag / VOL_MAX * 100) + "%";
+        $("dlVolVal").textContent = s.volLabel;
+        $("dlNoiseBar").style.width = s.noise + "%";
+        $("dlNoiseVal").textContent = s.noise >= 70 ? "high, since scale averages the noise out" : s.noise >= 40 ? "medium" : s.noise >= 18 ? "low, so every example counts" : "near zero, so the labels must be correct";
+        // header
+        $("dlDot").style.background = s.color;
+        $("dlName").textContent = s.name;
+        $("dlPurpose").innerHTML = m.purpose[s.key];
+        $("dlLoss").textContent = s.loss;
+        // datasets
+        const d = m.ds[s.key];
+        $("dlStrong").innerHTML = d.strong.map(x => `<span class="dl-chip">${x}</span>`).join("");
+        $("dlWeak").innerHTML = `<span class="dl-chip">${d.weak}</span>`;
+        $("dlSota").innerHTML = d.sota;
+        // collect strip
+        $("dlCollect").innerHTML = `<b>What "collecting" means here:</b> <span class="dl-verb">${s.collect.verb}</span>, which is to say ${s.collect.txt}`;
+        // eval rail
+        $("dlEvalTxt").innerHTML = m.eval;
+      }
+
+      $("dlRail").addEventListener("click", e => {
+        const b = e.target.closest(".dl-stage"); if (!b) return;
+        sel = +b.dataset.i; render();
+      });
+      $("dlMod").addEventListener("click", e => {
+        const b = e.target.closest("button"); if (!b) return;
+        mod = b.dataset.m;
+        document.querySelectorAll("#dlMod button").forEach(x => x.classList.toggle("on", x === b));
+        render();
+      });
+
+      render();
+    })();
+  </script>
+</body>
+
+</html>

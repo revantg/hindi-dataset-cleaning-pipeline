@@ -1,0 +1,19 @@
+{
+  "source_url": "https://huggingface.co/datasets/ai4bharat/sangraha",
+  "dataset_id": "ai4bharat/sangraha",
+  "license": "CC BY 4.0",
+  "revision": "8b813c3f62d37b2fa174d68c31e8b35ae2fe85e8",
+  "config": "verified",
+  "split": "hin",
+  "sample_selection": "deterministic first rows from streaming split until estimated-token target; cached as JSONL",
+  "target_estimated_tokens": 30000000,
+  "raw_cache_path": "data/sangraha_hi_verified_30m/raw.jsonl",
+  "raw_cache_sha256": "cabc38b5d3c559e229dd52ad8da670c63b181ecf5f1c36c14fce0902578cd02f",
+  "final_records_sha256": "45959807a459eb40041e1e86fb8ec77a6331ecd024c9f6c7e4af15d6dac48fc0",
+  "pipeline_version": "s4-hindi-cleaning-2026-08-02-v1",
+  "run_utc": "2026-08-01T19:27:20.019351+00:00",
+  "token_estimator": "ceil(non-whitespace units x 1.35); fertility assumption selected for Hindi/code-mixed text",
+  "dedup_method": "SHA-256 exact hash plus 16-permutation MinHash with four-row LSH bands; local approximation",
+  "decontamination_scope": "limited textual proxy: benchmark names and evaluation markers; no full benchmark corpus downloaded",
+  "selection_source": "cache"
+}

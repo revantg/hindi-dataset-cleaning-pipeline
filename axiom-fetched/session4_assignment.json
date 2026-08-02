@@ -1,0 +1,38 @@
+{
+  "id": "cmrokwadd012z08o1eou3k34c",
+  "sessionId": "cmroc28350a8409qv5c8pm2a0",
+  "courseId": "cmq97i5kn032208o8xu5dab4q",
+  "title": "Session 4 - Assignment QnA",
+  "descriptionMarkdown": "# The assignment\n\nWork with your agent, and find in total \"how many strategies\" are listed in this session. Then find a 10-100M dataset like [this](https://huggingface.co/lordx64/Qwen3.6-35B-A3B-Claude-4.7-Opus-Reasoning-Distilled), and then apply these cleanups. Find interested datasets, specially from the Session 3 that you may have come across. Finally create a widget that talks about:\n- how many strategies, what are they\n- what dataset was picked\n- what was cleaned and why\n- any other stragtegy or concern was cleaned up?\n- final statistics\n\nUpload to Netlify and then share the link.",
+  "rubricJson": [],
+  "dueAt": "2026-07-25T01:30:00.000Z",
+  "latePolicy": null,
+  "maxPoints": 500,
+  "assignmentRepoUrl": "",
+  "assignmentRepoName": null,
+  "allowResubmission": true,
+  "status": "published",
+  "kind": "individual",
+  "order": 3,
+  "parts": [
+    {
+      "id": "cmrokwadm013008o12uct7rx9",
+      "assignmentId": "cmrokwadd012z08o1eou3k34c",
+      "order": 0,
+      "label": "Netlify Link",
+      "prompt": "",
+      "type": "link",
+      "points": 500,
+      "config": {
+        "allowMultiple": true,
+        "requireCaption": true,
+        "requirePrivacyConfirm": true
+      }
+    }
+  ],
+  "_count": {
+    "submissions": 88
+  },
+  "hasUserSubmission": false,
+  "submissionCount": 88
+}

@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Extraction quality as we turn HTML into text</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --surface: #ffffff;
+      --surface-alt: #fbfdff;
+      --ink: #102338;
+      --ink-body: #1f3850;
+      --ink-muted: #60768d;
+      --muted-2: #7d90a5;
+      --rule: #e2e9f0;
+      --rule-strong: #cfdbe6;
+      --accent: #00a7d8;
+      --accent-soft: #eafaff;
+      --accent-ink: #0f6e8c;
+      --green: #24b36b;
+      --green-soft: #e7fff2;
+      --green-ink: #19824e;
+      --amber: #d99a13;
+      --amber-soft: #fff7df;
+      --amber-ink: #8a5c06;
+      --violet: #7b61ff;
+      --violet-soft: #eeeaff;
+      --violet-ink: #5a44c8;
+      --red: #e05f6e;
+      --red-soft: #ffeef0;
+      --red-ink: #c0455a;
+      --slate: #5b6b7d;
+      --shadow-soft: 0 8px 22px rgba(16, 35, 56, .05);
+      --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box }
+    html, body { margin: 0; padding: 0; overflow-x: hidden }
+
+    body {
+      background: linear-gradient(180deg, #f8fafc 0%, #f3f6fa 100%);
+      color: var(--ink-body);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.55;
+      padding: 14px;
+    }
+
+    .w17-wrap { max-width: 900px; margin: 0 auto }
+
+    .w17-title {
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(26px, 2.8vw, 40px);
+      font-weight: 800;
+      letter-spacing: -.035em;
+      line-height: 1.08;
+    }
+    .w17-sub {
+      max-width: 820px;
+      margin: 10px 0 16px;
+      color: var(--ink-muted);
+      font-size: 15px;
+      line-height: 1.62;
+    }
+    .w17-sub b { color: var(--ink-body) }
+
+    .w17-panel {
+      margin-bottom: 14px;
+      padding: 15px 17px;
+      border: 1px solid var(--rule);
+      border-radius: 18px;
+      background: var(--surface-alt);
+      box-shadow: var(--shadow-soft);
+    }
+    .w17-ptitle {
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .w17-phint { margin-top: 3px; color: var(--ink-muted); font-size: 12.5px; line-height: 1.5 }
+
+    /* controls */
+    .w17-ctrl { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 13px 0 2px }
+    .w17-ctrl-lbl { font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--muted-2) }
+    .w17-seg { display: inline-flex; flex-wrap: wrap; padding: 3px; gap: 3px; border: 1px solid var(--rule); border-radius: 11px; background: #fff }
+    .w17-seg button {
+      border: 0; border-radius: 8px; background: transparent; color: var(--ink-muted);
+      font-family: var(--font-mono); font-size: 12px; font-weight: 800; padding: 7px 13px; cursor: pointer; transition: .16s ease;
+    }
+    .w17-seg button:hover { color: var(--accent-ink); background: #f2fbfe }
+    .w17-seg button.on.naive { background: linear-gradient(180deg, #fff8ec, #fff3da); color: var(--amber-ink); box-shadow: inset 0 0 0 1px #f0ddaf }
+    .w17-seg button.on.good { background: linear-gradient(180deg, #f0fff7, #e3fbef); color: var(--green-ink); box-shadow: inset 0 0 0 1px #b6ecce }
+
+    .w17-runbtn {
+      border: 0; border-radius: 10px; cursor: pointer; font-family: var(--font-sans);
+      font-size: 13px; font-weight: 800; padding: 9px 16px; color: #fff;
+      background: linear-gradient(180deg, #1fbecf, var(--accent)); box-shadow: 0 2px 8px rgba(0,167,216,.28);
+      transition: .16s ease;
+    }
+    .w17-runbtn:hover { filter: brightness(1.04); transform: translateY(-1px) }
+    .w17-runbtn:active { transform: translateY(0) }
+
+    /* raw HTML view */
+    .w17-rawbox {
+      margin-top: 12px; padding: 12px 13px; border: 1px solid var(--rule-strong); border-radius: 12px;
+      background: #fbfcfe; font-family: var(--font-mono); font-size: 11.5px; line-height: 1.55;
+      color: var(--slate); max-height: 190px; overflow: auto;
+      overflow-wrap: anywhere; word-break: break-word; white-space: pre-wrap;
+    }
+    .w17-rawbox .tag { color: var(--violet-ink) }
+    .w17-rawbox .bp { color: var(--red-ink); background: var(--red-soft); border-radius: 3px; padding: 0 1px }
+
+    /* output */
+    .w17-outhead { display: flex; align-items: center; gap: 9px; margin-bottom: 4px }
+    .w17-chip {
+      display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 800; letter-spacing: .03em;
+    }
+    .w17-chip.naive { background: var(--amber-soft); color: var(--amber-ink); border: 1px solid #f0ddaf }
+    .w17-chip.good { background: var(--green-soft); color: var(--green-ink); border: 1px solid #b6ecce }
+    .w17-dot { width: 8px; height: 8px; border-radius: 50%; flex: none }
+    .w17-dot.am { background: var(--amber) } .w17-dot.gr { background: var(--green) }
+
+    .w17-out {
+      margin-top: 10px; padding: 14px 15px; border-radius: 12px; min-height: 150px;
+      font-size: 13.5px; line-height: 1.85;
+      overflow-wrap: anywhere; word-break: break-word; white-space: pre-wrap;
+    }
+    .w17-out.naive { border: 1px solid #f0ddaf; background: #fffdf6; color: var(--ink-body) }
+    .w17-out.good  { border: 1px solid #b6ecce; background: #f8fffb; color: var(--ink-body) }
+    .w17-out .bad  { background: var(--red-soft); color: var(--red-ink); border-radius: 3px; padding: 0 2px; font-family: var(--font-mono); font-weight: 700 }
+    .w17-out .boiler { color: var(--muted-2); font-style: italic }
+    .w17-out .keep { color: var(--ink-body) }
+
+    /* meters */
+    .w17-meters { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; margin-top: 14px }
+    .w17-meter { border: 1px solid var(--rule); border-radius: 14px; background: #fff; padding: 13px 14px }
+    .w17-mtop { display: flex; align-items: baseline; justify-content: space-between; gap: 8px }
+    .w17-mlbl { font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--muted-2) }
+    .w17-mval { font-family: var(--font-mono); font-size: 26px; font-weight: 800; letter-spacing: -.02em; line-height: 1 }
+    .w17-mval.am { color: var(--amber-ink) } .w17-mval.gr { color: var(--green-ink) } .w17-mval.cy { color: var(--accent-ink) }
+    .w17-mval small { font-size: 12px; color: var(--muted-2); font-weight: 700; margin-left: 4px }
+    .w17-track { position: relative; height: 12px; border-radius: 999px; background: #eef3f7; overflow: hidden; margin-top: 11px }
+    .w17-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; transition: width .4s cubic-bezier(.2,.7,.2,1) }
+    .w17-fill.am { background: linear-gradient(90deg, #f1c97a, var(--amber)) }
+    .w17-fill.gr { background: linear-gradient(90deg, #7fd6a7, var(--green)) }
+    .w17-fill.cy { background: linear-gradient(90deg, #7fdcf3, var(--accent)) }
+    .w17-mnote { margin-top: 9px; font-size: 11.5px; color: var(--ink-muted); line-height: 1.5 }
+    .w17-mnote b { color: var(--ink-body) }
+
+    /* garbage ledger */
+    .w17-ledger { margin-top: 13px; border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; table-layout: fixed; width: 100%; border-collapse: collapse; font-size: 12.5px }
+    .w17-ledger th, .w17-ledger td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--rule) }
+    .w17-ledger th { background: #f4f8fc; color: var(--ink-muted); font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase }
+    .w17-ledger tr:last-child td { border-bottom: 0 }
+    .w17-ledger .cat { color: var(--ink-body); font-weight: 700 }
+    .w17-ledger .ex { font-family: var(--font-mono); font-size: 11.5px; color: var(--slate); overflow-wrap: anywhere }
+    .w17-ledger .n { font-family: var(--font-mono); font-weight: 800; text-align: right }
+    .w17-ledger .n.am { color: var(--amber-ink) } .w17-ledger .n.gr { color: var(--green-ink) }
+    .w17-ledger col.c1 { width: 31% } .w17-ledger col.c2 { width: 42% } .w17-ledger col.c3 { width: 13.5% } .w17-ledger col.c4 { width: 13.5% }
+
+    /* V4 callout */
+    .w17-v4 { border: 1px solid #f4c9cf; background: linear-gradient(180deg, #fff7f8, #ffeef0) }
+    .w17-v4row { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap }
+    .w17-v4tag { display: inline-flex; align-items: center; padding: 5px 11px; border-radius: 8px; background: var(--red); color: #fff; font-family: var(--font-mono); font-size: 11px; font-weight: 800; letter-spacing: .04em; flex: none }
+    .w17-v4txt { flex: 1 1 360px; font-size: 13.5px; line-height: 1.62; color: var(--ink-body) }
+    .w17-v4txt b { color: var(--red-ink) }
+    .w17-v4txt code { font-family: var(--font-mono); background: #fff; border: 1px solid #f4c9cf; border-radius: 5px; padding: 1px 5px; font-size: 12px; color: var(--red-ink) }
+
+    .w17-foot { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 6px; padding-top: 12px; flex-wrap: wrap }
+    .w17-foottxt { color: var(--ink-muted); font-size: 12.5px; max-width: 560px; line-height: 1.55 }
+    .w17-badge { display: inline-flex; align-items: center; white-space: nowrap; padding: 6px 12px; border: 1px solid #b6ecce; border-radius: 999px; background: var(--green-soft); color: var(--green-ink); font-family: var(--font-mono); font-size: 11.5px; font-weight: 700 }
+
+    @media(max-width:620px) {
+      body { padding: 13px }
+      .w17-meters { grid-template-columns: minmax(0,1fr) }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="w17-wrap">
+    <h1 class="w17-title">The same web page, extracted two ways</h1>
+    <p class="w17-sub">A crawler hands us raw HTML, and turning that HTML into a training document is the most unglamorous
+      step in the whole pipeline while remaining the step that decides quality far more than any exotic source ever
+      will. A <b>naive strip</b> leaves navigation menus, cookie banners, ghost tags, HTML entities and replacement
+      characters sitting inside the text, whereas a <b>good extractor</b> runs a real
+      <code style="font-family:var(--font-mono);font-size:13px">clean_text()</code> over the same page. As we select one
+      of the two extractors we can watch the garbage-token count move, because the cleaning below actually runs in
+      JavaScript.</p>
+
+    <!-- raw page -->
+    <div class="w17-panel">
+      <div class="w17-ptitle">One raw HTML page, as crawled</div>
+      <div class="w17-phint">Boilerplate is highlighted in <span style="color:var(--red-ink);font-weight:700">red</span>
+        while tags are shown in <span style="color:var(--violet-ink);font-weight:700">violet</span>. The body also
+        carries hidden control characters, a BOM, zero-width spaces, HTML entities and a stray U+FFFD that we cannot see
+        here even though the extractor can.</div>
+      <div class="w17-rawbox" id="w17-raw"></div>
+    </div>
+
+    <!-- extractor toggle + output -->
+    <div class="w17-panel">
+      <div class="w17-ctrl">
+        <span class="w17-ctrl-lbl">extractor</span>
+        <div class="w17-seg" id="w17-seg">
+          <button data-mode="naive" class="on naive">naive strip</button>
+          <button data-mode="good">good extractor + clean_text()</button>
+        </div>
+        <button class="w17-runbtn" id="w17-run">▶ run clean_text()</button>
+      </div>
+
+      <div class="w17-out naive" id="w17-out" style="margin-top:14px"></div>
+
+      <div class="w17-meters">
+        <div class="w17-meter">
+          <div class="w17-mtop">
+            <span class="w17-mlbl">Garbage tokens left</span>
+            <span class="w17-mval am" id="w17-garb">0<small>tokens</small></span>
+          </div>
+          <div class="w17-track"><div class="w17-fill am" id="w17-garbfill"></div></div>
+          <div class="w17-mnote" id="w17-garbnote"></div>
+        </div>
+        <div class="w17-meter">
+          <div class="w17-mtop">
+            <span class="w17-mlbl">Usable fraction</span>
+            <span class="w17-mval gr" id="w17-use">0<small>%</small></span>
+          </div>
+          <div class="w17-track"><div class="w17-fill gr" id="w17-usefill"></div></div>
+          <div class="w17-mnote" id="w17-usenote"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- garbage ledger -->
+    <div class="w17-panel">
+      <div class="w17-ptitle">What clean_text() actually removed</div>
+      <div class="w17-phint">These are live counts from the JS run, where the "good" extractor performs every one of
+        these passes while the "naive strip" performs none of them.</div>
+      <table class="w17-ledger">
+        <colgroup><col class="c1"><col class="c2"><col class="c3"><col class="c4"></colgroup>
+        <thead>
+          <tr><th>Pass</th><th>Example caught</th><th>Naive</th><th>Good</th></tr>
+        </thead>
+        <tbody id="w17-ledger"></tbody>
+      </table>
+    </div>
+
+    <!-- V4 reality -->
+    <div class="w17-panel w17-v4">
+      <div class="w17-v4row">
+        <span class="w17-v4tag">V4 · P0</span>
+        <div class="w17-v4txt">In V4 there was <b>no text cleaning anywhere</b> in the pretraining path, which meant
+          that ghost conversation markers leaked straight into the pretrain text, with <code>[USER]</code> appearing 6
+          times, <code>[SYSTEM]</code> 2 times and <code>&lt;|endoftext|&gt;</code> 3 times, so the model learned
+          <b>fake</b> chat markers that later fought against the <b>real</b>
+          <code>&lt;|user|&gt;</code>/<code>&lt;|assistant|&gt;</code> special tokens during SFT. Dolma had been cleaned
+          at the document level while remaining dirty at the <b>character level</b>, and this widget is the missing
+          <code>clean_text()</code> pass that we run live over that page.</div>
+      </div>
+    </div>
+
+    <div class="w17-foot">
+      <span class="w17-foottxt">Extraction is far from an incidental detail, since the very same page can yield two
+        documents where one becomes clean training data while the other teaches the model junk. The sample page here is
+        <b>illustrative</b>, and the V4 ghost-tag counts come from the V4 pipeline audit in Appendix D.</span>
+      <span class="w17-badge" id="w17-badge">naive → good : garbage −0</span>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+    (function () {
+      const $ = id => document.getElementById(id);
+
+      // ---- build the raw HTML blob (with INVISIBLE gremlins embedded in the body) ----
+      // gremlins: BOM (U+FEFF), ZWSP (U+200B), control chars (BEL U+0007, SOH U+0001), replacement char (U+FFFD),
+      //           HTML entities (&amp; &#39; &nbsp; &mdash;), ghost tags ([USER] <|endoftext|>), bloated whitespace.
+      const BOM = "\uFEFF", ZWSP = "\u200B", BEL = "\x07", SOH = "\x01", FFFD = "\uFFFD";
+
+      // The clean prose the page is actually "about" (this is what a good extractor should yield):
+      const RAW =
+        '<!doctype html>\n' +
+        '<header class="site-nav">Home · Products · Pricing · Blog · Login</header>\n' +
+        '<div class="cookie-banner">We use cookies to improve your experience. Accept all · Manage preferences</div>\n' +
+        '<nav class="breadcrumb">You are here: Home &gt; Articles &gt; Data</nav>\n' +
+        '<article>\n' +
+        '  <h1>' + BOM + 'How tokenizers handle scripts</h1>\n' +
+        '  <p>A tokenizer maps text to integer IDs.' + ZWSP + ' For Indic scripts &mdash; Devanagari,' + BEL + ' Tamil,\n' +
+        '     Telugu &amp; others &#39;fertility&#39; is high,' + FFFD + ' so the same meaning costs\n' +
+        '     more&nbsp;tokens than English.    [USER]   Quality of extraction\n' +
+        '     decides this' + SOH + ' more than the model.<|endoftext|></p>\n' +
+        '</article>\n' +
+        '<footer class="site-footer">© 2026 Example Corp. Privacy · Terms · Subscribe to our newsletter!</footer>\n' +
+        '<div class="ad-slot">Sponsored: Buy now for a limited time offer!!!</div>';
+
+      // ---- render the raw box with highlight (boilerplate red, tags violet) ----
+      function renderRaw() {
+        // escape, then colorize tags and known boilerplate lines
+        let esc = RAW.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        // strip the invisible gremlins for DISPLAY only (they are real in RAW, just not visible)
+        esc = esc.replace(/[\uFEFF\u200B\x07\x01\uFFFD]/g, "");
+        // tags -> violet
+        esc = esc.replace(/(&lt;[^&]*?&gt;)/g, '<span class="tag">$1</span>');
+        // boilerplate keywords -> red background
+        ["site-nav","cookie-banner","breadcrumb","site-footer","ad-slot","Accept all","Sponsored","newsletter",
+         "\\[USER\\]","\\|endoftext\\|"].forEach(k => {
+          esc = esc.replace(new RegExp("(" + k + ")", "g"), '<span class="bp">$1</span>');
+        });
+        $("w17-raw").innerHTML = esc;
+      }
+
+      // ===========================================================================
+      //  clean_text() is the real cleaning pipeline, and it runs in JS.
+      //  Returns { text, counts:{...}, removed } where counts are garbage tokens by pass.
+      // ===========================================================================
+      const ENTITIES = { "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'",
+                         "&nbsp;": " ", "&mdash;": "\u2014", "&ndash;": "–", "&copy;": "©" };
+      const GHOST_TAGS = ["[USER]", "[SYSTEM]", "[ASSISTANT]", "<|endoftext|>", "<|user|>", "<|assistant|>"];
+
+      function countWords(s) {
+        const t = s.trim();
+        return t ? t.split(/\s+/).length : 0;
+      }
+
+      // pull the article body out of the HTML (good extractor's job: keep <article>, drop nav/footer/ads/cookie)
+      function extractBody(html) {
+        const m = html.match(/<article[^>]*>([\s\S]*?)<\/article>/i);
+        return m ? m[1] : html;
+      }
+
+      function cleanText(html, mode) {
+        const counts = { control: 0, bom: 0, zwsp: 0, fffd: 0, entity: 0, ghost: 0, boiler: 0, ws: 0 };
+
+        // 1. choose body. naive = strip ALL tags from the WHOLE page (keeps boilerplate text).
+        //    good = isolate <article> first (drops nav/cookie/footer/ad text), then strip tags.
+        let src;
+        if (mode === "good") {
+          src = extractBody(html);
+        } else {
+          src = html; // naive keeps everything
+        }
+
+        // remove tags (both modes turn HTML into text)
+        let txt = src.replace(/<[^>]*>/g, " ");
+
+        if (mode === "good") {
+          // --- GOOD: full clean_text() passes ---
+
+          // 1. count boilerplate that was dropped (text only in nav/cookie/footer/ad, i.e. outside <article>)
+          //    measure by comparing whole-page word count vs article word count
+          const wholeWords = countWords(html.replace(/<[^>]*>/g, " ")
+            .replace(/[\uFEFF\u200B\x07\x01\uFFFD]/g, "")
+            .replace(/&[a-z#0-9]+;/gi, " "));
+          // (boiler counted below after we know clean article word count)
+
+          // 2. NFC normalize
+          txt = txt.normalize("NFC");
+
+          // 3. strip BOM
+          counts.bom = (txt.match(/\uFEFF/g) || []).length;
+          txt = txt.replace(/\uFEFF/g, "");
+
+          // 4. strip zero-width spaces / joiners
+          const zw = txt.match(/[\u200B-\u200D\u2060]/g) || [];
+          counts.zwsp = zw.length;
+          txt = txt.replace(/[\u200B-\u200D\u2060]/g, "");
+
+          // 5. drop U+FFFD replacement chars (mojibake markers)
+          counts.fffd = (txt.match(/\uFFFD/g) || []).length;
+          txt = txt.replace(/\uFFFD/g, "");
+
+          // 6. strip control chars (C0/C1 except \t \n \r)
+          const ctrl = txt.match(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g) || [];
+          counts.control = ctrl.length;
+          txt = txt.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, " ");
+
+          // 7. unescape HTML entities
+          txt = txt.replace(/&[a-z#0-9]+;/gi, m => {
+            if (ENTITIES[m] !== undefined) { counts.entity++; return ENTITIES[m]; }
+            counts.entity++; return " "; // unknown entity -> space, still counted
+          });
+
+          // 8. drop ghost conversation tags (the V4 P0 bug)
+          GHOST_TAGS.forEach(g => {
+            const re = new RegExp(g.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g");
+            const hit = txt.match(re) || [];
+            counts.ghost += hit.length;
+            txt = txt.replace(re, " ");
+          });
+
+          // 9. collapse whitespace (count the redundant whitespace tokens removed)
+          const before = txt;
+          txt = txt.replace(/[ \t]+/g, " ").replace(/\s*\n\s*/g, "\n").replace(/\n{2,}/g, "\n").trim();
+          counts.ws = Math.max(0, countWS(before) - countWS(txt));
+
+          // 10. now compute boilerplate dropped
+          const cleanWords = countWords(txt);
+          counts.boiler = Math.max(0, wholeWords - cleanWords - counts.entity - counts.ghost);
+
+          return { text: txt, counts, mode };
+        } else {
+          // --- NAIVE: collapse runs of spaces only, nothing else. gremlins survive. ---
+          txt = txt.replace(/[ \t]{2,}/g, " ").replace(/\n{3,}/g, "\n\n");
+          // count surviving garbage (for the meter) but DO NOT remove it
+          counts.bom = (txt.match(/\uFEFF/g) || []).length;
+          counts.zwsp = (txt.match(/[\u200B-\u200D\u2060]/g) || []).length;
+          counts.fffd = (txt.match(/\uFFFD/g) || []).length;
+          counts.control = (txt.match(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g) || []).length;
+          counts.entity = (txt.match(/&[a-z#0-9]+;/gi) || []).length;
+          GHOST_TAGS.forEach(g => {
+            const re = new RegExp(g.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g");
+            counts.ghost += (txt.match(re) || []).length;
+          });
+          // boilerplate words still present (nav/cookie/footer/ad)
+          counts.boiler = boilerplateWordCount(html);
+          counts.ws = 0;
+          return { text: txt, counts, mode };
+        }
+      }
+
+      function countWS(s) { return (s.match(/[ \t]/g) || []).length + (s.match(/\n/g) || []).length; }
+
+      function boilerplateWordCount(html) {
+        // words that live OUTSIDE <article> (nav, cookie, footer, ad) = boilerplate
+        const body = extractBody(html);
+        const whole = html.replace(/<[^>]*>/g, " ").replace(/&[a-z#0-9]+;/gi, " ");
+        const art = body.replace(/<[^>]*>/g, " ").replace(/&[a-z#0-9]+;/gi, " ")
+          .replace(/[\uFEFF\u200B\x07\x01\uFFFD]/g, "");
+        return Math.max(0, countWords(whole) - countWords(art));
+      }
+
+      // ---- render the cleaned output, marking garbage / boilerplate for the NAIVE view ----
+      function renderOut(res) {
+        const el = $("w17-out");
+        el.className = "w17-out " + res.mode;
+        if (res.mode === "good") {
+          el.textContent = res.text; // pristine prose, plain
+          return;
+        }
+        // naive: show the text but visually flag the surviving garbage so the eye sees it
+        let html = res.text
+          .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        // re-mark entities, gremlins (as visible glyphs), ghost tags, boilerplate
+        html = html.replace(/&amp;(amp|lt|gt|quot|nbsp|mdash|ndash|copy|#39|#\d+);/g,
+          m => '<span class="bad">' + m + '</span>');
+        html = html.replace(/\uFEFF/g, '<span class="bad">[BOM]</span>');
+        html = html.replace(/[\u200B-\u200D\u2060]/g, '<span class="bad">[ZWSP]</span>');
+        html = html.replace(/\uFFFD/g, '<span class="bad">\uFFFD</span>');
+        html = html.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, '<span class="bad">[CTRL]</span>');
+        ["\\[USER\\]","\\[SYSTEM\\]","&lt;\\|endoftext\\|&gt;","&lt;\\|user\\|&gt;","&lt;\\|assistant\\|&gt;"].forEach(g => {
+          html = html.replace(new RegExp(g, "g"), m => '<span class="bad">' + m + '</span>');
+        });
+        ["Home · Products · Pricing · Blog · Login","We use cookies[^<]*?preferences",
+         "You are here:[^<]*?Data","© 2026 Example Corp[^<]*?newsletter!","Sponsored:[^<]*?offer!!!"].forEach(b => {
+          html = html.replace(new RegExp(b, "g"), m => '<span class="boiler">' + m + '</span>');
+        });
+        el.innerHTML = html;
+      }
+
+      // ---- the garbage ledger rows ----
+      const LEDGER = [
+        { key: "boiler",  cat: "Drop nav / cookie / footer / ads", ex: "“We use cookies…”, “Sponsored:…”" },
+        { key: "ghost",   cat: "Strip ghost conversation tags",    ex: "[USER], <|endoftext|>" },
+        { key: "entity",  cat: "Unescape HTML entities",           ex: "&amp; &#39; &nbsp; &mdash;" },
+        { key: "fffd",    cat: "Drop U+FFFD (mojibake marker)",    ex: "\uFFFD" },
+        { key: "control", cat: "Strip control chars (C0/C1)",      ex: "U+0001, U+0007 (BEL)" },
+        { key: "bom",     cat: "Strip byte-order mark",            ex: "U+FEFF" },
+        { key: "zwsp",    cat: "Strip zero-width spaces",          ex: "U+200B" },
+        { key: "ws",      cat: "Collapse redundant whitespace",    ex: "runs of spaces / blank lines" }
+      ];
+
+      // ---- main update for the current mode ----
+      function update(animate) {
+        const naive = cleanText(RAW, "naive").counts;
+        const good = cleanText(RAW, "good");
+        const res = mode === "good" ? good : { counts: naive, mode: "naive", text: cleanText(RAW, "naive").text };
+
+        renderOut(res);
+
+        // garbage tokens still PRESENT in the output. naive counts = surviving garbage.
+        // good counts = garbage REMOVED, so what remains in the good output is 0.
+        const totGarb = c => c.boiler + c.ghost + c.entity + c.fffd + c.control + c.bom + c.zwsp + c.ws;
+        const naiveTot = totGarb(naive);
+        const cur = mode === "good" ? 0 : naiveTot;
+
+        $("w17-garb").innerHTML = cur + '<small>tokens</small>';
+        $("w17-garbfill").style.width = (naiveTot ? (cur / naiveTot * 100) : 0) + "%";
+        $("w17-garbfill").className = "w17-fill " + (cur === 0 ? "gr" : "am");
+        $("w17-garb").className = "w17-mval " + (cur === 0 ? "gr" : "am");
+        $("w17-garbnote").innerHTML = cur === 0
+          ? "Every junk token has been removed, so this blob is now <b>safe to tokenize</b>."
+          : "<b>" + cur + " junk tokens</b> would be tokenized and trained on as though they were language.";
+
+        // usable fraction: clean article words / total tokens (clean words + garbage)
+        const cleanWords = countWords(good.text);
+        const usableNaive = Math.round(cleanWords / (cleanWords + naiveTot) * 100);
+        const usable = res.mode === "good" ? 100 : usableNaive;
+        $("w17-use").innerHTML = usable + '<small>%</small>';
+        $("w17-usefill").style.width = usable + "%";
+        $("w17-usenote").innerHTML = res.mode === "good"
+          ? "We are left with <b>~" + cleanWords + " clean words</b> and zero junk, so the whole document is usable training text."
+          : "Only <b>~" + usable + "%</b> of this is real prose, while the rest is boilerplate and gremlins that dilute the corpus.";
+
+        // ledger
+        const rows = LEDGER.map(r => {
+          const ng = naive[r.key], gd = good.counts[r.key];
+          const removed = r.key === "ws" ? gd : ng; // good removed `ng` of each (it had ng to start)
+          const goodLeft = 0;
+          return '<tr>' +
+            '<td class="cat">' + r.cat + '</td>' +
+            '<td class="ex">' + r.ex + '</td>' +
+            '<td class="n am">' + (r.key === "ws" ? "\u2014" : ng) + '</td>' +
+            '<td class="n gr">' + (r.key === "ws" ? "✓ " + gd : "−" + ng) + '</td>' +
+          '</tr>';
+        }).join("");
+        $("w17-ledger").innerHTML = rows;
+
+        $("w17-badge").textContent = "naive → good : garbage −" + naiveTot;
+      }
+
+      // ---- wiring ----
+      let mode = "naive";
+      renderRaw();
+
+      $("w17-seg").addEventListener("click", e => {
+        const b = e.target.closest("button"); if (!b) return;
+        mode = b.dataset.mode;
+        document.querySelectorAll("#w17-seg button").forEach(x => {
+          x.classList.toggle("on", x === b);
+          x.classList.toggle("naive", x === b && mode === "naive");
+          x.classList.toggle("good", x === b && mode === "good");
+        });
+        update(true);
+      });
+
+      $("w17-run").addEventListener("click", () => {
+        // "run" flips to good and animates
+        mode = "good";
+        const seg = document.querySelectorAll("#w17-seg button");
+        seg.forEach(x => {
+          const on = x.dataset.mode === "good";
+          x.classList.toggle("on", on);
+          x.classList.toggle("good", on);
+          x.classList.toggle("naive", false);
+        });
+        update(true);
+      });
+
+      update(false);
+    })();
+  </script>
+</body>
+
+</html>

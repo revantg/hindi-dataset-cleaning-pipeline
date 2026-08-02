@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Indic / Multilingual Corpus Map, the verified split</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600&family=Noto+Sans+Tamil:wght@400;600&family=Noto+Sans+Telugu:wght@400;600&family=Noto+Sans+Bengali:wght@400;600&family=Noto+Sans+Oriya:wght@400;600&family=Noto+Sans+Gujarati:wght@400;600&family=Noto+Sans+Kannada:wght@400;600&family=Noto+Sans+Malayalam:wght@400;600&family=Noto+Sans+Gurmukhi:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --surface: #ffffff;
+      --surface-alt: #fbfdff;
+      --ink: #102338;
+      --ink-body: #1f3850;
+      --ink-muted: #60768d;
+      --muted-2: #7d90a5;
+      --rule: #e2e9f0;
+      --rule-strong: #cfdbe6;
+      --accent: #00a7d8;
+      --accent-soft: #eafaff;
+      --accent-ink: #0f6e8c;
+      --green: #24b36b;
+      --green-soft: #e7fff2;
+      --green-ink: #19824e;
+      --amber: #d99a13;
+      --amber-soft: #fff7df;
+      --amber-ink: #8a5c06;
+      --violet: #7b61ff;
+      --violet-soft: #eeeaff;
+      --violet-ink: #5a44c8;
+      --red: #e05f6e;
+      --red-soft: #ffeef0;
+      --red-ink: #c0455a;
+      --slate: #5b6b7d;
+      --shadow-soft: 0 8px 22px rgba(16, 35, 56, .05);
+      --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box }
+    html, body { margin: 0; padding: 0; overflow-x: hidden }
+
+    body {
+      background: linear-gradient(180deg, #f8fafc 0%, #f3f6fa 100%);
+      color: var(--ink-body);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.55;
+      padding: 14px;
+    }
+
+    .w11-wrap { max-width: 1240px; margin: 0 auto }
+
+    .w11-title {
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(26px, 2.8vw, 40px);
+      font-weight: 800;
+      letter-spacing: -.035em;
+      line-height: 1.08;
+    }
+    .w11-sub {
+      max-width: 980px;
+      margin: 10px 0 16px;
+      color: var(--ink-muted);
+      font-size: 15px;
+      line-height: 1.62;
+    }
+    .w11-sub b { color: var(--ink-body) }
+
+    .w11-panel {
+      margin-bottom: 14px;
+      padding: 15px 17px;
+      border: 1px solid var(--rule);
+      border-radius: 18px;
+      background: var(--surface-alt);
+      box-shadow: var(--shadow-soft);
+    }
+    .w11-ptitle { color: var(--ink); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase }
+
+    /* layout: chart left, side rail right */
+    .w11-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 330px); gap: 14px }
+    @media(max-width:900px){ .w11-grid { grid-template-columns: minmax(0,1fr) } }
+
+    /* controls */
+    .w11-ctrlrow { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 10px }
+    .w11-clbl { font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--muted-2) }
+    .w11-seg { display: inline-flex; padding: 3px; gap: 3px; border: 1px solid var(--rule); border-radius: 11px; background: #fff }
+    .w11-seg button { border: 0; border-radius: 8px; background: transparent; color: var(--ink-muted); font-family: var(--font-sans); font-size: 12.5px; font-weight: 800; padding: 7px 14px; cursor: pointer; transition: .16s ease }
+    .w11-seg button:hover { color: var(--accent-ink); background: #f2fbfe }
+    .w11-seg button.on { background: linear-gradient(180deg, #f2fcff, #e7f9ff); color: var(--accent-ink); box-shadow: inset 0 0 0 1px #bcefff }
+    .w11-seg button.viol.on { background: linear-gradient(180deg, #f6f3ff, #efeaff); color: var(--violet-ink); box-shadow: inset 0 0 0 1px #cdc2f6 }
+
+    /* per-language bar chart (table-layout to never overflow) */
+    .w11-chart { width: 100%; table-layout: fixed; border-collapse: collapse }
+    .w11-chart td { padding: 4px 0; vertical-align: middle }
+    .w11-lname { width: 122px; padding-right: 10px !important; }
+    .w11-lname .en { font-size: 12.5px; font-weight: 800; color: var(--ink); letter-spacing: -.01em; line-height: 1.3 }
+    .w11-lname .nat { font-size: 14px; color: var(--ink-muted); line-height: 1.85; overflow-wrap: anywhere; word-break: break-word }
+    .w11-barcell { position: relative }
+    .w11-bartrack { position: relative; height: 26px; border-radius: 8px; background: #eef3f7; overflow: hidden }
+    .w11-bar-ver { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 8px 0 0 8px; background: linear-gradient(90deg, #2fbe7a, #19824e); transition: width .5s cubic-bezier(.2,.7,.2,1) }
+    .w11-bar-syn { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, #f3d488 0 7px, #ecc463 7px 14px); border-right: 1px solid #e7b94b; transition: left .5s cubic-bezier(.2,.7,.2,1), width .5s cubic-bezier(.2,.7,.2,1), opacity .35s ease }
+    .w11-barval { position: absolute; top: 50%; transform: translateY(-50%); font-family: var(--font-mono); font-size: 11px; font-weight: 800; white-space: nowrap; transition: left .5s cubic-bezier(.2,.7,.2,1) }
+    .w11-bartrack.eng .w11-bar-ver { background: linear-gradient(90deg, #5db8d8, #0f6e8c) }
+
+    .w11-axis { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: var(--muted-2); margin: 4px 0 0 132px }
+
+    .w11-legend { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 12px; padding-top: 11px; border-top: 1px solid var(--rule) }
+    .w11-lg { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink-body) }
+    .w11-lg i { width: 13px; height: 13px; border-radius: 3px; flex: none }
+    .w11-lg i.ver { background: #19824e } .w11-lg i.syn { background: repeating-linear-gradient(135deg, #f3d488 0 4px, #ecc463 4px 8px) } .w11-lg i.eng { background: #0f6e8c }
+    .w11-lg b { font-weight: 800 }
+
+    /* killer-stat callouts */
+    .w11-killrow { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-top: 4px }
+    @media(max-width:680px){ .w11-killrow { grid-template-columns: minmax(0,1fr) } }
+    .w11-kill { border: 1px solid var(--rule); border-radius: 13px; background: #fff; padding: 11px 13px }
+    .w11-kill .kl { font-size: 11.5px; font-weight: 800; color: var(--ink); letter-spacing: -.01em; margin-bottom: 6px }
+    .w11-kill .knat { font-family: "Noto Sans Telugu","Noto Sans Oriya","Noto Sans Devanagari", var(--font-sans); font-size: 13px; color: var(--ink-muted); margin-left: 6px }
+    .w11-kill .kbig { font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-body); line-height: 1.6 }
+    .w11-kill .kbig .tot { color: var(--ink-muted); font-weight: 700 }
+    .w11-kill .kbig .ver { color: var(--green-ink); font-weight: 800 }
+    .w11-kill .kbig .syn { color: var(--amber-ink); font-weight: 800 }
+    .w11-kill .kshare { margin-top: 7px; font-size: 11.5px; color: var(--amber-ink); background: var(--amber-soft); border: 1px solid #f0ddaf; border-radius: 8px; padding: 5px 9px; line-height: 1.45 }
+
+    /* side rail */
+    .w11-rail { align-self: start }
+    .w11-railcard { border: 1px solid var(--rule); border-radius: 14px; background: #fff; padding: 14px; margin-bottom: 12px }
+    .w11-railcard:last-child { margin-bottom: 0 }
+    .w11-rk { font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--muted-2); margin-bottom: 9px }
+
+    /* dataset selector */
+    .w11-dschips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 11px }
+    .w11-dschip { border: 1px solid var(--rule); border-radius: 9px; background: var(--surface-alt); color: var(--ink-body); font-family: var(--font-sans); font-size: 12px; font-weight: 800; padding: 6px 11px; cursor: pointer; transition: .16s ease }
+    .w11-dschip:hover { border-color: var(--rule-strong) }
+    .w11-dschip.on { background: linear-gradient(180deg, #f2fcff, #e7f9ff); color: var(--accent-ink); box-shadow: inset 0 0 0 1px #bcefff; border-color: transparent }
+    .w11-dsname { font-size: 17px; font-weight: 800; color: var(--ink); letter-spacing: -.015em; line-height: 1.15 }
+    .w11-dstok { font-family: var(--font-mono); font-size: 13px; font-weight: 800; color: var(--accent-ink); margin: 6px 0 9px }
+    .w11-dsmeta { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 4px 10px; font-size: 12px; line-height: 1.5 }
+    .w11-dsmeta dt { color: var(--muted-2); font-weight: 800; font-size: 10.5px; letter-spacing: .03em; text-transform: uppercase; padding-top: 2px }
+    .w11-dsmeta dd { margin: 0; color: var(--ink-body); overflow-wrap: anywhere }
+    .w11-dsmeta dd b { color: var(--ink) }
+    .w11-tier { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800; border-radius: 7px; padding: 3px 8px }
+    .w11-tier.t-syn { background: var(--amber-soft); color: var(--amber-ink); border: 1px solid #f0ddaf }
+    .w11-tier.t-mix { background: var(--accent-soft); color: var(--accent-ink); border: 1px solid #cceefa }
+    .w11-tier.t-clean { background: var(--green-soft); color: var(--green-ink); border: 1px solid #b9eccf }
+    .w11-tier.t-eng { background: var(--red-soft); color: var(--red-ink); border: 1px solid #f3c9d0 }
+
+    /* sangraha tier bar */
+    .w11-tierbar { display: flex; height: 30px; border-radius: 9px; overflow: hidden; border: 1px solid var(--rule); margin-top: 6px }
+    .w11-tierbar i { display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 10.5px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden }
+    .w11-tierbar i.ver { background: linear-gradient(90deg, #2fbe7a, #19824e) }
+    .w11-tierbar i.unv { background: linear-gradient(90deg, #5db8d8, #0f6e8c) }
+    .w11-tierbar i.syn2 { background: repeating-linear-gradient(135deg, #efc869 0 6px, #e2b54e 6px 12px) }
+    .w11-tierleg { display: flex; gap: 13px; flex-wrap: wrap; margin-top: 8px; font-size: 11px; color: var(--ink-muted) }
+    .w11-tierleg span b { color: var(--ink-body); font-family: var(--font-mono) }
+
+    /* quote */
+    .w11-quote { border: 1px solid #d8d0ff; background: linear-gradient(180deg, #fbfaff, #f7f4ff); border-radius: 14px; padding: 14px 16px }
+    .w11-quote .q { font-size: 13.5px; line-height: 1.62; color: var(--ink-body); font-style: italic }
+    .w11-quote .q b { color: var(--violet-ink); font-style: normal }
+    .w11-quote .qc { display: block; margin-top: 9px; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--violet-ink); font-style: normal }
+
+    .w11-foot { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 6px; padding-top: 12px; flex-wrap: wrap }
+    .w11-foot-txt { color: var(--ink-muted); font-size: 12px; max-width: 820px; line-height: 1.55 }
+    .w11-foot-txt b { color: var(--ink-body) }
+    .w11-badge { display: inline-flex; align-items: center; white-space: nowrap; padding: 6px 12px; border: 1px solid #f0ddaf; border-radius: 999px; background: var(--amber-soft); color: var(--amber-ink); font-family: var(--font-mono); font-size: 11.5px; font-weight: 700 }
+  </style>
+</head>
+
+<body>
+  <div class="w11-wrap">
+    <h1 class="w11-title">When the headline tokens are far larger than the real tokens we can train on</h1>
+    <p class="w11-sub">Indic corpora tend to look considerably bigger than what they really contain, and <b>Sangraha</b> is a
+      good illustration of this because it ships <b>251B tokens across 22 languages</b> while roughly 65% of that count is
+      <b>synthetic</b> material that was machine-translated and transliterated out of English. What the verified split
+      reveals to us is the genuine scarcity underneath these numbers, since Telugu's headline of <b>16.3B</b> collapses
+      down to <b>3.7B verified</b> once we remove the padding, and Odia's <b>12.5B</b> falls all the way to <b>1.2B</b>.
+      As we flip the toggle to <b>collapse the synthetic padding</b>, we can watch the real corpus emerge in front of
+      us.</p>
+
+    <!-- controls -->
+    <div class="w11-panel">
+      <div class="w11-ctrlrow">
+        <span class="w11-clbl">show</span>
+        <div class="w11-seg" id="w11Mode">
+          <button data-m="total" class="on">Headline total</button>
+          <button data-m="verified" class="viol">Verified-only</button>
+        </div>
+        <span class="w11-clbl" style="margin-left:6px">scale</span>
+        <div class="w11-seg" id="w11Scale">
+          <button data-s="indic" class="on">Indic only</button>
+          <button data-s="eng">vs English</button>
+        </div>
+      </div>
+
+      <div class="w11-grid">
+        <div>
+          <table class="w11-chart"><tbody id="w11Bars"></tbody></table>
+          <div class="w11-axis" id="w11Axis"></div>
+          <div class="w11-legend">
+            <span class="w11-lg"><i class="ver"></i>Verified <b>(human-origin, native)</b></span>
+            <span class="w11-lg"><i class="syn"></i>Not verified <b>(synthetic + unverified crawl)</b></span>
+            <span class="w11-lg" id="w11EngLeg" style="display:none"><i class="eng"></i>English (CulturaX, shown for scale)</span>
+          </div>
+        </div>
+
+        <!-- side rail -->
+        <div class="w11-rail">
+          <div class="w11-railcard">
+            <div class="w11-rk">Dataset inventory, which we can click to inspect</div>
+            <div class="w11-dschips" id="w11Chips"></div>
+            <div class="w11-dsname" id="w11DsName"></div>
+            <div class="w11-dstok" id="w11DsTok"></div>
+            <dl class="w11-dsmeta" id="w11DsMeta"></dl>
+          </div>
+          <div class="w11-railcard">
+            <div class="w11-rk">Sangraha · 251B by tier</div>
+            <div class="w11-tierbar">
+              <i class="ver" style="width:25.5%">64B</i>
+              <i class="unv" style="width:9.6%">24B</i>
+              <i class="syn2" style="width:64.9%">Synthetic 162B</i>
+            </div>
+            <div class="w11-tierleg">
+              <span><b>Verified 64B</b> · 25%</span>
+              <span><b>Unverified 24B</b> · 10%</span>
+              <span><b>Synthetic 162B</b> · ~65%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- killer stats -->
+    <div class="w11-panel">
+      <div class="w11-ptitle" style="margin-bottom:11px">The killer stat, where totals are inflated by synthetic translation</div>
+      <div class="w11-killrow" id="w11Kill"></div>
+    </div>
+
+    <!-- quote -->
+    <div class="w11-panel w11-quote">
+      <span class="q" id="w11Quote"></span>
+      <span class="qc">AI4Bharat, Sangraha / IndicLLMSuite (arXiv:2403.06350)</span>
+    </div>
+
+    <div class="w11-foot">
+      <span class="w11-foot-txt">For <b>Hindi, Telugu, Odia</b> the totals together with their verified splits are exact published
+        figures drawn from Sangraha / IndicLLMSuite, whereas the other languages' verified bars are <b>illustrative</b> of
+        that same roughly 65%-synthetic shape. The numbers for the remaining datasets are all published in the literature
+        (IndicCorp v2, MADLAD-400, CulturaX, FineWeb-2). What the sovereign-data thesis comes down to is that <b>the
+        verified Hindi-vs-Odia gap is around 10×</b>, and the synthetic padding is exactly what keeps that gap hidden from
+        us.</span>
+      <span class="w11-badge" id="w11Badge">~65% of Sangraha is synthetic</span>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+    (function () {
+      const $ = id => document.getElementById(id);
+
+      // ---- per-language Sangraha total vs verified (B tokens). verified is human-origin; synthetic = total - verified. ----
+      // Only Hindi/Telugu/Odia have exact verified figures from the spec; others use the Sangraha verified-tier (64B over 22 langs)
+      // shape illustratively where a precise per-language verified number was not published, and this is flagged in the footer of the card.
+      const LANGS = [
+        { en: "Hindi",     nat: "हिन्दी",     font: "Noto Sans Devanagari", total: 34.5, verified: 12.6, exact: true },
+        { en: "Telugu",    nat: "తెలుగు",     font: "Noto Sans Telugu",     total: 16.3, verified: 3.7,  exact: true },
+        { en: "Odia",      nat: "ଓଡ଼ିଆ",      font: "Noto Sans Oriya",      total: 12.5, verified: 1.2,  exact: true },
+        { en: "Bengali",   nat: "বাংলা",      font: "Noto Sans Bengali",    total: 30.0, verified: 10.6, exact: true },
+        { en: "Tamil",     nat: "தமிழ்",      font: "Noto Sans Tamil",      total: 17.4, verified: 4.0,  exact: true },
+        { en: "Gujarati",  nat: "ગુજરાતી",    font: "Noto Sans Gujarati",   total: 17.2, verified: 3.6,  exact: true },
+        { en: "Kannada",   nat: "ಕನ್ನಡ",      font: "Noto Sans Kannada",    total: 14.3, verified: 1.8,  exact: true },
+        { en: "Malayalam", nat: "മലയാളം",    font: "Noto Sans Malayalam",  total: 16.4, verified: 2.7,  exact: true },
+        { en: "Punjabi",   nat: "ਪੰਜਾਬੀ",     font: "Noto Sans Gurmukhi",   total: 11.2, verified: 1.1,  exact: true }
+      ];
+      const ENGLISH = { en: "English", nat: "(CulturaX)", total: 2847, verified: 2847 }; // CulturaX, for scale
+
+      // ---- datasets ----
+      const DATASETS = [
+        {
+          key: "sangraha", name: "Sangraha", tok: "251B tokens · 22 languages",
+          tier: ["t-syn", "~65% synthetic"],
+          rows: [
+            ["Source", "AI4Bharat, IndicLLMSuite (ACL 2024, Outstanding Paper)"],
+            ["Tiers", "<b>Verified 64B</b> / Unverified 24B / <b>Synthetic 162B</b>"],
+            ["Synthetic", "~90B machine-translated from English Wikimedia (IndicTrans2) together with ~72B romanized transliteration (IndicXlit)"],
+            ["License", "<b>CC-BY-4.0</b>"],
+            ["Note", "Because the headline totals are inflated by synthetic material, the verified figure is what carries the true signal."]
+          ]
+        },
+        {
+          key: "indiccorp", name: "IndicCorp v2", tok: "20.9B tokens · 24 languages",
+          tier: ["t-clean", "web-crawled, native"],
+          rows: [
+            ["Source", "AI4Bharat, crawled Indic web text"],
+            ["Scale", "<b>2.3×</b> the size of IndicCorp v1"],
+            ["Quality", "Native-origin web text that was not translated"],
+            ["Note", "We do not enumerate the languages here, since that listing turned out to be unreliable."]
+          ]
+        },
+        {
+          key: "madlad", name: "MADLAD-400", tok: "5T noisy / 2.8T clean · 419 languages",
+          tier: ["t-mix", "clean ≠ correct"],
+          rows: [
+            ["Source", "Google, web-scale multilingual"],
+            ["Clean chars", "Hindi <b>20.1B</b>, Tamil <b>10.6B</b>, Malayalam <b>6.3B</b>, Telugu <b>5.1B</b>, Bengali <b>4.3B</b>"],
+            ["Bug", "A <b>detached-virama encoding bug</b> in the Brahmic scripts (bn, ta, te, kn, ml, or, hi, mr and others) that required a dedicated correction pass"],
+            ["Note", "Text that looks \"clean\" at the byte level can still corrupt the grapheme that we actually read."]
+          ]
+        },
+        {
+          key: "culturax", name: "CulturaX", tok: "English 2,847B · 45.1% of corpus",
+          tier: ["t-eng", "English-dominated"],
+          rows: [
+            ["English", "<b>2,847B</b> tokens, which is 45.1% of the whole corpus"],
+            ["Hindi", "16.79B (0.27%)"],
+            ["Bengali / Tamil", "9.57B (0.15%) · 4.38B (0.07%)"],
+            ["Sliver", "<b>Telugu / Odia / Kannada / Malayalam each &lt; 0.05%</b>"],
+            ["Note", "Placed next to English, the entire Indic share amounts to little more than a rounding error."]
+          ]
+        },
+        {
+          key: "fineweb2", name: "FineWeb-2", tok: "20TB · 1,868 language-script pairs",
+          tier: ["t-mix", "scarcity signal"],
+          rows: [
+            ["Source", "Hugging Face, drawn from 96 CC snapshots and 5B docs"],
+            ["Scarcity", "<b>70% (1,320 / 1,868)</b> of pairs draw &gt;half their docs from <b>Bible / Wikipedia</b>"],
+            ["License", "ODC-By"],
+            ["Note", "For the majority of languages, the open web barely exists in any usable quantity."]
+          ]
+        }
+      ];
+
+      const QUOTE = "English instruction recipes (ShareGPT, Self-Instruct, Evol-Instruct, UltraChat) are <b>not available for low- and mid-resource languages</b> due to lack of high-quality LLMs, leading to a <b>chicken-and-egg problem</b>, further widening the gap between the haves and the have-nots.";
+
+      let mode = "total", scaleMode = "indic", dsKey = "sangraha";
+
+      // ---- max for bar scaling ----
+      function maxVal() {
+        if (scaleMode === "eng") return ENGLISH.total;
+        return Math.max(...LANGS.map(l => l.total));
+      }
+
+      function rows() {
+        const arr = LANGS.slice();
+        if (scaleMode === "eng") arr.unshift(ENGLISH);
+        return arr;
+      }
+
+      function buildBars() {
+        const M = maxVal();
+        const verifiedMode = (mode === "verified");
+        $("w11Bars").innerHTML = rows().map(l => {
+          const isEng = l.en === "English";
+          const ver = l.verified, syn = Math.max(0, l.total - l.verified);
+          const verPct = l.total / M * 100 * (ver / l.total);
+          const synPct = l.total / M * 100 * (syn / l.total);
+          const verW = ver / M * 100;
+          const totW = l.total / M * 100;
+          const shown = verifiedMode ? ver : l.total;
+          // label position: just past the end of the visible bar
+          const labelLeft = (verifiedMode ? verW : totW);
+          const valColor = isEng ? "var(--accent-ink)" : verifiedMode ? "var(--green-ink)" : "var(--ink-body)";
+          const natFont = isEng ? "var(--font-sans)" : `"${l.font}", var(--font-sans)`;
+          return `<tr>
+            <td class="w11-lname">
+              <div class="en">${l.en}</div>
+              <div class="nat" style="font-family:${natFont}">${l.nat}</div>
+            </td>
+            <td class="w11-barcell">
+              <div class="w11-bartrack ${isEng ? "eng" : ""}">
+                <div class="w11-bar-ver" style="width:${verW}%"></div>
+                ${isEng ? "" : `<div class="w11-bar-syn" style="left:${verW}%;width:${synPct}%;opacity:${verifiedMode ? 0 : 1}"></div>`}
+                <div class="w11-barval" style="left:calc(${Math.min(labelLeft, 86)}% + 8px);color:${valColor}">${shown.toLocaleString("en-US")}B</div>
+              </div>
+            </td>
+          </tr>`;
+        }).join("");
+
+        // axis
+        const ticks = scaleMode === "eng"
+          ? [0, 700, 1400, 2100, 2847]
+          : [0, 9, 18, 27, Math.round(M)];
+        $("w11Axis").innerHTML = ticks.map(t => `<span>${t.toLocaleString("en-US")}B</span>`).join("");
+        $("w11EngLeg").style.display = scaleMode === "eng" ? "flex" : "none";
+      }
+
+      function buildKill() {
+        const kills = [
+          { l: "Telugu", nat: "తెలుగు", total: 16.3, ver: 3.7, msg: "11.9B of that count is synthetic, which leaves only <b>23%</b> verified" },
+          { l: "Odia",   nat: "ଓଡ଼ିଆ",  total: 12.5, ver: 1.2, msg: "11.3B of that count is synthetic, which leaves only <b>10%</b> verified" },
+          { l: "Hindi",  nat: "हिन्दी",  total: 34.5, ver: 12.6, msg: "the richest Indic language we have, and even here only about a third of the tokens, which is <b>12.6B</b>, are verified human text" }
+        ];
+        $("w11Kill").innerHTML = kills.map(k => {
+          const notver = (k.total - k.ver).toFixed(1);
+          return `<div class="w11-kill">
+            <div class="kl">${k.l}<span class="knat">${k.nat}</span></div>
+            <div class="kbig"><span class="tot">${k.total}B total</span> &nbsp;→&nbsp; <span class="ver">${k.ver}B verified</span> &nbsp;+&nbsp; <span class="syn">${notver}B not verified</span></div>
+            <div class="kshare">${k.msg}</div>
+          </div>`;
+        }).join("");
+      }
+
+      function buildChips() {
+        $("w11Chips").innerHTML = DATASETS.map(d =>
+          `<button class="w11-dschip ${d.key === dsKey ? "on" : ""}" data-k="${d.key}">${d.name}</button>`).join("");
+      }
+
+      function renderDs() {
+        const d = DATASETS.find(x => x.key === dsKey);
+        $("w11DsName").innerHTML = `${d.name} <span class="w11-tier ${d.tier[0]}">${d.tier[1]}</span>`;
+        $("w11DsTok").textContent = d.tok;
+        $("w11DsMeta").innerHTML = d.rows.map(r => `<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join("");
+      }
+
+      // wiring
+      $("w11Mode").addEventListener("click", e => {
+        const b = e.target.closest("button"); if (!b) return;
+        mode = b.dataset.m;
+        document.querySelectorAll("#w11Mode button").forEach(x => x.classList.toggle("on", x === b));
+        $("w11Badge").textContent = mode === "verified" ? "synthetic padding removed" : "~65% of Sangraha is synthetic";
+        buildBars();
+      });
+      $("w11Scale").addEventListener("click", e => {
+        const b = e.target.closest("button"); if (!b) return;
+        scaleMode = b.dataset.s;
+        document.querySelectorAll("#w11Scale button").forEach(x => x.classList.toggle("on", x === b));
+        buildBars();
+      });
+      $("w11Chips").addEventListener("click", e => {
+        const b = e.target.closest(".w11-dschip"); if (!b) return;
+        dsKey = b.dataset.k;
+        document.querySelectorAll("#w11Chips button").forEach(x => x.classList.toggle("on", x === b));
+        renderDs();
+      });
+
+      $("w11Quote").innerHTML = QUOTE;
+      buildChips();
+      renderDs();
+      buildKill();
+      buildBars();
+    })();
+  </script>
+</body>
+
+</html>

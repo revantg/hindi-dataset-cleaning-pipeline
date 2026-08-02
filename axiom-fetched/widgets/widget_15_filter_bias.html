@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Filter Bias: how over-filtering quietly erases languages</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --surface: #ffffff;
+      --surface-alt: #fbfdff;
+      --ink: #102338;
+      --ink-body: #1f3850;
+      --ink-muted: #60768d;
+      --muted-2: #7d90a5;
+      --rule: #e2e9f0;
+      --rule-strong: #cfdbe6;
+      --accent: #00a7d8;
+      --accent-soft: #eafaff;
+      --accent-ink: #0f6e8c;
+      --green: #24b36b;
+      --green-soft: #e7fff2;
+      --green-ink: #19824e;
+      --amber: #d99a13;
+      --amber-soft: #fff7df;
+      --amber-ink: #8a5c06;
+      --violet: #7b61ff;
+      --violet-soft: #eeeaff;
+      --violet-ink: #5a44c8;
+      --red: #e05f6e;
+      --red-soft: #ffeef0;
+      --red-ink: #c0455a;
+      --slate: #5b6b7d;
+      --shadow-soft: 0 8px 22px rgba(16, 35, 56, .05);
+      --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box }
+    html, body { margin: 0; padding: 0; overflow-x: hidden }
+
+    body {
+      background: linear-gradient(180deg, #f8fafc 0%, #f3f6fa 100%);
+      color: var(--ink-body);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.55;
+      padding: 14px;
+    }
+
+    .w15-wrap { max-width: 900px; margin: 0 auto }
+
+    .w15-title {
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(26px, 2.8vw, 40px);
+      font-weight: 800;
+      letter-spacing: -.035em;
+      line-height: 1.08;
+    }
+    .w15-sub {
+      max-width: 820px;
+      margin: 10px 0 16px;
+      color: var(--ink-muted);
+      font-size: 15px;
+      line-height: 1.62;
+    }
+    .w15-sub b { color: var(--ink-body) }
+
+    .w15-panel {
+      margin-bottom: 14px;
+      padding: 15px 17px;
+      border: 1px solid var(--rule);
+      border-radius: 18px;
+      background: var(--surface-alt);
+      box-shadow: var(--shadow-soft);
+    }
+    .w15-ptitle { color: var(--ink); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase }
+
+    /* ---- control row ---- */
+    .w15-ctop { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 4px }
+    .w15-strict { font-family: var(--font-mono); font-size: 17px; font-weight: 800; color: var(--accent-ink); letter-spacing: -.01em }
+    .w15-strict small { font-size: 12px; color: var(--muted-2); font-weight: 700; margin-left: 6px }
+    input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; margin: 12px 0 8px }
+    .w15-ticks { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: var(--muted-2) }
+    .w15-stage-line { margin-top: 10px; padding: 10px 13px; border-radius: 11px; border: 1px solid var(--rule); background: #fff; font-size: 12.5px; color: var(--ink-body); line-height: 1.5; overflow-wrap: anywhere }
+    .w15-stage-line b { color: var(--ink) }
+    .w15-stage-line .w15-mech { font-family: var(--font-mono); font-weight: 800; color: var(--amber-ink) }
+
+    /* fix toggle */
+    .w15-fixrow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 13px }
+    .w15-clbl { font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--muted-2) }
+    .w15-seg { display: inline-flex; padding: 3px; gap: 3px; border: 1px solid var(--rule); border-radius: 11px; background: #fff }
+    .w15-seg button { border: 0; border-radius: 8px; background: transparent; color: var(--ink-muted); font-family: var(--font-sans); font-size: 12.5px; font-weight: 800; padding: 7px 13px; cursor: pointer; transition: .16s ease }
+    .w15-seg button:hover { color: var(--accent-ink); background: #f2fbfe }
+    .w15-seg button.on { background: linear-gradient(180deg, #f2fcff, #e7f9ff); color: var(--accent-ink); box-shadow: inset 0 0 0 1px #bcefff }
+    .w15-seg button.w15-fix.on { background: linear-gradient(180deg, #f6f3ff, #efeaff); color: var(--violet-ink); box-shadow: inset 0 0 0 1px #cdc2f6 }
+
+    /* ---- corpus tiles ---- */
+    .w15-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 7px; margin-top: 12px }
+    @media(max-width:620px){ .w15-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) } }
+    .w15-tile {
+      position: relative; border: 1px solid var(--rule); border-radius: 10px; background: #fff;
+      padding: 8px 8px 7px; min-height: 64px; transition: opacity .35s ease, filter .35s ease, border-color .25s ease, transform .25s ease;
+      overflow: hidden;
+    }
+    .w15-tile .w15-lc { font-family: var(--font-mono); font-size: 9.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase }
+    .w15-tile .w15-txt {
+      margin-top: 4px; font-size: 12px; color: var(--ink-body); line-height: 1.8;
+      overflow-wrap: anywhere; word-break: break-word;
+    }
+    .w15-tile.w15-dropped { opacity: .26; filter: grayscale(1); border-style: dashed; transform: scale(.97) }
+    .w15-tile.w15-dropped::after {
+      content: "dropped"; position: absolute; top: 6px; right: 6px;
+      font-family: var(--font-mono); font-size: 8.5px; font-weight: 800; letter-spacing: .03em;
+      color: var(--red-ink); background: var(--red-soft); border: 1px solid #f3c9d0; border-radius: 6px; padding: 1px 5px;
+    }
+    .w15-tile.w15-saved { box-shadow: inset 0 0 0 2px var(--violet); border-color: transparent }
+    .w15-tile.w15-saved::after {
+      content: "protected"; position: absolute; top: 6px; right: 6px;
+      font-family: var(--font-mono); font-size: 8.5px; font-weight: 800; letter-spacing: .03em;
+      color: var(--violet-ink); background: var(--violet-soft); border: 1px solid #cdc2f6; border-radius: 6px; padding: 1px 5px;
+    }
+    /* family colors */
+    .w15-en   .w15-lc { color: var(--accent-ink) }
+    .w15-enin .w15-lc { color: var(--slate) }
+    .w15-indic .w15-lc { color: var(--amber-ink) }
+
+    /* ---- legend ---- */
+    .w15-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 11px }
+    .w15-lg { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink-body) }
+    .w15-lg i { width: 11px; height: 11px; border-radius: 3px; flex: none; border: 1px solid var(--rule) }
+    .w15-lg i.en { background: var(--accent-soft); border-color: #bcefff }
+    .w15-lg i.enin { background: #f0f3f7; border-color: var(--rule-strong) }
+    .w15-lg i.indic { background: var(--amber-soft); border-color: #f0ddaf }
+    .w15-lg i.drop { background: var(--red-soft); border-color: #f3c9d0 }
+
+    /* ---- retention readout ---- */
+    .w15-rrow { display: grid; grid-template-columns: minmax(0, 1fr); gap: 9px; margin-top: 4px }
+    .w15-rtbl { width: 100%; border-collapse: collapse; table-layout: fixed }
+    .w15-rtbl td { padding: 5px 4px; vertical-align: middle }
+    .w15-rname { font-size: 12.5px; font-weight: 700; color: var(--ink-body); width: 38%; overflow-wrap: anywhere }
+    .w15-rname .w15-fam { font-family: var(--font-mono); font-size: 9.5px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; margin-left: 6px }
+    .w15-rname .w15-fam.en { color: var(--accent-ink) } .w15-rname .w15-fam.enin { color: var(--slate) } .w15-rname .w15-fam.indic { color: var(--amber-ink) }
+    .w15-rbar-cell { width: 47% }
+    .w15-rbar { height: 13px; border-radius: 999px; background: #eef3f7; overflow: hidden }
+    .w15-rbar i { display: block; height: 100%; border-radius: 999px; transition: width .4s cubic-bezier(.2,.7,.2,1), background .3s ease }
+    .w15-rpct { width: 15%; text-align: right; font-family: var(--font-mono); font-size: 12.5px; font-weight: 800 }
+
+    .w15-summ { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 13px }
+    .w15-scard { flex: 1 1 200px; min-width: 0; border: 1px solid var(--rule); border-radius: 13px; background: #fff; padding: 12px 14px }
+    .w15-scard .w15-sk { font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--muted-2) }
+    .w15-scard .w15-sv { font-family: var(--font-mono); font-size: 24px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; margin-top: 4px }
+    .w15-scard .w15-snote { font-size: 11.5px; color: var(--ink-muted); line-height: 1.5; margin-top: 5px }
+    .w15-scard.en .w15-sv { color: var(--accent-ink) }
+    .w15-scard.indic .w15-sv { color: var(--amber-ink) }
+    .w15-scard.gap .w15-sv { color: var(--red-ink) }
+    .w15-scard.gap.ok .w15-sv { color: var(--green-ink) }
+
+    .w15-verdict { margin-top: 13px; padding: 11px 14px; border-radius: 12px; font-size: 13px; line-height: 1.55 }
+    .w15-verdict b { font-weight: 800 }
+    .w15-verdict.base { border: 1px solid #cceefa; background: var(--accent-soft); color: var(--accent-ink) }
+    .w15-verdict.bad { border: 1px solid #f3c9d0; background: var(--red-soft); color: var(--red-ink) }
+    .w15-verdict.fixed { border: 1px solid #cdc2f6; background: var(--violet-soft); color: var(--violet-ink) }
+
+    /* ---- MADLAD virama card ---- */
+    .w15-virama { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 13px; margin-top: 12px }
+    @media(max-width:620px){ .w15-virama { grid-template-columns: minmax(0,1fr) } }
+    .w15-vcard { border: 1px solid var(--rule); border-radius: 13px; background: #fff; padding: 13px 14px }
+    .w15-vcard .w15-vk { font-size: 10.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; display: flex; align-items: center; gap: 7px; margin-bottom: 9px }
+    .w15-vcard.broke .w15-vk { color: var(--red-ink) }
+    .w15-vcard.good .w15-vk { color: var(--green-ink) }
+    .w15-vbig {
+      font-size: 30px; line-height: 1.9; color: var(--ink); overflow-wrap: anywhere; word-break: break-word;
+      padding: 6px 0 4px;
+    }
+    .w15-vcap { font-family: var(--font-mono); font-size: 11px; color: var(--ink-muted); line-height: 1.5; margin-top: 6px; overflow-wrap: anywhere }
+    .w15-vcap b { color: var(--ink-body) }
+
+    /* ---- V4 reality callout ---- */
+    .w15-v4 { border: 1px solid #d8d0ff; background: linear-gradient(180deg, #fbfaff, #f7f4ff) }
+    .w15-v4-h { display: flex; align-items: center; gap: 9px; margin-bottom: 8px }
+    .w15-v4-tag { font-family: var(--font-mono); font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--violet-ink); background: var(--violet-soft); border: 1px solid #cdc2f6; border-radius: 8px; padding: 4px 9px }
+    .w15-v4 p { margin: 0; font-size: 13px; line-height: 1.62; color: var(--ink-body) }
+    .w15-v4 p b { color: var(--violet-ink) }
+    .w15-v4 .w15-mono { font-family: var(--font-mono); font-weight: 800; color: var(--ink) }
+
+    .w15-foot { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 6px; padding-top: 12px; flex-wrap: wrap }
+    .w15-foot-txt { color: var(--ink-muted); font-size: 12px; max-width: 600px; line-height: 1.55 }
+    .w15-foot-txt b { color: var(--ink-body) }
+    .w15-badge { display: inline-flex; align-items: center; white-space: nowrap; padding: 6px 12px; border: 1px solid #f0ddaf; border-radius: 999px; background: var(--amber-soft); color: var(--amber-ink); font-family: var(--font-mono); font-size: 11.5px; font-weight: 700 }
+  </style>
+</head>
+
+<body>
+  <div class="w15-wrap">
+    <h1 class="w15-title">A quality filter is a representation decision</h1>
+    <p class="w15-sub">Quality filters are tuned on English, so when we crank "quality" up, the tiles that vanish first
+      turn out to be the <b>low-resource languages and non-Latin scripts</b> that the English-trained classifier never
+      learned to read. As we slide the strictness up we can watch Indic content get erased while English survives, and
+      then we can turn on the fix to see representation restored.</p>
+
+    <!-- control -->
+    <div class="w15-panel">
+      <div class="w15-ctop">
+        <span class="w15-ptitle">English-tuned quality filter · strictness</span>
+        <span class="w15-strict" id="w15Strict">0 / 3<small>off</small></span>
+      </div>
+      <input type="range" id="w15Slider" min="0" max="3" step="1" value="0">
+      <div class="w15-ticks"><span>off</span><span>blocklist</span><span>+ perplexity</span><span>+ lang-ID conf.</span></div>
+      <div class="w15-stage-line" id="w15StageLine"></div>
+
+      <div class="w15-fixrow">
+        <span class="w15-clbl">the fix</span>
+        <div class="w15-seg" id="w15FixSeg">
+          <button data-f="0" class="on">English filter only</button>
+          <button data-f="1" class="w15-fix">Script-aware + Always-ON protected</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- corpus -->
+    <div class="w15-panel">
+      <div class="w15-ptitle">A mixed 24-document corpus</div>
+      <div class="w15-grid" id="w15Grid"></div>
+      <div class="w15-legend">
+        <span class="w15-lg"><i class="en"></i>English</span>
+        <span class="w15-lg"><i class="enin"></i>Indian English / dialectal</span>
+        <span class="w15-lg"><i class="indic"></i>Indic script</span>
+        <span class="w15-lg"><i class="drop"></i>dropped by filter</span>
+      </div>
+    </div>
+
+    <!-- retention -->
+    <div class="w15-panel">
+      <div class="w15-ptitle" style="margin-bottom:12px">% of each group that survives the filter</div>
+      <div class="w15-rrow">
+        <table class="w15-rtbl"><tbody id="w15RetBody"></tbody></table>
+      </div>
+      <div class="w15-summ">
+        <div class="w15-scard en"><div class="w15-sk">English retained</div><div class="w15-sv" id="w15EnPct">100%</div><div class="w15-snote">the corpus the filter was built to keep</div></div>
+        <div class="w15-scard indic"><div class="w15-sk">Indic retained</div><div class="w15-sv" id="w15InPct">100%</div><div class="w15-snote">native-script documents that survive</div></div>
+        <div class="w15-scard gap" id="w15GapCard"><div class="w15-sk">English − Indic gap</div><div class="w15-sv" id="w15Gap">0 pts</div><div class="w15-snote" id="w15GapNote">no bias yet, because the filter is off</div></div>
+      </div>
+      <div class="w15-verdict base" id="w15Verdict"></div>
+    </div>
+
+    <!-- MADLAD virama: how the filter mangles the script even when it keeps it -->
+    <div class="w15-panel">
+      <div class="w15-ptitle">Deletion is only part of the story, because the filter can also mangle the script it keeps</div>
+      <p class="w15-sub" style="margin:9px 0 2px;max-width:none">MADLAD-400's own self-audit found <b>incorrectly-encoded (detached) viramas</b>
+        across Brahmic scripts (Hindi, Bengali, Tamil, Telugu, Kannada, Malayalam, Odia, Marathi, Nepali…) that needed a
+        correction pass. The virama is the invisible joiner that fuses a consonant cluster, so when we detach it a real syllable
+        becomes a broken half-grapheme that an English-trained classifier reads as garbage and then drops.</p>
+      <div class="w15-virama">
+        <div class="w15-vcard broke">
+          <div class="w15-vk"><span>✗ detached virama (the bug)</span></div>
+          <div class="w15-vbig" lang="hi">क ्  ष</div>
+          <div class="w15-vcap"><b>क + ् (virama, floating) + ष</b> shows the joiner separated from its consonants, so the conjunct never forms and the renderer shows three loose pieces.</div>
+        </div>
+        <div class="w15-vcard good">
+          <div class="w15-vk"><span>✓ correct encoding</span></div>
+          <div class="w15-vbig" lang="hi">क्ष</div>
+          <div class="w15-vcap"><b>क + ् + ष → क्ष</b> shows the virama bound between its consonants, producing a single conjunct and a single grapheme exactly the way a reader sees it.</div>
+        </div>
+      </div>
+      <div class="w15-foot">
+        <span class="w15-foot-txt">These are the same bytes under a single encoding choice, and the detached form is what the corpus actually shipped before the audit caught it.</span>
+        <span class="w15-badge">MADLAD-400: 5T noisy → 2.8T clean</span>
+      </div>
+    </div>
+
+    <!-- V4 reality -->
+    <div class="w15-panel w15-v4">
+      <div class="w15-v4-h"><span class="w15-v4-tag">V4 reality</span></div>
+      <p>We lived through exactly this failure. V4's data selector <b>OPUS</b> steered toward a benchmark proxy that was English-heavy,
+        showing a <span class="w15-mono">cosine 0.876</span> with the English web band, so OPUS <b>systematically under-valued Indic
+        data and would have rejected it</b>, which is the same English-proxy bias this widget demonstrates. Our fix was
+        <b>Always-ON</b>, meaning that <span class="w15-mono">8%</span> of <em>every</em> batch reserved Indic and benchmark data
+        totalling <span class="w15-mono">66.9B</span> tokens across 10 Brahmic scripts, injected <b>invisibly to OPUS</b>, so that every
+        Indic script trained at every growth stage regardless of what the selector wanted. Representation became a protected
+        guarantee rather than a filter outcome.</p>
+    </div>
+
+    <div class="w15-foot">
+      <span class="w15-foot-txt">Sources: C4 blocklist bias <b>(Dodge et al., EMNLP 2021)</b>; MADLAD-400 virama audit + token counts
+        <b>(arXiv:2309.04662)</b>; V4 numbers from <b>DataSet/DATA_REPORT_V2.md</b>. The 24 tiles, the per-stage drop rates,
+        and the survival percentages are <b>illustrative</b>, since they are meant to show the shape of the bias rather than measured retention rates.</span>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+    (function () {
+      const $ = id => document.getElementById(id);
+
+      // ----- corpus: 24 tiles, 3 families -----
+      // fam: en (clean English), enin (Indian-English / dialectal), indic (native script)
+      // drop[s] = true means dropped at strictness level s (1..3) by the English filter
+      // Indic tiles drop earliest and hardest; clean English survives; dialectal English drops in the middle.
+      const TILES = [
+        { fam: "en", lc: "en", txt: "The committee will reconvene on Tuesday to review the proposal.", drop: [0,0,0] },
+        { fam: "en", lc: "en", txt: "Photosynthesis converts sunlight into chemical energy in plants.", drop: [0,0,0] },
+        { fam: "en", lc: "en", txt: "A balanced diet supports both physical and cognitive health.", drop: [0,0,0] },
+        { fam: "en", lc: "en", txt: "The quarterly report shows steady growth across all regions.", drop: [0,0,0] },
+        { fam: "en", lc: "en", txt: "Climate models predict warmer winters over the next decade.", drop: [0,0,0] },
+        { fam: "en", lc: "en", txt: "Students should cite primary sources in their research essays.", drop: [0,0,1] },
+
+        { fam: "enin", lc: "en-IN", txt: "Kindly do the needful and revert back at the earliest, na.", drop: [1,1,1] },
+        { fam: "enin", lc: "en-IN", txt: "I am having two brothers and one sister only, what to do.", drop: [0,1,1] },
+        { fam: "enin", lc: "dialect", txt: "We be finna pull up to the cookout, it's gonna be lit fr.", drop: [1,1,1] },
+        { fam: "enin", lc: "en-IN", txt: "Please prepone the meeting, it is too much hectic otherwise.", drop: [0,1,1] },
+
+        { fam: "indic", lc: "hi", txt: "विद्यालय में आज विज्ञान की प्रदर्शनी आयोजित की गई थी।", drop: [1,1,1] },
+        { fam: "indic", lc: "hi", txt: "नदी के किनारे बसा यह गाँव अपनी संस्कृति के लिए प्रसिद्ध है।", drop: [0,1,1] },
+        { fam: "indic", lc: "te", txt: "విద్యార్థులు గ్రంథాలయంలో పుస్తకాలను చదువుతున్నారు.", drop: [1,1,1] },
+        { fam: "indic", lc: "te", txt: "ఈ పండుగను ప్రతి సంవత్సరం ఎంతో ఉత్సాహంగా జరుపుకుంటారు.", drop: [1,1,1] },
+        { fam: "indic", lc: "bn", txt: "আমরা সকালে নদীর ধারে হাঁটতে গিয়েছিলাম।", drop: [0,1,1] },
+        { fam: "indic", lc: "bn", txt: "এই বইটি ছাত্রছাত্রীদের জন্য খুবই উপকারী।", drop: [1,1,1] },
+        { fam: "indic", lc: "ta", txt: "மாணவர்கள் நூலகத்தில் புத்தகங்களைப் படிக்கின்றனர்.", drop: [1,1,1] },
+        { fam: "indic", lc: "ta", txt: "இந்த விழாவை ஒவ்வொரு ஆண்டும் கொண்டாடுகிறார்கள்.", drop: [0,1,1] },
+        { fam: "indic", lc: "kn", txt: "ಮಕ್ಕಳು ಉದ್ಯಾನವನದಲ್ಲಿ ಆಟವಾಡುತ್ತಿದ್ದಾರೆ.", drop: [1,1,1] },
+        { fam: "indic", lc: "ml", txt: "വിദ്യാർത്ഥികൾ ലൈബ്രറിയിൽ പുസ്തകങ്ങൾ വായിക്കുന്നു.", drop: [1,1,1] },
+        { fam: "indic", lc: "or", txt: "ପିଲାମାନେ ବଗିଚାରେ ଖେଳୁଛନ୍ତି।", drop: [1,1,1] },
+        { fam: "indic", lc: "gu", txt: "વિદ્યાર્થીઓ પુસ્તકાલયમાં પુસ્તકો વાંચે છે.", drop: [0,1,1] },
+        { fam: "indic", lc: "mr", txt: "मुले बागेत आनंदाने खेळत आहेत.", drop: [0,1,1] },
+        { fam: "indic", lc: "pa", txt: "ਬੱਚੇ ਬਾਗ਼ ਵਿੱਚ ਖੇਡ ਰਹੇ ਹਨ।", drop: [1,1,1] }
+      ];
+
+      const FAM_CLASS = { en: "w15-en", enin: "w15-enin", indic: "w15-indic" };
+      const FAM_LABEL = { en: "English", enin: "Indian-English / dialectal", indic: "Indic script" };
+
+      const STAGE = [
+        { name: "off", mech: "no filter", txt: "No filter is applied yet, so all 24 documents remain in the corpus, and as we slide right we add one English-tuned filter at a time." },
+        { name: "blocklist", mech: "URL + word blocklist", txt: "A C4-style word and URL blocklist built for English now fires, and because it never modelled the vocabulary of non-English or dialectal text it removes a good deal of legitimate content along the way." },
+        { name: "+ perplexity", mech: "English LM perplexity cutoff", txt: "We add a perplexity filter scored by an English language model, and non-Latin scripts together with code-mixed text score as high-perplexity 'garbage' that then gets cut." },
+        { name: "+ lang-ID conf.", mech: "lang-ID confidence threshold", txt: "We add a language-ID confidence gate, and the low-resource scripts the detector is unsure about, which happen to be exactly the ones we most need, fall below the threshold and are removed." }
+      ];
+
+      let strictness = 0, fix = 0;
+
+      // build tiles once
+      $("w15Grid").innerHTML = TILES.map((t, i) =>
+        `<div class="w15-tile ${FAM_CLASS[t.fam]}" data-i="${i}">
+           <div class="w15-lc">${t.lc}</div>
+           <div class="w15-txt" lang="${t.lc}">${t.txt}</div>
+         </div>`).join("");
+
+      // a tile is dropped if its drop[strictness-1] is set, unless the fix protects it
+      function isDropped(t) {
+        if (strictness === 0) return false;
+        const wouldDrop = t.drop[strictness - 1] === 1;
+        if (!wouldDrop) return false;
+        // fix: script-aware filter stops mangling Indic; Always-ON protects Indic (and dialectal) regardless
+        if (fix === 1 && (t.fam === "indic" || t.fam === "enin")) return false;
+        return true;
+      }
+      function isSaved(t) {
+        // a tile is "saved by the fix" if it WOULD have been dropped but the fix rescued it
+        if (fix !== 1 || strictness === 0) return false;
+        return t.drop[strictness - 1] === 1 && (t.fam === "indic" || t.fam === "enin");
+      }
+
+      function render() {
+        const st = STAGE[strictness];
+        $("w15Strict").innerHTML = strictness + " / 3<small>" + st.name + "</small>";
+        $("w15StageLine").innerHTML = strictness === 0
+          ? st.txt
+          : `<b>Filter ${strictness}:</b> <span class="w15-mech">${st.mech}</span>. ${st.txt}`;
+
+        // tiles
+        const counts = { en: [0, 0], enin: [0, 0], indic: [0, 0] }; // [kept, total]
+        TILES.forEach((t, i) => {
+          counts[t.fam][1]++;
+          const el = $("w15Grid").children[i];
+          const dropped = isDropped(t), saved = isSaved(t);
+          el.classList.toggle("w15-dropped", dropped);
+          el.classList.toggle("w15-saved", saved);
+          if (!dropped) counts[t.fam][0]++;
+        });
+
+        // retention table, grouping enin under the English side with indic separate
+        const rows = [
+          { key: "en", label: "English (clean)" },
+          { key: "enin", label: "Indian-English / dialectal" },
+          { key: "indic", label: "Indic script" }
+        ];
+        $("w15RetBody").innerHTML = rows.map(r => {
+          const [kept, total] = counts[r.key];
+          const pct = Math.round(kept / total * 100);
+          const col = r.key === "en" ? "linear-gradient(90deg,#7fdcf3,var(--accent))"
+            : r.key === "enin" ? "linear-gradient(90deg,#9aa9ba,var(--slate))"
+              : (fix === 1 ? "linear-gradient(90deg,#9d86ff,var(--violet))" : "linear-gradient(90deg,#f1c97a,var(--amber))");
+          const pctCol = r.key === "en" ? "var(--accent-ink)" : r.key === "enin" ? "var(--slate)" : (fix === 1 ? "var(--violet-ink)" : "var(--amber-ink)");
+          const famCls = r.key === "en" ? "en" : r.key === "enin" ? "enin" : "indic";
+          return `<tr>
+            <td class="w15-rname">${r.label}<span class="w15-fam ${famCls}">${kept}/${total}</span></td>
+            <td class="w15-rbar-cell"><div class="w15-rbar"><i style="width:${pct}%;background:${col}"></i></div></td>
+            <td class="w15-rpct" style="color:${pctCol}">${pct}%</td>
+          </tr>`;
+        }).join("");
+
+        // summary cards: English vs Indic
+        const enPct = Math.round(counts.en[0] / counts.en[1] * 100);
+        const inPct = Math.round(counts.indic[0] / counts.indic[1] * 100);
+        $("w15EnPct").textContent = enPct + "%";
+        $("w15InPct").textContent = inPct + "%";
+        const gap = enPct - inPct;
+        $("w15Gap").textContent = gap + " pts";
+        const gapCard = $("w15GapCard");
+        gapCard.classList.toggle("ok", gap <= 8);
+        $("w15GapNote").textContent = strictness === 0 ? "no bias yet, because the filter is off"
+          : gap <= 8 ? "the fix has closed the gap, so retention is now fair across scripts"
+            : "English survives while Indic does not, and that is the bias";
+
+        // verdict
+        const v = $("w15Verdict");
+        if (strictness === 0) {
+          v.className = "w15-verdict base";
+          v.innerHTML = `The filter is <b>off</b>, so every group sits at 100%, and as we raise the strictness we can watch which tiles disappear first.`;
+        } else if (fix === 1) {
+          v.className = "w15-verdict fixed";
+          v.innerHTML = `<b>The fix is on.</b> Script-aware filtering stops scoring native scripts as garbage, while an Always-ON
+            reserve <b>protects</b> Indic and dialectal documents regardless of what the English filter decides, so Indic retention is back to <b>${inPct}%</b>
+            with the gap down to <b>${gap} pts</b>, which means representation has become a guarantee rather than a side-effect.`;
+        } else {
+          v.className = "w15-verdict bad";
+          v.innerHTML = `At strictness <b>${strictness}</b>, English sits at <b>${enPct}%</b> while Indic sits at only <b>${inPct}%</b>, which is a
+            <b>${gap}-point</b> gap. The filter never "decided" to delete a language, since it simply kept whatever it could read, and this is how
+            over-filtering becomes a silent erasure that we can undo by turning on the fix.`;
+        }
+      }
+
+      $("w15Slider").addEventListener("input", e => { strictness = +e.target.value; render(); });
+      $("w15FixSeg").addEventListener("click", e => {
+        const b = e.target.closest("button"); if (!b) return;
+        fix = +b.dataset.f;
+        document.querySelectorAll("#w15FixSeg button").forEach(x => x.classList.toggle("on", x === b));
+        render();
+      });
+
+      render();
+    })();
+  </script>
+</body>
+
+</html>

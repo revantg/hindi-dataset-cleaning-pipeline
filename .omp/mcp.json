@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json",
+  "mcpServers": {
+    "alphaxiv": {
+      "type": "http",
+      "url": "https://api.alphaxiv.org/mcp/v1"
+    },
+    "exa": {
+      "type": "http",
+      "url": "https://mcp.exa.ai/mcp",
+      "headers": {
+        "x-api-key": "!python3 -c 'import json; print(json.load(open(\"/home/rev/.config/opencode/opencode.json\"))[\"mcp\"][\"exa\"][\"headers\"][\"x-api-key\"])'"
+      }
+    }
+  }
+}

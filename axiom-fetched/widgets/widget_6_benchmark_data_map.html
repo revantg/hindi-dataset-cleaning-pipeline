@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>How Benchmarks Map Back to Data</title>
+  <style>
+    :root {
+      --bg: #f6f8fb; --surface: #ffffff; --surface-alt: #fbfdff;
+      --ink: #102338; --ink-body: #1f3850; --ink-muted: #60768d; --muted-2: #7d90a5;
+      --rule: #e2e9f0; --rule-strong: #cfdbe6;
+      --accent: #00a7d8; --accent-soft: #eafaff; --accent-ink: #0f6e8c;
+      --green: #24b36b; --green-soft: #e7fff2; --green-ink: #19824e;
+      --amber: #d99a13; --amber-soft: #fff7df; --amber-ink: #8a5c06;
+      --violet: #7b61ff; --violet-soft: #eeeaff; --violet-ink: #5a44c8;
+      --red: #e05f6e; --red-soft: #ffeef0; --red-ink: #c0455a;
+      --slate: #5b6b7d;
+      --shadow-soft: 0 8px 22px rgba(16, 35, 56, .05);
+      --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    * { box-sizing: border-box }
+    html, body { margin: 0; padding: 0; overflow-x: hidden }
+    body { background: linear-gradient(180deg, #f8fafc 0%, #f3f6fa 100%); color: var(--ink-body); font-family: var(--font-sans); font-size: 14px; line-height: 1.55; padding: 14px }
+    .w6-wrap { max-width: 1260px; margin: 0 auto }
+    .w6-title { margin: 0; color: var(--ink); font-size: clamp(26px, 2.8vw, 40px); font-weight: 800; letter-spacing: -.035em; line-height: 1.08 }
+    .w6-sub { max-width: 900px; margin: 10px 0 16px; color: var(--ink-muted); font-size: 15px; line-height: 1.62 }
+    .w6-sub b { color: var(--ink-body) }
+    .w6-panel { margin-bottom: 14px; padding: 15px 17px; border: 1px solid var(--rule); border-radius: 18px; background: var(--surface-alt); box-shadow: var(--shadow-soft) }
+    .w6-ptitle { color: var(--ink); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase }
+    .w6-colhead { display: flex; justify-content: space-between; margin-bottom: 10px }
+    .w6-colhead span { font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--muted-2) }
+
+    .w6-stage { position: relative; display: grid; grid-template-columns: minmax(0, 280px) minmax(0, 1fr) minmax(0, 280px); gap: 0; align-items: stretch }
+    .w6-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1 }
+    .w6-col { display: flex; flex-direction: column; gap: 9px; z-index: 2 }
+    .w6-col.right { align-items: stretch }
+    .w6-node { position: relative; text-align: left; cursor: pointer; border: 1px solid var(--rule); border-radius: 12px; background: #fff; padding: 10px 12px; transition: .16s ease; font-family: inherit }
+    .w6-node:hover { border-color: var(--rule-strong); box-shadow: var(--shadow-soft) }
+    .w6-node .w6-nn { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 800; color: var(--ink); letter-spacing: -.01em }
+    .w6-node .w6-ndot { width: 9px; height: 9px; border-radius: 3px; flex: none }
+    .w6-node .w6-nnote { font-size: 11px; color: var(--ink-muted); margin-top: 3px; line-height: 1.4 }
+    .w6-node.dim { opacity: .3 }
+    .w6-node.hot { box-shadow: inset 0 0 0 2px currentColor; border-color: transparent }
+    .w6-node.right .w6-nn { justify-content: flex-end; text-align: right }
+
+    .w6-hint { text-align: center; font-size: 12px; color: var(--muted-2); margin-top: 12px }
+    .w6-hint b { color: var(--ink-body) }
+
+    .w6-detail { margin-top: 4px }
+    .w6-dh { display: flex; align-items: center; gap: 9px; margin-bottom: 10px }
+    .w6-dh .w6-ddot { width: 12px; height: 12px; border-radius: 3px; flex: none }
+    .w6-dh h3 { margin: 0; font-size: 17px; font-weight: 800; color: var(--ink); letter-spacing: -.01em }
+    .w6-links-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 9px }
+    .w6-li { display: grid; grid-template-columns: minmax(0, 170px) minmax(0, 1fr); gap: 12px; align-items: start; border: 1px solid var(--rule); border-radius: 11px; background: #fff; padding: 10px 12px }
+    @media(max-width:620px){ .w6-li { grid-template-columns: minmax(0,1fr) } }
+    .w6-li .w6-lt { font-weight: 800; color: var(--ink); font-size: 13px; display: flex; align-items: center; gap: 7px }
+    .w6-li .w6-lt .w6-w { font-family: var(--font-mono); font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px }
+    .w6-w.s3 { background: var(--green-soft); color: var(--green-ink) }
+    .w6-w.s2 { background: var(--accent-soft); color: var(--accent-ink) }
+    .w6-w.s1 { background: #eef2f6; color: var(--slate) }
+    .w6-li .w6-lwhy { font-size: 12.5px; color: var(--ink-body); line-height: 1.5 }
+    .w6-li .w6-ldelta { font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; color: var(--violet-ink); margin-top: 4px; display: block }
+    .w6-empty { font-size: 13px; color: var(--ink-muted) }
+
+    .w6-foot { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 6px; padding-top: 12px; flex-wrap: wrap }
+    .w6-foot-txt { color: var(--ink-muted); font-size: 12px; max-width: 760px; line-height: 1.55 }
+    .w6-foot-txt b { color: var(--ink-body) }
+    .w6-badge { display: inline-flex; align-items: center; white-space: nowrap; padding: 6px 12px; border: 1px solid #bcefff; border-radius: 999px; background: var(--accent-soft); color: var(--accent-ink); font-family: var(--font-mono); font-size: 11.5px; font-weight: 700 }
+  </style>
+</head>
+
+<body>
+  <div class="w6-wrap">
+    <h1 class="w6-title">Which data lifts which benchmark</h1>
+    <p class="w6-sub">Once we know the benchmark we want to win, we already know a great deal about the data we need to
+      collect, because the two are tied together through published training results. When we click a <b>data source</b> the
+      map shows us everything it feeds, and when we click a <b>benchmark</b> the map traces back to everything that feeds it.
+      The thicker links mark the strong effects that the literature has measured, and among them the one that tends to
+      surprise us is that <b>code lifts general reasoning</b> rather than only the code scores.</p>
+
+    <div class="w6-panel">
+      <div class="w6-colhead"><span>Data sources</span><span>Benchmarks</span></div>
+      <div class="w6-stage" id="w6Stage">
+        <svg class="w6-svg" id="w6Svg" preserveAspectRatio="none"></svg>
+        <div class="w6-col left" id="w6Left"></div>
+        <div></div>
+        <div class="w6-col right" id="w6Right"></div>
+      </div>
+      <div class="w6-hint" id="w6Hint">Tip: when we click <b>GSM8K / MATH</b> on the right, the math, code and reasoning data light up while everything else dims away.</div>
+    </div>
+
+    <div class="w6-panel">
+      <div class="w6-detail" id="w6Detail"></div>
+    </div>
+
+    <div class="w6-foot">
+      <span class="w6-foot-txt">The deltas we show here are <b>published results</b> measured on the authors' own eval suites
+        (DeepSeekMath, OpenWebMath, Llemma/Proof-Pile-2, FineMath, FineWeb-Edu, "To Code or Not To Code?"). We should read the
+        code→reasoning effect as a <b>best-case, task-dependent</b> outcome, since adding more code can also <i>hurt</i> syntax
+        and factual tasks in some settings.</span>
+      <span class="w6-badge">collect against the benchmark</span>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+    (function () {
+      const $ = id => document.getElementById(id);
+
+      const SOURCES = [
+        { id: "edu", name: "Educational web", note: "FineWeb-Edu, DCLM", color: "#00a7d8" },
+        { id: "code", name: "Code", note: "The Stack v2, StarCoder", color: "#d99a13" },
+        { id: "math", name: "Math web + proofs", note: "OpenWebMath, FineMath", color: "#7b61ff" },
+        { id: "reason", name: "Reasoning traces", note: "CoT / R1-style", color: "#24b36b" },
+        { id: "indic", name: "Multilingual / Indic", note: "Sangraha, IndicCorp", color: "#e05f6e" },
+        { id: "books", name: "Books", note: "long-form prose", color: "#5b6b7d" },
+        { id: "stem", name: "STEM / arXiv", note: "pes2o, arXiv", color: "#0f6e8c" },
+        { id: "instr", name: "Instruction", note: "FLAN, IFEval-like", color: "#8a5c06" }
+      ];
+      const BENCH = [
+        { id: "mmlu", name: "MMLU" },
+        { id: "arc", name: "ARC" },
+        { id: "code_b", name: "HumanEval / MBPP" },
+        { id: "math_b", name: "GSM8K / MATH" },
+        { id: "indic_b", name: "Belebele / MILU" },
+        { id: "ifeval", name: "IFEval" }
+      ];
+      const LINKS = [
+        { s: "edu", b: "mmlu", w: 3, why: "Educational web is the dominant lever for broad knowledge.", delta: "FineWeb-Edu → dramatically better MMLU & ARC" },
+        { s: "edu", b: "arc", w: 3, why: "Same educational signal drives grade-school science reasoning.", delta: "FineWeb-Edu → large ARC gains" },
+        { s: "code", b: "code_b", w: 3, why: "This link is direct, because code data is exactly what HumanEval and MBPP measure.", delta: "permissive-license code is the base capability" },
+        { s: "code", b: "mmlu", w: 2, why: "This is the surprising case, where code in pretraining lifts GENERAL reasoning well beyond code itself.", delta: "+8.2% NL reasoning, +4.2% world knowledge (best-case)" },
+        { s: "code", b: "arc", w: 1, why: "Structured code reasoning transfers to science QA.", delta: "task-dependent" },
+        { s: "math", b: "math_b", w: 3, why: "Mining math from CC is the single biggest GSM8K/MATH lever.", delta: "DeepSeekMath 7B → 51.7% MATH; OpenWebMath ~20× data-efficient" },
+        { s: "math", b: "arc", w: 1, why: "Quantitative reasoning spills into science QA.", delta: "" },
+        { s: "reason", b: "math_b", w: 2, why: "CoT/R1-style traces teach multi-step solutions.", delta: "Proof-Pile-2 → +20pp GSM8K, +13pp MATH (Llemma)" },
+        { s: "reason", b: "arc", w: 2, why: "The same reasoning traces generalise to the multi-step question answering that ARC asks for.", delta: "" },
+        { s: "indic", b: "indic_b", w: 3, why: "Multilingual coverage is the only way to move Indic evals.", delta: "verified Indic tokens are the scarce signal" },
+        { s: "indic", b: "mmlu", w: 1, why: "Some cross-lingual transfer to English knowledge.", delta: "" },
+        { s: "books", b: "mmlu", w: 2, why: "Long-form prose carries deep, structured knowledge.", delta: "" },
+        { s: "books", b: "ifeval", w: 1, why: "Long coherent text helps format/length following.", delta: "" },
+        { s: "stem", b: "math_b", w: 2, why: "arXiv/proofs supply formal math and notation.", delta: "Proof-Pile-2 arXiv 29B component" },
+        { s: "stem", b: "mmlu", w: 2, why: "Academic papers lift graduate-level knowledge.", delta: "feeds GPQA-style depth" },
+        { s: "instr", b: "ifeval", w: 3, why: "Instruction-format data is what IFEval checks.", delta: "verifiable-constraint following" },
+        { s: "instr", b: "mmlu", w: 1, why: "Task-formatted data helps zero-shot MMLU.", delta: "" }
+      ];
+
+      const srcById = Object.fromEntries(SOURCES.map(s => [s.id, s]));
+      const benById = Object.fromEntries(BENCH.map(b => [b.id, b]));
+
+      // build nodes
+      $("w6Left").innerHTML = SOURCES.map(s =>
+        `<button class="w6-node left" data-kind="s" data-id="${s.id}" style="color:${s.color}">
+          <span class="w6-nn"><span class="w6-ndot" style="background:${s.color}"></span>${s.name}</span>
+          <span class="w6-nnote">${s.note}</span>
+        </button>`).join("");
+      $("w6Right").innerHTML = BENCH.map(b =>
+        `<button class="w6-node right" data-kind="b" data-id="${b.id}" style="color:var(--accent)">
+          <span class="w6-nn">${b.name}</span>
+        </button>`).join("");
+
+      const svg = $("w6Svg");
+      let sel = null; // {kind,id}
+
+      function center(el, side) {
+        const stage = $("w6Stage").getBoundingClientRect();
+        const r = el.getBoundingClientRect();
+        return { x: (side === "r" ? r.right : r.left) - stage.left, y: r.top - stage.top + r.height / 2 };
+      }
+
+      function layout() {
+        const stage = $("w6Stage").getBoundingClientRect();
+        svg.setAttribute("viewBox", `0 0 ${stage.width} ${stage.height}`);
+        let paths = "";
+        LINKS.forEach((lk, i) => {
+          const sEl = $("w6Left").querySelector(`[data-id="${lk.s}"]`);
+          const bEl = $("w6Right").querySelector(`[data-id="${lk.b}"]`);
+          if (!sEl || !bEl) return;
+          const a = center(sEl, "r"), c = center(bEl, "l");
+          const mx = (a.x + c.x) / 2;
+          const active = sel && ((sel.kind === "s" && sel.id === lk.s) || (sel.kind === "b" && sel.id === lk.b));
+          const col = srcById[lk.s].color;
+          const sw = lk.w * 1.6 + 1;
+          const op = !sel ? .22 : (active ? .9 : .04);
+          paths += `<path d="M${a.x},${a.y} C${mx},${a.y} ${mx},${c.y} ${c.x},${c.y}" fill="none" stroke="${col}" stroke-width="${active ? sw + 1 : sw}" stroke-linecap="round" opacity="${op}"/>`;
+        });
+        svg.innerHTML = paths;
+      }
+
+      function applyDim() {
+        document.querySelectorAll(".w6-node").forEach(n => { n.classList.remove("dim", "hot"); });
+        if (!sel) return;
+        const selEl = document.querySelector(`.w6-node[data-kind="${sel.kind}"][data-id="${sel.id}"]`);
+        selEl.classList.add("hot");
+        if (sel.kind === "s") {
+          const fed = new Set(LINKS.filter(l => l.s === sel.id).map(l => l.b));
+          BENCH.forEach(b => { if (!fed.has(b.id)) document.querySelector(`.w6-node[data-id="${b.id}"][data-kind="b"]`).classList.add("dim"); });
+          SOURCES.forEach(s => { if (s.id !== sel.id) document.querySelector(`.w6-node[data-id="${s.id}"][data-kind="s"]`).classList.add("dim"); });
+        } else {
+          const feeders = new Set(LINKS.filter(l => l.b === sel.id).map(l => l.s));
+          SOURCES.forEach(s => { if (!feeders.has(s.id)) document.querySelector(`.w6-node[data-id="${s.id}"][data-kind="s"]`).classList.add("dim"); });
+          BENCH.forEach(b => { if (b.id !== sel.id) document.querySelector(`.w6-node[data-id="${b.id}"][data-kind="b"]`).classList.add("dim"); });
+        }
+      }
+
+      function wlabel(w) { return w >= 3 ? ["s3", "strong"] : w >= 2 ? ["s2", "medium"] : ["s1", "supporting"]; }
+
+      function renderDetail() {
+        if (!sel) {
+          $("w6Detail").innerHTML = `<div class="w6-empty">When we click any source or benchmark, the map traces its links and shows us the published deltas alongside them.</div>`;
+          return;
+        }
+        let title, color, items;
+        if (sel.kind === "s") {
+          const s = srcById[sel.id]; title = s.name; color = s.color;
+          items = LINKS.filter(l => l.s === sel.id).sort((a, b) => b.w - a.w)
+            .map(l => ({ name: benById[l.b].name, w: l.w, why: l.why, delta: l.delta }));
+        } else {
+          const b = benById[sel.id]; title = b.name; color = "#00a7d8";
+          items = LINKS.filter(l => l.b === sel.id).sort((a, c) => c.w - a.w)
+            .map(l => ({ name: srcById[l.s].name, w: l.w, why: l.why, delta: l.delta, dot: srcById[l.s].color }));
+        }
+        const rows = items.map(it => {
+          const [cls, lbl] = wlabel(it.w);
+          return `<div class="w6-li">
+            <div class="w6-lt">${it.dot ? `<span class="w6-ndot" style="width:9px;height:9px;border-radius:3px;background:${it.dot}"></span>` : ""}${it.name}<span class="w6-w ${cls}">${lbl}</span></div>
+            <div><div class="w6-lwhy">${it.why}</div>${it.delta ? `<span class="w6-ldelta">${it.delta}</span>` : ""}</div>
+          </div>`;
+        }).join("");
+        $("w6Detail").innerHTML = `
+          <div class="w6-dh"><span class="w6-ddot" style="background:${color}"></span><h3>${title} ${sel.kind === "s" ? "feeds →" : "← fed by"}</h3></div>
+          <div class="w6-links-list">${rows}</div>`;
+      }
+
+      function renderAll() { layout(); applyDim(); renderDetail(); }
+
+      $("w6Stage").addEventListener("click", e => {
+        const n = e.target.closest(".w6-node"); if (!n) return;
+        const cand = { kind: n.dataset.kind, id: n.dataset.id };
+        if (sel && sel.kind === cand.kind && sel.id === cand.id) sel = null;
+        else sel = cand;
+        $("w6Hint").style.display = sel ? "none" : "";
+        renderAll();
+      });
+
+      window.addEventListener("resize", layout);
+      // initial layout after fonts/render settle
+      requestAnimationFrame(() => { renderAll(); setTimeout(layout, 60); });
+    })();
+  </script>
+</body>
+
+</html>

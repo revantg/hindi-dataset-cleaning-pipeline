@@ -1,0 +1,9 @@
+task:
+  agentModelOverrides:
+    task: anthropic/claude-sonnet-5
+    scout: anthropic/claude-sonnet-5
+    sonic: anthropic/claude-sonnet-5
+    reviewer: anthropic/claude-sonnet-5
+    security-reviewer: anthropic/claude-sonnet-5
+    librarian: anthropic/claude-sonnet-5
+    designer: anthropic/claude-sonnet-5

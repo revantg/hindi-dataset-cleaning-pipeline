@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Code &amp; Math as Capability Fuel</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --surface: #ffffff;
+      --surface-alt: #fbfdff;
+      --ink: #102338;
+      --ink-body: #1f3850;
+      --ink-muted: #60768d;
+      --muted-2: #7d90a5;
+      --rule: #e2e9f0;
+      --rule-strong: #cfdbe6;
+      --accent: #00a7d8;
+      --accent-soft: #eafaff;
+      --accent-ink: #0f6e8c;
+      --green: #24b36b;
+      --green-soft: #e7fff2;
+      --green-ink: #19824e;
+      --amber: #d99a13;
+      --amber-soft: #fff7df;
+      --amber-ink: #8a5c06;
+      --violet: #7b61ff;
+      --violet-soft: #eeeaff;
+      --violet-ink: #5a44c8;
+      --red: #e05f6e;
+      --red-soft: #ffeef0;
+      --red-ink: #c0455a;
+      --slate: #5b6b7d;
+      --shadow-soft: 0 8px 22px rgba(16, 35, 56, .05);
+      --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box }
+    html, body { margin: 0; padding: 0; overflow-x: hidden }
+
+    body {
+      background: linear-gradient(180deg, #f8fafc 0%, #f3f6fa 100%);
+      color: var(--ink-body);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.55;
+      padding: 14px;
+    }
+
+    .w20-wrap { max-width: 900px; margin: 0 auto }
+
+    .w20-title {
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(26px, 2.8vw, 40px);
+      font-weight: 800;
+      letter-spacing: -.035em;
+      line-height: 1.08;
+    }
+    .w20-sub {
+      max-width: 820px;
+      margin: 10px 0 16px;
+      color: var(--ink-muted);
+      font-size: 15px;
+      line-height: 1.62;
+    }
+    .w20-sub b { color: var(--ink-body) }
+
+    .w20-panel {
+      margin-bottom: 14px;
+      padding: 15px 17px;
+      border: 1px solid var(--rule);
+      border-radius: 18px;
+      background: var(--surface-alt);
+      box-shadow: var(--shadow-soft);
+    }
+    .w20-ptitle { color: var(--ink); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase }
+
+    /* tabs */
+    .w20-tabs { display: inline-flex; padding: 4px; gap: 4px; border: 1px solid var(--rule); border-radius: 13px; background: #fff; margin-bottom: 14px }
+    .w20-tabs button { border: 0; border-radius: 9px; background: transparent; color: var(--ink-muted); font-family: var(--font-sans); font-size: 13.5px; font-weight: 800; padding: 9px 18px; cursor: pointer; transition: .16s ease; letter-spacing: -.01em }
+    .w20-tabs button:hover { color: var(--accent-ink); background: #f2fbfe }
+    .w20-tabs button.on { background: linear-gradient(180deg, #f2fcff, #e7f9ff); color: var(--accent-ink); box-shadow: inset 0 0 0 1px #bcefff }
+    .w20-tabs button.on.violet { background: linear-gradient(180deg, #f6f3ff, #efeaff); color: var(--violet-ink); box-shadow: inset 0 0 0 1px #cdc2f6 }
+
+    .w20-view { display: none }
+    .w20-view.show { display: block }
+
+    /* CODE TAB bars */
+    .w20-leadrow { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px }
+    .w20-lead { font-size: 13.5px; color: var(--ink-body); line-height: 1.55 }
+    .w20-lead b { color: var(--ink) }
+    .w20-toggle { display: inline-flex; align-items: center; gap: 9px; font-size: 12.5px; font-weight: 700; color: var(--ink-body); cursor: pointer; user-select: none; margin-left: auto }
+    .w20-switch { position: relative; width: 42px; height: 23px; border-radius: 999px; background: #d7e0e9; transition: .2s ease; flex: none }
+    .w20-switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 19px; height: 19px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(16,35,56,.25); transition: .2s ease }
+    .w20-toggle.on .w20-switch { background: var(--violet) }
+    .w20-toggle.on .w20-switch::after { transform: translateX(19px) }
+
+    .w20-bars { display: grid; gap: 16px }
+    .w20-bench { }
+    .w20-bench-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 9px }
+    .w20-bench-name { font-size: 13.5px; font-weight: 800; color: var(--ink) }
+    .w20-bench-name small { display: block; font-size: 11.5px; font-weight: 600; color: var(--muted-2); letter-spacing: 0; margin-top: 1px }
+    .w20-delta { font-family: var(--font-mono); font-size: 13px; font-weight: 800; color: var(--green-ink); background: var(--green-soft); border: 1px solid #bfeed4; border-radius: 8px; padding: 3px 9px; white-space: nowrap; opacity: 0; transition: opacity .35s ease .25s }
+    .w20-bars.coded .w20-delta { opacity: 1 }
+
+    .w20-baseline-track { position: relative; height: 30px; border-radius: 9px; background: #eef3f7; overflow: hidden; border: 1px solid var(--rule) }
+    .w20-fill-base { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 8px; background: linear-gradient(90deg, #7fdcf3, var(--accent)); transition: width .55s cubic-bezier(.2,.7,.2,1) }
+    .w20-fill-add { position: absolute; top: 0; bottom: 0; border-radius: 0 8px 8px 0; background: linear-gradient(90deg, #9d86ff, var(--violet)); width: 0; transition: width .55s cubic-bezier(.2,.7,.2,1) .15s }
+    .w20-fill-lbl { position: absolute; top: 50%; transform: translateY(-50%); font-family: var(--font-mono); font-size: 11.5px; font-weight: 800; color: #fff; white-space: nowrap }
+    .w20-fill-lbl.b { left: 9px }
+    .w20-fill-lbl.a { right: 9px; opacity: 0; transition: opacity .3s ease .35s }
+    .w20-bars.coded .w20-fill-lbl.a { opacity: 1 }
+
+    .w20-legend { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 16px; padding-top: 13px; border-top: 1px solid var(--rule) }
+    .w20-lg { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-body) }
+    .w20-lg i { width: 12px; height: 12px; border-radius: 3px; flex: none }
+    .w20-lg i.cy { background: var(--accent) } .w20-lg i.vi { background: var(--violet) }
+    .w20-lg b { color: var(--ink) }
+
+    .w20-callout { margin-top: 14px; padding: 12px 15px; border-radius: 12px; font-size: 13px; line-height: 1.58 }
+    .w20-callout.violet { border: 1px solid #d8d0ff; background: var(--violet-soft); color: var(--violet-ink) }
+    .w20-callout.amber { border: 1px solid #f0ddaf; background: var(--amber-soft); color: var(--amber-ink) }
+    .w20-callout b { color: inherit; font-weight: 800 }
+    .w20-callout .ttl { display: block; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 4px; opacity: .85 }
+
+    /* MATH TAB loop */
+    .w20-math-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px }
+    .w20-btn { border: 1px solid #bcefff; border-radius: 11px; background: linear-gradient(180deg, #f2fcff, #e7f9ff); color: var(--accent-ink); font-family: var(--font-sans); font-size: 13px; font-weight: 800; padding: 9px 16px; cursor: pointer; transition: .16s ease }
+    .w20-btn:hover { box-shadow: var(--shadow-soft) }
+    .w20-btn:active { transform: translateY(1px) }
+    .w20-btn.ghost { background: #fff; border-color: var(--rule); color: var(--ink-muted) }
+    .w20-iter { font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-muted); margin-left: 2px }
+    .w20-iter b { color: var(--accent-ink); font-weight: 800 }
+
+    .w20-loop { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; margin-bottom: 6px }
+    @media(max-width:640px){ .w20-loop { grid-template-columns: repeat(2, minmax(0,1fr)) } }
+    .w20-step { position: relative; border: 1px solid var(--rule); border-radius: 13px; background: #fff; padding: 12px 12px 13px; transition: .25s ease }
+    .w20-step.active { box-shadow: inset 0 0 0 2px var(--accent), var(--shadow-soft); border-color: transparent; transform: translateY(-2px) }
+    .w20-step .sn { font-family: var(--font-mono); font-size: 10px; font-weight: 800; color: var(--muted-2) }
+    .w20-step .sname { font-size: 13px; font-weight: 800; color: var(--ink); line-height: 1.22; margin-top: 3px }
+    .w20-step .sdesc { font-size: 11.5px; color: var(--ink-muted); line-height: 1.5; margin-top: 6px }
+    .w20-step .sicon { font-size: 22px; line-height: 1; margin-bottom: 5px; display: block }
+
+    .w20-loopback { display: flex; align-items: center; justify-content: center; gap: 9px; margin: 4px 0 16px; font-size: 12px; color: var(--violet-ink); font-weight: 700 }
+    .w20-loopback .arc { font-size: 16px }
+
+    .w20-corpus { border: 1px solid var(--rule); border-radius: 14px; background: #fff; padding: 15px 16px; margin-bottom: 14px }
+    .w20-corpus-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 11px }
+    .w20-corpus-lbl { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-2) }
+    .w20-corpus-val { font-family: var(--font-mono); font-size: 30px; font-weight: 800; color: var(--violet-ink); letter-spacing: -.02em; line-height: 1 }
+    .w20-corpus-val small { font-size: 14px; color: var(--muted-2); font-weight: 700; margin-left: 5px }
+    .w20-corpus-track { position: relative; height: 18px; border-radius: 999px; background: #eef3f7; overflow: hidden }
+    .w20-corpus-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: linear-gradient(90deg, #9d86ff, var(--violet)); width: 0; transition: width .9s cubic-bezier(.2,.7,.2,1) }
+    .w20-corpus-scale { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: var(--muted-2); margin-top: 6px }
+
+    .w20-result { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; border: 1px solid #d8d0ff; background: linear-gradient(180deg, #fbfaff, #f7f4ff); border-radius: 16px; padding: 16px 18px; margin-bottom: 14px; opacity: .4; transition: opacity .5s ease }
+    .w20-result.reached { opacity: 1 }
+    .w20-result .rnum { font-family: var(--font-mono); font-weight: 800; color: var(--violet-ink); line-height: 1 }
+    .w20-result .rnum .g { font-size: 40px; letter-spacing: -.03em }
+    .w20-result .rnum small { display: block; margin-top: 5px; font-size: 11px; font-weight: 700; color: var(--muted-2); letter-spacing: .02em }
+    .w20-result .rtxt { flex: 1 1 320px; font-size: 13.5px; line-height: 1.6; color: var(--ink-body) }
+    .w20-result .rtxt b { color: var(--violet-ink) }
+
+    .w20-foot { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 4px; padding-top: 12px; flex-wrap: wrap }
+    .w20-foot-txt { color: var(--ink-muted); font-size: 12px; max-width: 580px; line-height: 1.55 }
+    .w20-foot-txt b { color: var(--ink-body) }
+    .w20-badge { display: inline-flex; align-items: center; white-space: nowrap; padding: 6px 12px; border: 1px solid #bcefff; border-radius: 999px; background: var(--accent-soft); color: var(--accent-ink); font-family: var(--font-mono); font-size: 11.5px; font-weight: 700 }
+    .w20-pub { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border: 1px solid var(--rule-strong); border-radius: 999px; background: #fff; color: var(--slate); font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; letter-spacing: .02em }
+    .w20-pub i { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex: none }
+  </style>
+</head>
+
+<body>
+  <div class="w20-wrap">
+    <h1 class="w20-title">Code &amp; math are capability fuel rather than niche data</h1>
+    <p class="w20-sub">We have two surprises to work through about what we feed a model. When we add <b>code</b> to
+      pretraining it lifts <b>general</b> reasoning well beyond coding benchmarks alone. When a domain corpus does not
+      exist yet, we can <b>mine one out of Common Crawl</b> with a cheap classifier, which is the recipe that carried a
+      7B model into GPT-4 territory on math. Both of these ideas transfer directly into building an <b>Indic</b> corpus
+      from scratch.</p>
+
+    <div class="w20-tabs" role="tablist">
+      <button id="tabCode" class="on" data-view="code">Code → reasoning</button>
+      <button id="tabMath" data-view="math">Math mining loop</button>
+    </div>
+
+    <!-- ============ CODE TAB ============ -->
+    <div class="w20-view show" id="viewCode">
+      <div class="w20-panel">
+        <div class="w20-leadrow">
+          <span class="w20-lead"><b>The surprise:</b> when we add code to a text-only pretraining mix the model gets
+            better at things that have nothing to do with code. We can flip the switch to mix code in and watch it
+            happen.</span>
+          <label class="w20-toggle" id="codeToggle">
+            <span>text-only</span>
+            <span class="w20-switch"></span>
+            <span style="color:var(--violet-ink);font-weight:800">+ code (12×)</span>
+          </label>
+        </div>
+
+        <div class="w20-bars" id="codeBars">
+          <!-- NL reasoning -->
+          <div class="w20-bench">
+            <div class="w20-bench-head">
+              <span class="w20-bench-name">Natural-language reasoning
+                <small>e.g. commonsense / inference, which is NOT a code benchmark</small></span>
+              <span class="w20-delta">+8.2%</span>
+            </div>
+            <div class="w20-baseline-track">
+              <div class="w20-fill-base" data-base="62"></div>
+              <div class="w20-fill-add" data-add="8.2" data-base="62"></div>
+              <span class="w20-fill-lbl b">text-only</span>
+              <span class="w20-fill-lbl a">+ code</span>
+            </div>
+          </div>
+          <!-- World knowledge -->
+          <div class="w20-bench">
+            <div class="w20-bench-head">
+              <span class="w20-bench-name">World knowledge
+                <small>facts about the world, again not code</small></span>
+              <span class="w20-delta">+4.2%</span>
+            </div>
+            <div class="w20-baseline-track">
+              <div class="w20-fill-base" data-base="55"></div>
+              <div class="w20-fill-add" data-add="4.2" data-base="55"></div>
+              <span class="w20-fill-lbl b">text-only</span>
+              <span class="w20-fill-lbl a">+ code</span>
+            </div>
+          </div>
+          <!-- Generative win-rate -->
+          <div class="w20-bench">
+            <div class="w20-bench-head">
+              <span class="w20-bench-name">Generative win-rate
+                <small>open-ended generation, judged head-to-head</small></span>
+              <span class="w20-delta">+6.6%</span>
+            </div>
+            <div class="w20-baseline-track">
+              <div class="w20-fill-base" data-base="50"></div>
+              <div class="w20-fill-add" data-add="6.6" data-base="50"></div>
+              <span class="w20-fill-lbl b">text-only</span>
+              <span class="w20-fill-lbl a">+ code</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="w20-legend">
+          <span class="w20-lg"><i class="cy"></i><b>baseline</b> from text-only pretraining</span>
+          <span class="w20-lg"><i class="vi"></i><b>the lift</b> that adding code buys on non-code tasks</span>
+          <span class="w20-pub" style="margin-left:auto"><i></i>published result</span>
+        </div>
+      </div>
+
+      <div class="w20-panel" style="padding-top:13px">
+        <div class="w20-callout violet">
+          <span class="ttl">Why this matters</span>
+          Code teaches structure alongside long-range dependencies and step-by-step procedure, and that learning
+          <b>transfers</b> into plain-language reasoning. We should read these as <b>best-case "up to" figures at
+          sub-3B scale</b> that remain <b>task-dependent</b>. <span class="w20-pub" style="vertical-align:middle"><i></i>published: Aryabumi et&nbsp;al., "To Code or Not To Code?" (up to +8.2% NL reasoning, +4.2% world knowledge, +6.6% gen win-rate, 12× code vs text-only)</span>
+        </div>
+        <div class="w20-callout amber" style="margin-top:11px">
+          <span class="ttl">The caveat, since more is not always better</span>
+          When we push the code share <b>too high</b> it can <b>hurt</b> syntax / morphology and factual-knowledge tasks,
+          so we should treat code as a powerful seasoning that works best in measured amounts. <span class="w20-pub" style="vertical-align:middle"><i></i>published: Petty et&nbsp;al., TMLR 2025</span>
+        </div>
+        <div class="w20-callout" style="margin-top:11px;border:1px solid var(--rule-strong);background:#fff;color:var(--ink-body)">
+          <span class="ttl" style="color:var(--slate)">V5 sourcing note</span>
+          We should use <b>permissive-license code only</b> (e.g. The Stack v2). V4's code band was thin because it drew
+          on StarCoder alone, which is exactly the gap the cohort should close.
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ MATH TAB ============ -->
+    <div class="w20-view" id="viewMath">
+      <div class="w20-panel">
+        <div class="w20-math-top">
+          <button class="w20-btn" id="runLoop">▶ Run the mining loop</button>
+          <button class="w20-btn ghost" id="resetLoop">Reset</button>
+          <span class="w20-iter">iteration <b id="iterNum">0</b> / 4</span>
+        </div>
+
+        <div class="w20-loop" id="loopSteps">
+          <div class="w20-step" data-step="0">
+            <span class="sicon">🌱</span>
+            <span class="sn">STEP 1</span>
+            <div class="sname">Seed math</div>
+            <div class="sdesc">We start with a small set of known-good math pages such as a math Q&amp;A site, which we hold as our positive examples.</div>
+          </div>
+          <div class="w20-step" data-step="1">
+            <span class="sicon">🧮</span>
+            <span class="sn">STEP 2</span>
+            <div class="sname">Train fastText classifier</div>
+            <div class="sdesc">We train a cheap and fast text classifier that answers "is this page math-like?", feeding it the seed pages as positives and random web pages as negatives.</div>
+          </div>
+          <div class="w20-step" data-step="2">
+            <span class="sicon">⛏️</span>
+            <span class="sn">STEP 3</span>
+            <div class="sname">Recall / mine Common Crawl</div>
+            <div class="sdesc">We score the whole crawl and pull in the pages the classifier flags as math, so that new math pages surface for us.</div>
+          </div>
+          <div class="w20-step" data-step="3">
+            <span class="sicon">📈</span>
+            <span class="sn">STEP 4</span>
+            <div class="sname">Grow corpus → repeat</div>
+            <div class="sdesc">We add the freshly-found pages back as seeds so that we can retrain and mine again, and each pass recovers still more.</div>
+          </div>
+        </div>
+        <div class="w20-loopback"><span class="arc">↻</span> the loop feeds itself as found pages become next round's seed</div>
+
+        <div class="w20-corpus">
+          <div class="w20-corpus-head">
+            <span class="w20-corpus-lbl">Math tokens mined from Common Crawl</span>
+            <span class="w20-corpus-val"><span id="corpusVal">0</span><small>B tokens</small></span>
+          </div>
+          <div class="w20-corpus-track"><div class="w20-corpus-fill" id="corpusFill"></div></div>
+          <div class="w20-corpus-scale"><span>0B</span><span>30B</span><span>60B</span><span>90B</span><span>120B</span></div>
+        </div>
+
+        <div class="w20-result" id="mathResult">
+          <div class="rnum"><span class="g">51.7%</span><small>MATH benchmark · 7B model</small></div>
+          <div class="rtxt">When we continue-pretrain a <b>7B</b> model on those <b>120B mined math tokens</b> it reaches
+            <b>51.7% on MATH</b> (60.9% with self-consistency), which lands in GPT-4 / Gemini-Ultra territory for a 7B.
+            <span class="w20-pub"><i></i>published: DeepSeekMath</span></div>
+        </div>
+
+        <div class="w20-callout" style="border:1px solid var(--rule-strong);background:#fff;color:var(--ink-body)">
+          <span class="ttl" style="color:var(--slate)">Why the cohort cares</span>
+          There is no off-the-shelf high-quality <b>Indic</b> corpus available to us, and this <b>exact recipe</b> of
+          seeding, training a cheap classifier, recalling from the crawl, growing and repeating is how we build a
+          quality corpus for a language or domain <b>where none exists</b>. We are working through math here so that we
+          can turn the same machinery on Telugu next.
+        </div>
+      </div>
+    </div>
+
+    <div class="w20-foot">
+      <span class="w20-foot-txt">All numeric figures here are <b>published results</b> from the cited papers
+        (Aryabumi et&nbsp;al.; Petty et&nbsp;al.; DeepSeekMath), while the intermediate per-iteration token counts on the
+        mining loop are <b>illustrative</b> pacing toward the published 120B total.</span>
+      <span class="w20-badge" id="footBadge">code lifts non-code tasks</span>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+    (function () {
+      const $ = id => document.getElementById(id);
+      const qsa = sel => Array.prototype.slice.call(document.querySelectorAll(sel));
+
+      /* ---------- tabs ---------- */
+      const tabCode = $("tabCode"), tabMath = $("tabMath");
+      const badge = $("footBadge");
+      function showView(v) {
+        const isCode = v === "code";
+        tabCode.classList.toggle("on", isCode);
+        tabMath.classList.toggle("on", !isCode);
+        tabMath.classList.toggle("violet", !isCode);
+        $("viewCode").classList.toggle("show", isCode);
+        $("viewMath").classList.toggle("show", !isCode);
+        badge.textContent = isCode ? "code lifts non-code tasks" : "mine a corpus from scratch";
+      }
+      tabCode.addEventListener("click", () => showView("code"));
+      tabMath.addEventListener("click", () => { showView("math"); });
+
+      /* ---------- CODE tab bars ---------- */
+      const codeBars = $("codeBars");
+      const toggle = $("codeToggle");
+      // scale so the longest bar (62 base + 8.2 add = 70.2%) sits comfortably inside the track
+      const MAXPCT = 78;
+      function layoutBars() {
+        const coded = codeBars.classList.contains("coded");
+        qsa(".w20-fill-base").forEach(el => {
+          const base = parseFloat(el.dataset.base);
+          el.style.width = (base / MAXPCT * 100) + "%";
+        });
+        qsa(".w20-fill-add").forEach(el => {
+          const base = parseFloat(el.dataset.base);
+          const add = parseFloat(el.dataset.add);
+          el.style.left = (base / MAXPCT * 100) + "%";
+          el.style.width = coded ? (add / MAXPCT * 100) + "%" : "0%";
+        });
+      }
+      function setCoded(on) {
+        toggle.classList.toggle("on", on);
+        codeBars.classList.toggle("coded", on);
+        layoutBars();
+      }
+      toggle.addEventListener("click", () => setCoded(!toggle.classList.contains("on")));
+      layoutBars();
+
+      /* ---------- MATH tab loop ---------- */
+      // Illustrative per-iteration growth pacing toward the PUBLISHED 120B total.
+      const TOTALS = [0, 28, 62, 95, 120];   // B tokens after each completed iteration
+      const MAXTOK = 120;
+      const steps = qsa("#loopSteps .w20-step");
+      const corpusVal = $("corpusVal"), corpusFill = $("corpusFill");
+      const iterNum = $("iterNum"), mathResult = $("mathResult");
+      const runBtn = $("runLoop"), resetBtn = $("resetLoop");
+
+      let running = false, timers = [];
+      function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+
+      function setCorpus(v) {
+        corpusVal.textContent = Math.round(v);
+        corpusFill.style.width = (v / MAXTOK * 100) + "%";
+      }
+      function reset() {
+        clearTimers(); running = false;
+        steps.forEach(s => s.classList.remove("active"));
+        setCorpus(0); iterNum.textContent = "0";
+        mathResult.classList.remove("reached");
+        runBtn.textContent = "▶ Run the mining loop";
+        runBtn.disabled = false;
+      }
+      resetBtn.addEventListener("click", reset);
+
+      function runLoop() {
+        if (running) return;
+        running = true;
+        runBtn.disabled = true;
+        runBtn.textContent = "mining…";
+        steps.forEach(s => s.classList.remove("active"));
+        setCorpus(0); iterNum.textContent = "0";
+        mathResult.classList.remove("reached");
+
+        const STEP_MS = 520;     // time each step card stays highlighted
+        const ITER_STEPS = 4;    // 4 cards per iteration
+        const ITERS = 4;         // 4 full passes → 120B
+        let t = 200;
+
+        for (let it = 0; it < ITERS; it++) {
+          for (let s = 0; s < ITER_STEPS; s++) {
+            const stepIdx = s;
+            timers.push(setTimeout(() => {
+              steps.forEach(x => x.classList.remove("active"));
+              steps[stepIdx].classList.add("active");
+            }, t));
+            t += STEP_MS;
+          }
+          // after step 4 of this iteration, corpus grows + iteration counter ticks
+          const iterDone = it + 1;
+          timers.push(setTimeout(() => {
+            setCorpus(TOTALS[iterDone]);
+            iterNum.textContent = String(iterDone);
+          }, t - STEP_MS + 260));
+        }
+
+        // finish
+        timers.push(setTimeout(() => {
+          steps.forEach(x => x.classList.remove("active"));
+          mathResult.classList.add("reached");
+          running = false;
+          runBtn.disabled = false;
+          runBtn.textContent = "▶ Run again";
+        }, t + 200));
+      }
+      runBtn.addEventListener("click", runLoop);
+
+      // init
+      setCorpus(0);
+    })();
+  </script>
+</body>
+
+</html>

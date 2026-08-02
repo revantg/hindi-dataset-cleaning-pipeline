@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Deduplication Effect: when more aggressive stops helping</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --surface: #ffffff;
+      --surface-alt: #fbfdff;
+      --ink: #102338;
+      --ink-body: #1f3850;
+      --ink-muted: #60768d;
+      --muted-2: #7d90a5;
+      --rule: #e2e9f0;
+      --rule-strong: #cfdbe6;
+      --accent: #00a7d8;
+      --accent-soft: #eafaff;
+      --accent-ink: #0f6e8c;
+      --green: #24b36b;
+      --green-soft: #e7fff2;
+      --green-ink: #19824e;
+      --amber: #d99a13;
+      --amber-soft: #fff7df;
+      --amber-ink: #8a5c06;
+      --violet: #7b61ff;
+      --violet-soft: #eeeaff;
+      --violet-ink: #5a44c8;
+      --red: #e05f6e;
+      --red-soft: #ffeef0;
+      --red-ink: #c0455a;
+      --slate: #5b6b7d;
+      --shadow-soft: 0 8px 22px rgba(16, 35, 56, .05);
+      --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box }
+    html, body { margin: 0; padding: 0; overflow-x: hidden }
+
+    body {
+      background: linear-gradient(180deg, #f8fafc 0%, #f3f6fa 100%);
+      color: var(--ink-body);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.55;
+      padding: 14px;
+    }
+
+    .w9-wrap { max-width: 900px; margin: 0 auto }
+
+    .w9-title {
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(26px, 2.8vw, 40px);
+      font-weight: 800;
+      letter-spacing: -.035em;
+      line-height: 1.08;
+    }
+    .w9-subtitle {
+      max-width: 820px;
+      margin: 10px 0 16px;
+      color: var(--ink-muted);
+      font-size: 15px;
+      line-height: 1.62;
+    }
+    .w9-subtitle b { color: var(--ink-body) }
+
+    .w9-panel {
+      margin-bottom: 14px;
+      padding: 15px 17px;
+      border: 1px solid var(--rule);
+      border-radius: 18px;
+      background: var(--surface-alt);
+      box-shadow: var(--shadow-soft);
+    }
+    .w9-ptitle { color: var(--ink); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase }
+
+    /* toggle */
+    .w9-ctrl-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap }
+    .w9-ctrl-lbl { font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--muted-2) }
+    .w9-seg { display: inline-flex; flex-wrap: wrap; padding: 3px; gap: 3px; border: 1px solid var(--rule); border-radius: 11px; background: #fff }
+    .w9-seg button { border: 0; border-radius: 8px; background: transparent; color: var(--ink-muted); font-family: var(--font-mono); font-size: 12px; font-weight: 800; padding: 7px 13px; cursor: pointer; transition: .16s ease }
+    .w9-seg button:hover { color: var(--accent-ink); background: #f2fbfe }
+    .w9-seg button.on { background: linear-gradient(180deg, #f2fcff, #e7f9ff); color: var(--accent-ink); box-shadow: inset 0 0 0 1px #bcefff }
+    .w9-seg button.win.on { background: linear-gradient(180deg, #f6f3ff, #efeaff); color: var(--violet-ink); box-shadow: inset 0 0 0 1px #cdc2f6 }
+
+    /* corpus blocks */
+    .w9-corpus-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 14px 0 9px }
+    .w9-corpus-sub { font-size: 12px; color: var(--ink-muted) }
+    .w9-corpus-sub b { color: var(--ink-body) }
+    .w9-grid {
+      display: grid;
+      grid-template-columns: repeat(16, minmax(0, 1fr));
+      gap: 3px;
+    }
+    .w9-blk {
+      aspect-ratio: 1 / 1;
+      border-radius: 3px;
+      background: #d9e6f0;
+      transition: background .4s ease, opacity .4s ease, transform .4s ease;
+    }
+    .w9-blk.dup { background: #f1c97a }      /* near/exact duplicate of something else (amber = the cost) */
+    .w9-blk.old { background: #b9c9d8 }       /* older-dump unique doc, still useful */
+    .w9-blk.dropped { opacity: .14; transform: scale(.72) }
+    .w9-snap-labels { display: flex; justify-content: space-between; margin-top: 7px; font-family: var(--font-mono); font-size: 9.5px; color: var(--muted-2) }
+
+    .w9-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px }
+    .w9-lg { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink-body) }
+    .w9-lg i { width: 12px; height: 12px; border-radius: 3px; flex: none }
+
+    /* outcome cards */
+    .w9-cards { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px }
+    .w9-card { border: 1px solid var(--rule); border-radius: 14px; background: #fff; padding: 14px 15px }
+    .w9-card .w9-sh { display: flex; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--ink); margin-bottom: 11px }
+    .w9-dot { width: 9px; height: 9px; border-radius: 3px; flex: none }
+    .w9-dot.am { background: var(--amber) }
+    .w9-dot.gn { background: var(--green) }
+    .w9-card .w9-big { font-family: var(--font-mono); font-size: 27px; font-weight: 800; letter-spacing: -.02em; line-height: 1 }
+    .w9-card.rem .w9-big { color: var(--amber-ink) }
+    .w9-card.qual .w9-big { color: var(--green-ink) }
+    .w9-card .w9-unit { font-size: 12px; color: var(--muted-2); font-weight: 700; margin-left: 5px }
+    .w9-track { position: relative; height: 14px; border-radius: 999px; background: #eef3f7; overflow: hidden; margin: 11px 0 9px }
+    .w9-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; transition: width .4s cubic-bezier(.2, .7, .2, 1) }
+    .w9-fill.am { background: linear-gradient(90deg, #f1c97a, var(--amber)) }
+    .w9-fill.gn { background: linear-gradient(90deg, #7fd9a8, var(--green)) }
+    .w9-card .w9-sn { font-size: 11.5px; color: var(--ink-muted); line-height: 1.5 }
+    .w9-card .w9-sn b { color: var(--ink-body) }
+
+    /* verdict */
+    .w9-verdict { margin-top: 13px; padding: 12px 15px; border-radius: 12px; font-size: 13px; line-height: 1.55 }
+    .w9-verdict b { font-weight: 800 }
+    .w9-verdict.base { border: 1px solid var(--rule-strong); background: #fff; color: var(--ink-body) }
+    .w9-verdict.cost { border: 1px solid #f0ddaf; background: var(--amber-soft); color: var(--amber-ink) }
+    .w9-verdict.warn { border: 1px solid #f3c9cf; background: var(--red-soft); color: var(--red-ink) }
+    .w9-verdict.good { border: 1px solid #c6e6d4; background: var(--green-soft); color: var(--green-ink) }
+    .w9-verdict.answer { border: 1px solid #d8d0ff; background: var(--violet-soft); color: var(--violet-ink) }
+
+    /* the finding panel */
+    .w9-finding { border: 1px solid #d8d0ff; background: linear-gradient(180deg, #fbfaff, #f7f4ff) }
+    .w9-fi-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap }
+    .w9-fi-num { font-family: var(--font-mono); font-weight: 800; color: var(--violet-ink); line-height: 1 }
+    .w9-fi-num .w9-g { font-size: 38px; letter-spacing: -.03em }
+    .w9-fi-num small { display: block; margin-top: 5px; font-size: 11px; font-weight: 700; color: var(--muted-2); letter-spacing: .03em }
+    .w9-fi-txt { flex: 1 1 320px; font-size: 13.5px; line-height: 1.6; color: var(--ink-body) }
+    .w9-fi-txt b { color: var(--violet-ink) }
+    .w9-fi-ref { margin-top: 10px; padding: 9px 12px; border: 1px dashed #cdc2f6; border-radius: 10px; font-family: var(--font-mono); font-size: 12px; color: var(--ink-muted) }
+    .w9-fi-ref b { color: var(--ink) }
+
+    /* quality-score comparison bars */
+    .w9-bars { display: grid; gap: 10px; margin-top: 4px }
+    .w9-bar-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) 64px; align-items: center; gap: 10px }
+    .w9-bar-lbl { font-size: 12px; font-weight: 700; color: var(--ink-body); line-height: 1.25 }
+    .w9-bar-lbl small { display: block; font-weight: 600; color: var(--muted-2); font-size: 10.5px }
+    .w9-bar-track { position: relative; height: 22px; border-radius: 8px; background: #eef3f7; overflow: hidden }
+    .w9-bar-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 8px; transition: width .5s cubic-bezier(.2, .7, .2, 1) }
+    .w9-bar-fill.base { background: linear-gradient(90deg, #7fdcf3, var(--accent)) }
+    .w9-bar-fill.lo { background: linear-gradient(90deg, #f0aab2, var(--red)) }
+    .w9-bar-fill.hi { background: linear-gradient(90deg, #9d86ff, var(--violet)) }
+    .w9-bar-val { font-family: var(--font-mono); font-size: 13px; font-weight: 800; color: var(--ink); text-align: right }
+
+    .w9-footer { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 6px; padding-top: 12px; flex-wrap: wrap }
+    .w9-foot-txt { color: var(--ink-muted); font-size: 12.5px; max-width: 560px; line-height: 1.55 }
+    .w9-badge { display: inline-flex; align-items: center; white-space: nowrap; padding: 6px 12px; border: 1px solid #d8d0ff; border-radius: 999px; background: var(--violet-soft); color: var(--violet-ink); font-family: var(--font-mono); font-size: 11.5px; font-weight: 700 }
+
+    @media(max-width:680px) {
+      body { padding: 13px }
+      .w9-cards { grid-template-columns: minmax(0, 1fr) }
+      .w9-grid { grid-template-columns: repeat(8, minmax(0, 1fr)) }
+      .w9-bar-row { grid-template-columns: 110px minmax(0, 1fr) 56px }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="w9-wrap">
+    <h1 class="w9-title">When more dedup stops helping</h1>
+    <p class="w9-subtitle">Because duplicates inflate token counts, the natural instinct is to crush them as hard as we
+      can, yet FineWeb found that this instinct works against us. Deduplicating <b>within each CommonCrawl snapshot</b>
+      turned out to beat deduplicating <b>globally across all 96 snapshots</b>, since the global pass stripped up to
+      <b>~90% of the older dumps</b> and that removed data proved to be <b>higher</b> quality. As we flip between the
+      modes below we can watch what gets thrown away and see what it does to the trained model.</p>
+
+    <!-- toggle -->
+    <div class="w9-panel">
+      <div class="w9-ctrl-row">
+        <span class="w9-ctrl-lbl">dedup strategy</span>
+        <div class="w9-seg" id="w9Seg">
+          <button data-m="raw">No dedup</button>
+          <button data-m="snap" class="win on">Per-snapshot</button>
+          <button data-m="global">Global (all 96 dumps)</button>
+        </div>
+      </div>
+
+      <div class="w9-corpus-head">
+        <span class="w9-ptitle">The corpus · 96 CommonCrawl snapshots, from oldest through to newest</span>
+        <span class="w9-corpus-sub" id="w9CorpusSub"></span>
+      </div>
+      <div class="w9-grid" id="w9Grid" aria-hidden="true"></div>
+      <div class="w9-snap-labels"><span>2013 (oldest dumps)</span><span>2024 (newest dumps)</span></div>
+
+      <div class="w9-legend">
+        <span class="w9-lg"><i style="background:#b9c9d8"></i>unique doc from an older dump</span>
+        <span class="w9-lg"><i style="background:#d9e6f0"></i>unique doc from a newer dump</span>
+        <span class="w9-lg"><i style="background:#f1c97a"></i>near / exact duplicate</span>
+      </div>
+    </div>
+
+    <!-- outcome cards -->
+    <div class="w9-panel">
+      <div class="w9-ptitle" style="margin-bottom:12px">Two quantities that move as we change the mode</div>
+      <div class="w9-cards">
+        <div class="w9-card rem">
+          <div class="w9-sh"><span class="w9-dot am"></span>Tokens removed</div>
+          <div><span class="w9-big" id="w9RemBig">0%</span><span class="w9-unit">of the raw corpus</span></div>
+          <div class="w9-track"><div class="w9-fill am" id="w9RemFill" style="width:0%"></div></div>
+          <div class="w9-sn" id="w9RemNote"></div>
+        </div>
+        <div class="w9-card qual">
+          <div class="w9-sh"><span class="w9-dot gn"></span>Downstream quality</div>
+          <div><span class="w9-big" id="w9QualBig">·</span><span class="w9-unit">vs RefinedWeb baseline</span></div>
+          <div class="w9-track"><div class="w9-fill gn" id="w9QualFill" style="width:50%"></div></div>
+          <div class="w9-sn" id="w9QualNote"></div>
+        </div>
+      </div>
+      <div class="w9-verdict base" id="w9Verdict"></div>
+    </div>
+
+    <!-- quality comparison -->
+    <div class="w9-panel">
+      <div class="w9-ptitle" style="margin-bottom:13px">Downstream benchmark performance from the published FineWeb results</div>
+      <div class="w9-bars">
+        <div class="w9-bar-row">
+          <div class="w9-bar-lbl">RefinedWeb<small>the bar to match</small></div>
+          <div class="w9-bar-track"><div class="w9-bar-fill base" style="width:88%"></div></div>
+          <div class="w9-bar-val">baseline</div>
+        </div>
+        <div class="w9-bar-row">
+          <div class="w9-bar-lbl">Per-snapshot dedup<small>~20T tokens kept</small></div>
+          <div class="w9-bar-track"><div class="w9-bar-fill hi" style="width:88%"></div></div>
+          <div class="w9-bar-val">matches</div>
+        </div>
+        <div class="w9-bar-row">
+          <div class="w9-bar-lbl">Global dedup<small>~4T tokens kept</small></div>
+          <div class="w9-bar-track"><div class="w9-bar-fill lo" style="width:50%"></div></div>
+          <div class="w9-bar-val">far below</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- the finding -->
+    <div class="w9-panel w9-finding">
+      <div class="w9-fi-row">
+        <div class="w9-fi-num"><span class="w9-g">~90%</span><small>of older dumps stripped by global dedup</small></div>
+        <div class="w9-fi-txt">Global MinHash treats the whole web as one pile, so that a 2024 page which echoes a 2014
+          page ends up deleting the <b>older</b> copy. Once we repeat that across 96 snapshots the early dumps are gutted,
+          and the global-deduped ~4T set showed <b>little improvement over non-deduplicated data</b> while it scored far
+          below RefinedWeb, which tells us that the removed old documents were the <b>good</b> ones. Per-snapshot dedup
+          instead keeps each dump honest on its own terms, lands at ~20T tokens, and <b>matches RefinedWeb</b>, which
+          teaches us that dedup is a quality lever we should tune with care rather than a knob we simply push toward
+          maximum aggressiveness.</div>
+      </div>
+      <div class="w9-fi-ref">FineWeb &middot; <b>15T tokens</b> from <b>96 CC snapshots</b>. Per-snapshot dedup &rarr;
+        <b>~20T &rarr; matches RefinedWeb</b>; global dedup &rarr; <b>~4T &rarr; far below</b>. Published results.</div>
+    </div>
+
+    <div class="w9-footer">
+      <span class="w9-foot-txt">The idea that more bytes always means more data is the wrong instinct, and the idea
+        that we should remove every duplicate leads us astray in the same way, because the token count and the quality can
+        move in different directions while only the quality shapes the model we train.</span>
+      <span class="w9-badge">aggressive ≠ better</span>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+    (function () {
+      const $ = id => document.getElementById(id);
+
+      // ---- build the corpus grid: 16 cols x 8 rows = 128 blocks, 96 "snapshots" worth ----
+      // left half = older dumps, right half = newer dumps. Some blocks are duplicates (amber).
+      const COLS = 16, ROWS = 8, N = COLS * ROWS;
+      const grid = $("w9Grid");
+      const blocks = [];
+      // deterministic pseudo-random so layout is stable
+      let seed = 42;
+      const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+
+      for (let i = 0; i < N; i++) {
+        const col = i % COLS;
+        const older = col < COLS / 2;          // left half = older dumps
+        const r = rnd();
+        // duplicates are spread throughout (~22% of corpus are near/exact dups)
+        const isDup = r < 0.22;
+        const b = document.createElement("div");
+        b.className = "w9-blk" + (isDup ? " dup" : (older ? " old" : ""));
+        b.dataset.older = older ? "1" : "0";
+        b.dataset.dup = isDup ? "1" : "0";
+        grid.appendChild(b);
+        blocks.push(b);
+      }
+
+      // ---- modes ----
+      // Numbers: FineWeb published. raw=0% removed; per-snapshot removes near/exact dups within a dump
+      // (illustrative ~22% here) keeping ~20T and matching RefinedWeb; global removes ~90% of OLDER dumps
+      // plus the duplicates, ending near ~4T (illustrative split of the published 15T/4T figures across the grid).
+      const MODES = {
+        raw: {
+          verdictClass: "base",
+          removedPct: 0,
+          qualWidth: 50, qualText: "non-deduplicated",
+          drop: () => false
+        },
+        snap: {
+          verdictClass: "answer",
+          // remove the duplicate blocks only (within-dump near/exact dups)
+          removedPct: null,    // computed from grid
+          qualWidth: 88, qualText: "matches RefinedWeb",
+          drop: b => b.dataset.dup === "1"
+        },
+        global: {
+          verdictClass: "warn",
+          removedPct: null,
+          qualWidth: 50, qualText: "far below RefinedWeb",
+          // remove duplicates AND ~90% of older-dump uniques (the higher-quality data)
+          drop: b => b.dataset.dup === "1" || (b.dataset.older === "1" && rndDropOld(b))
+        }
+      };
+
+      // stable per-block decision for the 90% old-dump strip
+      const oldDropMap = new WeakMap();
+      (function () { let s = 7; const r = () => (s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+        blocks.forEach(b => { if (b.dataset.older === "1") oldDropMap.set(b, r() < 0.90); }); })();
+      function rndDropOld(b) { return oldDropMap.get(b) === true; }
+
+      const dupCount = blocks.filter(b => b.dataset.dup === "1").length;
+
+      function apply(mode) {
+        const cfg = MODES[mode];
+        let dropped = 0;
+        blocks.forEach(b => {
+          const d = cfg.drop(b);
+          b.classList.toggle("dropped", d);
+          if (d) dropped++;
+        });
+        const removedPct = Math.round(dropped / N * 100);
+
+        // corpus header
+        $("w9CorpusSub").innerHTML = `<b>${N - dropped}</b> of ${N} document blocks survive`;
+
+        // removed card
+        $("w9RemBig").textContent = removedPct + "%";
+        $("w9RemFill").style.width = removedPct + "%";
+
+        // quality card
+        $("w9QualBig").textContent = mode === "snap" ? "✓ matches" : (mode === "global" ? "✗ far below" : "·");
+        $("w9QualFill").style.width = cfg.qualWidth + "%";
+
+        const rem = $("w9RemNote"), qn = $("w9QualNote"), vd = $("w9Verdict");
+        vd.className = "w9-verdict " + cfg.verdictClass;
+
+        if (mode === "raw") {
+          rem.innerHTML = `Nothing has been removed yet, so the raw <b>15T-token</b> corpus still carries every ` +
+            `near-duplicate, which is the inflated number we get when we assume that more bytes always means more data.`;
+          qn.innerHTML = `The corpus is still un-deduplicated, so the duplicate pages add bulk while they waste compute ` +
+            `and raise the risk of memorisation.`;
+          vd.innerHTML = `<b>Starting point.</b> Here we have 96 CommonCrawl snapshots with no dedup applied, and the ` +
+            `next two modes are where the real decision lives, because they ask <b>where</b> we go looking for ` +
+            `duplicates, whether inside a single dump or across all of them at once.`;
+        } else if (mode === "snap") {
+          rem.innerHTML = `Only the near / exact duplicates <b>within each snapshot</b> are dropped, which comes to about ` +
+            `${removedPct}% here as an illustration, and the corpus then lands at the published <b>~20T tokens</b>.`;
+          qn.innerHTML = `Because each dump is cleaned on its own terms, the old <b>unique</b> documents survive, and this ` +
+            `is the recipe that ends up winning.`;
+          vd.innerHTML = `<b>The answer.</b> Per-snapshot dedup keeps ~20T tokens and <b>matches RefinedWeb</b>, which was ` +
+            `the strongest open baseline at the time, so the less aggressive pass gives us the better model.`;
+        } else {
+          rem.innerHTML = `Here the duplicates are removed along with up to <b>~90% of the older dumps</b>, because any ` +
+            `2024 page that echoes a 2014 page deletes the <b>older</b> copy, and once we repeat this across 96 dumps the ` +
+            `early years are gutted down to the published <b>~4T tokens</b>.`;
+          qn.innerHTML = `The result is counter-intuitively <b>worse</b>, since it shows little improvement over ` +
+            `non-deduplicated data while landing <b>far below RefinedWeb</b>, which happens because the deleted old data ` +
+            `was the <b>higher-quality</b> data.`;
+          vd.innerHTML = `<b>The trap.</b> The most aggressive option removed the most tokens along with the best data, ` +
+            `which shows us that aggressiveness was never the goal and that <b>where we deduplicate</b> is the decision ` +
+            `that actually matters.`;
+        }
+      }
+
+      // wiring
+      $("w9Seg").addEventListener("click", e => {
+        const b = e.target.closest("button"); if (!b) return;
+        document.querySelectorAll("#w9Seg button").forEach(x => x.classList.toggle("on", x === b));
+        apply(b.dataset.m);
+      });
+
+      apply("snap");   // open on the winning per-snapshot mode
+    })();
+  </script>
+</body>
+
+</html>

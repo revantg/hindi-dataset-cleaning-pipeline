@@ -1,0 +1,24 @@
+[project]
+name = "dataset-cleaning-assignment"
+version = "0.1.0"
+description = "ERA V5 Session 4 data cleaning assignment workspace"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "datasets>=5.0.1",
+    "extruct>=0.18.0",
+    "huggingface-hub>=1.26.0",
+    "inscriptis>=2.7.3",
+    "justext>=3.0.2",
+    "readability-lxml>=0.8.4.1",
+    "resiliparse>=1.0.9",
+    "tqdm>=4.70.0",
+    "trafilatura>=2.2.0",
+]
+
+[dependency-groups]
+dev = [
+    "marimo>=0.23.16",
+    "pydantic-ai>=2.21.0",
+    "ruff>=0.16.1",
+]

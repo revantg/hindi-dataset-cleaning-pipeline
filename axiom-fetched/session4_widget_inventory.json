@@ -1,0 +1,445 @@
+{
+  "source": {
+    "session_title": "Session 4 - Data Cleaning and Deduplication",
+    "session_id": "cmroc28350a8409qv5c8pm2a0",
+    "course_id": "cmq97i5kn032208o8xu5dab4q",
+    "lesson_path": "axiom-fetched/session4_lecture.md",
+    "session_json": "axiom-fetched/session4.json",
+    "assignment_path": "axiom-fetched/session4_assignment.md",
+    "transcript_url": "https://docs.google.com/document/d/16S1wvJedqkmpv2myuTnYeFUAM8ZmzOFEMTdo3l4EM34/export?format=txt",
+    "transcript_observed_duration": "02:46:02",
+    "lesson_embeds_count": 10,
+    "studio_video_url": "https://www.youtube.com/embed/GpS-oisqkqA?si=Vdd7n9_FveBt5Fn0",
+    "gmeet_video_url": "https://www.youtube.com/embed/LGQK548XxB4?si=uMKFtZjwpvzdLj5a",
+    "transcript_file": "axiom-fetched/session4_transcript.txt",
+    "transcript_lines": 699
+  },
+  "canonical_strategy_count": 8,
+  "canonical_strategy_rule": "Ghost/special-token cleanup is a normalization concern, not a ninth stage.",
+  "stages": [
+    {
+      "number": 1,
+      "name": "Extract",
+      "does": "Turn raw HTML into clean prose; retain the article body and drop surrounding page chrome.",
+      "removes": [
+        "navigation",
+        "boilerplate",
+        "cookie banners",
+        "footers"
+      ],
+      "illustrative_survival_after_stage": 92,
+      "v4_defect": "Naive HTML stripping retained navigation and cookie/legal text as content.",
+      "widget": "widget_1_cleaning_pipeline_map.html"
+    },
+    {
+      "number": 2,
+      "name": "Normalize",
+      "does": "Apply NFC Unicode normalization, decode HTML entities, remove character-level noise, and collapse whitespace before tokenization.",
+      "removes": [
+        "46 garbage vocabulary tokens",
+        "broken byte fragments",
+        "ghost markers",
+        "zero-width noise"
+      ],
+      "illustrative_survival_after_stage": 88,
+      "v4_defect": "V4 had no clean_text() in six ingestion scripts; 46 garbage vocabulary tokens and literal [USER] tags entered the data.",
+      "widget": "widget_2_clean_text_live.html",
+      "special_token_note": "Special-token/ghost-tag cleanup is part of normalization, not a ninth canonical stage. Preserve ZWNJ U+200C and ZWJ U+200D in Brahmic/Indic text; remove ZWSP, BOM, bidi overrides, replacement characters, controls, and private-use noise."
+    },
+    {
+      "number": 3,
+      "name": "Language ID",
+      "does": "Detect each document at runtime and validate detected language against its claimed folder/source label.",
+      "removes": [
+        "mislabeled documents",
+        "wrong-language pages",
+        "unclassifiable or out-of-scope material"
+      ],
+      "illustrative_survival_after_stage": 61,
+      "v4_defect": "V4 trusted folder names and had a Telugu te/tel mapping bug that could silently misroute pools.",
+      "widget": "widget_7_language_id_validation.html"
+    },
+    {
+      "number": 4,
+      "name": "Quality filter",
+      "does": "Run Gopher/C4-style heuristics, then a trained educational-value classifier, keeping documents above threshold.",
+      "removes": [
+        "spam",
+        "list walls",
+        "SEO junk",
+        "low-value or malformed pages"
+      ],
+      "illustrative_survival_after_stage": 44,
+      "v4_defect": "An English-heavy OPUS proxy undervalued Indic text, requiring an Always-ON bypass to protect good Indic data.",
+      "widget": "widget_4_quality_filter_cascade.html"
+    },
+    {
+      "number": 5,
+      "name": "Deduplicate",
+      "does": "Remove exact and near duplicates globally with shingles, MinHash signatures, and LSH candidate banding.",
+      "removes": [
+        "repeated documents",
+        "near duplicates",
+        "mirror/repost copies"
+      ],
+      "illustrative_survival_after_stage": 43,
+      "v4_defect": "Sangraha, the Indic crawl, had zero deduplication, wasting compute and increasing memorization risk.",
+      "widget": "widget_5_minhash_lsh_simulator.html"
+    },
+    {
+      "number": 6,
+      "name": "PII scrub",
+      "does": "Redact structured identifiers with regex and use NER/ML for names and other identifiers that patterns miss.",
+      "removes": [
+        "emails",
+        "phone numbers",
+        "IP addresses",
+        "unnecessary personal names/identifiers"
+      ],
+      "illustrative_survival_after_stage": 42,
+      "v4_defect": "Dolma used regex PII scrubbing, but the Indic pipeline had no dedicated PII pass.",
+      "widget": "widget_8_pii_scrubber.html"
+    },
+    {
+      "number": 7,
+      "name": "Decontaminate",
+      "does": "Fingerprint held-out evaluation sets, scan every shard for overlap, and remove training text that overlaps test material.",
+      "removes": [
+        "benchmark/test leakage",
+        "held-out n-gram or fingerprint overlap"
+      ],
+      "illustrative_survival_after_stage": 42,
+      "v4_defect": "The Golden Proxy was kept out of training so decontamination could be verified rather than assumed.",
+      "widget": "widget_16_contamination_heldout.html"
+    },
+    {
+      "number": 8,
+      "name": "Manifest",
+      "does": "Emit per-shard provenance and deterministic identifiers: source, license, contributor, script hash, content hash, token count, and language mix.",
+      "removes": [
+        "unknown-provenance or incomplete/unsafe-license shards"
+      ],
+      "illustrative_survival_after_stage": 42,
+      "v4_defect": "V4 copied dataset sizes, generated non-deterministic IDs, and used words × 1.3, which was wrong for Indic by 2–10×.",
+      "widget": "widget_9_lineage_manifest_builder.html"
+    }
+  ],
+  "widgets": [
+    {
+      "file": "widget_1_cleaning_pipeline_map.html",
+      "title": "Cleaning Pipeline Map",
+      "role": "Overview of all eight ordered stages",
+      "interaction": "Click stages or Next/Prev to update stage detail and the surviving-token bar.",
+      "mechanism": "Illustrative survival sequence 100 → 92 → 88 → 61 → 44 → 43 → 42 → 42; clean_text() runs before sha256/content hashing.",
+      "key_outputs": [
+        "stage purpose",
+        "removed categories",
+        "illustrative yield",
+        "V4 defect fixed"
+      ],
+      "section": "2. The pipeline as a whole",
+      "iframe": {
+        "src": "/widgets/widget_1_cleaning_pipeline_map.html",
+        "width": "1280",
+        "height": "700"
+      },
+      "local_path": "axiom-fetched/widgets/widget_1_cleaning_pipeline_map.html"
+    },
+    {
+      "file": "widget_2_clean_text_live.html",
+      "title": "clean_text() Live · Session 4",
+      "role": "Interactive normalization pass",
+      "interaction": "Edit/select English web, chat, Hindi, Telugu, code, or mixed samples; toggle each operation.",
+      "mechanism": "NFC; HTML entity unescape; U+FFFD removal; controls/ZWSP/private-use removal; bidi/BOM removal; whitespace collapse; ghost-token flagging; ZWNJ/ZWJ preservation.",
+      "key_outputs": [
+        "garbage-token counter",
+        "Indic joiners preserved",
+        "ghost-tag flag",
+        "V4 vocabulary breakdown: 18 zero-width, 4 HTML, 20 broken UTF-8, 4 private-use; 6,340 ZWNJ and 598 ZWJ kept"
+      ],
+      "section": "3. Normalizing the text",
+      "iframe": {
+        "src": "/widgets/widget_2_clean_text_live.html",
+        "width": "1280",
+        "height": "1070"
+      },
+      "local_path": "axiom-fetched/widgets/widget_2_clean_text_live.html"
+    },
+    {
+      "file": "widget_3_special_tokens_ghost_tags.html",
+      "title": "Special Tokens and the Ghost-Tag Trap",
+      "role": "Normalization sub-concern: canonical conversation format",
+      "interaction": "Switch among Samvaad/Hindi, SmolTalk2/XML-ish, MegaScience/Alpaca, and NCERT/Header; press Unify to real special tokens.",
+      "mechanism": "Shows literal markers tokenized as ordinary pretraining subwords versus atomic tokenizer special tokens in SFT; rewriting all four to <|user|>/<|assistant|> removes the collision.",
+      "key_outputs": [
+        "2 competing formats → 1 canonical format",
+        "V4 counts: [USER] ×6, [SYSTEM] ×2, <|endoftext|> ×3",
+        "no ghost markers in unified state"
+      ],
+      "section": "4. The ghost-tag trap",
+      "iframe": {
+        "src": "/widgets/widget_3_special_tokens_ghost_tags.html",
+        "width": "1280",
+        "height": "680"
+      },
+      "local_path": "axiom-fetched/widgets/widget_3_special_tokens_ghost_tags.html"
+    },
+    {
+      "file": "widget_4_quality_filter_cascade.html",
+      "title": "Quality Filter Cascade · heuristic chain + classifier gate",
+      "role": "Quality filtering",
+      "interaction": "Toggle English/Telugu and move classifier strictness from 0 to 5.",
+      "mechanism": "Live Gopher/C4-style checks: mean word length [3,10], symbol/word <0.10, terminal punctuation ≥0.30, duplicate lines <0.30, top 2-gram <0.20, ≥2 English stopwords, bullet lines <0.90, ellipsis lines <0.30, word count [50,100000]; then illustrative score gate.",
+      "key_outputs": [
+        "pass/fail per heuristic",
+        "classifier score and threshold",
+        "corpus-kept and survivor-quality meters",
+        "script-aware fix: per-language stopword lists and thresholds",
+        "illustrative FineWeb-Edu reference: score ≥3, ~8% of FineWeb (1.3T/15T)"
+      ],
+      "section": "5. Quality filtering",
+      "iframe": {
+        "src": "/widgets/widget_4_quality_filter_cascade.html",
+        "width": "1280",
+        "height": "1155"
+      },
+      "local_path": "axiom-fetched/widgets/widget_4_quality_filter_cascade.html"
+    },
+    {
+      "file": "widget_5_minhash_lsh_simulator.html",
+      "title": "MinHash + LSH Simulator",
+      "role": "Near-duplicate mechanism",
+      "interaction": "Edit documents, choose six pair types, change shingle size k, bands b, rows r, or load FineWeb defaults.",
+      "mechanism": "Word-level k-shingle sets → exact Jaccard → n MinHash slots → LSH bands; candidate probability P(s)=1−(1−s^r)^b and threshold ≈(1/b)^(1/r).",
+      "key_outputs": [
+        "true vs estimated Jaccard",
+        "matching slots/bands",
+        "candidate probability",
+        "duplicate/keep verdict",
+        "FineWeb preset: k=5, 112 hashes = 14×8, target ≈0.75"
+      ],
+      "section": "6. Deduplication, the mechanism",
+      "iframe": {
+        "src": "/widgets/widget_5_minhash_lsh_simulator.html",
+        "width": "1280",
+        "height": "1185"
+      },
+      "local_path": "axiom-fetched/widgets/widget_5_minhash_lsh_simulator.html"
+    },
+    {
+      "file": "widget_6_global_dedup_scale.html",
+      "title": "Global Dedup at Scale",
+      "role": "Cross-shard/global deduplication",
+      "interaction": "Run local passes, merge globally, reset; drag corpus-doc slider to inspect memory sizing.",
+      "mechanism": "Four student shards contain within-shard and cross-shard repeats; hash identical cleaned text, keep first local occurrence, then group locally-kept docs globally.",
+      "key_outputs": [
+        "local vs global unique-token counts",
+        "cross-shard duplicate clusters and overlap",
+        "real FNV-1a hash demonstration",
+        "memory estimate: 128×8-byte signature = 1 KB/doc ×1.6 overhead; default 500M docs ≈763 GiB, ≥768 GB node",
+        "NVMe/S3/checkpoint/owner+backup design"
+      ],
+      "section": "7. Deduplication at scale",
+      "iframe": {
+        "src": "/widgets/widget_6_global_dedup_scale.html",
+        "width": "1280",
+        "height": "860"
+      },
+      "local_path": "axiom-fetched/widgets/widget_6_global_dedup_scale.html"
+    },
+    {
+      "file": "widget_7_language_id_validation.html",
+      "title": "Language ID and Validation · Session 4",
+      "role": "Language ID and validation",
+      "interaction": "Compare trusting folder labels with runtime detection; run the Telugu lookup demo.",
+      "mechanism": "Script-histogram detector handles English, Telugu, Hindi/English code-switching, and Bengali mislabeled as Assamese; compare detected code to claimed code.",
+      "key_outputs": [
+        "mislabeled-doc count",
+        "code-switched review count",
+        "Assamese-folder Bengali mismatch",
+        "te/tel malformed mapping that succeeds only via fallback"
+      ],
+      "section": "8. Language identification and validation",
+      "iframe": {
+        "src": "/widgets/widget_7_language_id_validation.html",
+        "width": "1280",
+        "height": "955"
+      },
+      "local_path": "axiom-fetched/widgets/widget_7_language_id_validation.html"
+    },
+    {
+      "file": "widget_8_pii_scrubber.html",
+      "title": "PII Scrubber — Regex + NER",
+      "role": "PII removal with boundary control",
+      "interaction": "Toggle regex and NER layers; raise aggressiveness to expose false positives.",
+      "mechanism": "Regex masks emails/phones/IPv4; illustrative NER masks known personal names; aggressive NER can mask non-PII place names (मैसूर/Mysuru).",
+      "key_outputs": [
+        "correctly masked PII",
+        "false positives",
+        "missed PII",
+        "precision/recall meters",
+        "six labeled PII targets in demo; structured regex has near-perfect precision"
+      ],
+      "section": "9. Removing personal information",
+      "iframe": {
+        "src": "/widgets/widget_8_pii_scrubber.html",
+        "width": "1280",
+        "height": "780"
+      },
+      "local_path": "axiom-fetched/widgets/widget_8_pii_scrubber.html"
+    },
+    {
+      "file": "widget_16_contamination_heldout.html",
+      "title": "Contamination and held-out discipline",
+      "role": "Decontamination and evaluation firewall",
+      "interaction": "Leak Golden Proxy, disable/enforce firewall, scan 32 shards, and prompt a canary prefix.",
+      "mechanism": "Held-out test/validation splits stay behind a sourcing-time wall; scan n-gram overlap, fingerprint shards, remove hits; illustrative honest score 41% vs contaminated 88%.",
+      "key_outputs": [
+        "train vs held-out split separation",
+        "five overlapping shards when leak is active",
+        "V4 Golden Proxy 6.8M tokens/11 shards, benchmark train splits 11.2B/356 shards",
+        "canary completion confirms post-hoc leak",
+        "B2 dropped after 18.7% leakage"
+      ],
+      "section": "10. Keeping the evaluation honest",
+      "iframe": {
+        "src": "/widgets/widget_16_contamination_heldout.html",
+        "width": "100%",
+        "height": "1280"
+      },
+      "local_path": "axiom-fetched/widgets/widget_16_contamination_heldout.html"
+    },
+    {
+      "file": "widget_9_lineage_manifest_builder.html",
+      "title": "Lineage Manifest Builder",
+      "role": "Manifest/provenance and reproducibility gate",
+      "interaction": "Edit source/license/contributor/script/text/language fields; rerun identical text to compare hashes.",
+      "mechanism": "Web Crypto SHA-256, content-derived shard_id, token count, language distribution, script hash, timestamp; block unknown/unsafe/missing required fields.",
+      "key_outputs": [
+        "emitted shard.manifest.json",
+        "ADMITTED/BLOCKED gate",
+        "same text → identical hash/id",
+        "required fields: source_url, contributor_id, cleaning script hash, sha256, token_count; license allow-list",
+        "V4 non-deterministic row_number IDs and words×1.3 Indic estimate called out"
+      ],
+      "section": "11. Reproducibility and the manifest",
+      "iframe": {
+        "src": "/widgets/widget_9_lineage_manifest_builder.html",
+        "width": "1280",
+        "height": "935"
+      },
+      "local_path": "axiom-fetched/widgets/widget_9_lineage_manifest_builder.html"
+    }
+  ],
+  "verification": {
+    "live_widget_fetch": "10/10 HTTP 200; each response contains script and matched cached local content by SHA-256 prefix",
+    "source_scope": "Only the 10 iframe refs in Session 4 lesson are included. Other HTML files in axiom-fetched/widgets belong to other lecture content and are not embedded by Session 4.",
+    "transcript_lines": 699,
+    "lesson_lines": 167,
+    "lesson_matches_session_json": true
+  },
+  "lesson_sections": [
+    {
+      "section": "1. What this session is",
+      "content": "Raw collection is not training data; cleaning turns collected web/Indic/instruction material into trainable text and fixes V4 priority-zero defects."
+    },
+    {
+      "section": "2. The pipeline as a whole",
+      "content": "Ordered path from raw bytes through extraction, normalization, language validation, quality, deduplication, PII, decontamination, and manifest; clean before content hash."
+    },
+    {
+      "section": "3. Normalizing the text",
+      "content": "NFC, entity decoding, control/noise removal, whitespace normalization, and Indic-aware preservation of ZWNJ/ZWJ; V4 had 46 garbage vocabulary tokens."
+    },
+    {
+      "section": "4. The ghost-tag trap",
+      "content": "Source-specific literal conversation markers become ordinary pretraining subwords; choose one canonical real-special-token format at cleaning time."
+    },
+    {
+      "section": "5. Quality filtering",
+      "content": "Heuristic cascade plus cheap classifier; English-tuned rules can discard good Indic text, so script-aware thresholds and protected coverage matter."
+    },
+    {
+      "section": "6. Deduplication, the mechanism",
+      "content": "Near-duplicate detection uses overlapping shingles, MinHash signatures, and LSH banding rather than exact equality or expensive LLM comparison."
+    },
+    {
+      "section": "7. Deduplication at scale",
+      "content": "Local shard dedup cannot find cross-shard duplicates; a central large-memory, checkpoint-resumable global pass is required."
+    },
+    {
+      "section": "8. Language identification and validation",
+      "content": "Folder labels are claims; runtime detection catches mislabeled Bengali-in-Assamese, code-switched text, and silent te/tel mapping errors."
+    },
+    {
+      "section": "9. Removing personal information",
+      "content": "Regex catches emails/phones/IPs; NER catches names but must balance precision and recall, especially for Indic names and place names."
+    },
+    {
+      "section": "10. Keeping the evaluation honest",
+      "content": "Hold out test/evaluation material, fingerprint and scan shards for overlap, remove contamination, and use canary strings for post-hoc leak detection."
+    },
+    {
+      "section": "11. Reproducibility and the manifest",
+      "content": "Every shard needs source/license/contributor/scripts/hashes/tokens/language mix and deterministic identifiers; no manifest means no ingest."
+    },
+    {
+      "section": "12. Minor topic: the collection tracker and the dedup machine",
+      "content": "Track clean-token coverage across pools and provision the owned central dedup machine; local passes remain useful but are not globally complete."
+    },
+    {
+      "section": "13. The assignment",
+      "content": "Choose an approximate 10–100M-token dataset (not the demo), apply the cleaning strategies, explain choices, report final statistics, build a widget, and deploy to Netlify."
+    },
+    {
+      "section": "14. What this session commits us to",
+      "content": "Cleaning is load-bearing engineering; reproducibility/provenance are mandatory; later mixture/curriculum work assumes these stages have run."
+    }
+  ],
+  "implementation_boundaries": [
+    {
+      "widget": "widget_1_cleaning_pipeline_map.html",
+      "boundary": "Per-stage yields and the 100→42 survival descent are explicitly illustrative; the widget is a teaching model, not a measured corpus run."
+    },
+    {
+      "widget": "widget_2_clean_text_live.html",
+      "boundary": "Unicode/regex transforms run live; the displayed code comment says sha1(clean_text(s)), while the pipeline map and manifest widget specify sha256. Use one declared hash algorithm consistently in an implementation; the surrounding provenance contract is SHA-256."
+    },
+    {
+      "widget": "widget_4_quality_filter_cascade.html",
+      "boundary": "Heuristics are computed live; the classifier score and corpus meter are illustrative and no classifier model is loaded."
+    },
+    {
+      "widget": "widget_5_minhash_lsh_simulator.html",
+      "boundary": "Shingles, MinHash signatures and LSH probability are computed live in JavaScript; FineWeb defaults are cited as a design reference."
+    },
+    {
+      "widget": "widget_6_global_dedup_scale.html",
+      "boundary": "Hashing and memory math are live; token counts and machine sizing are illustrative syllabus values."
+    },
+    {
+      "widget": "widget_7_language_id_validation.html",
+      "boundary": "The script-histogram detector and mismatch logic are live; confidence values are illustrative."
+    },
+    {
+      "widget": "widget_8_pii_scrubber.html",
+      "boundary": "Regex masking is live; NER behavior and precision/recall are illustrative, driven by a small labeled list."
+    },
+    {
+      "widget": "widget_16_contamination_heldout.html",
+      "boundary": "Leak/firewall/scan/canary state transitions are live; scores 41/88 and corpus-size values are illustrative."
+    },
+    {
+      "widget": "widget_9_lineage_manifest_builder.html",
+      "boundary": "SHA-256, token count, gating, and deterministic rerun are live in the browser; example script hashes and form data are demonstration values."
+    }
+  ],
+  "demo_observations": {
+    "pipeline_map": "Illustrative surviving percentage after stages: Extract 92, Normalize 88, Language ID 61, Quality filter 44, Deduplicate 43, PII scrub 42, Decontaminate 42, Manifest 42.",
+    "global_dedup_widget_default": "20 raw documents / 24,200 tokens across four shards; local passes retain 21,400 tokens (18 docs); global pass retains 14,800 tokens (13 docs), removing 6,600 cross-shard duplicate tokens across 5 clusters; cross-shard overlap is 30.8% of the locally-clean token total.",
+    "pii_widget_default_states": "Regex-only masks 4 structured PII items and leaves 2 names; both layers at conservative aggressiveness mask 6 true PII items; aggressive name mode can add 2 place-name false positives.",
+    "contamination_widget": "The illustrative score is 41% when honest and 88% when the held-out test set is leaked; the active leak scan flags 5 of 32 shards.",
+    "language_widget": "Runtime mode includes two clean matches, one Hindi/English code-switched document flagged for review, and one Bengali document mislabeled as Assamese.",
+    "manifest_widget": "Default example is a Hindi shard with 82% hi / 18% en; admission requires source, license, contributor, script hash, content hash, nonzero token count, and language distribution."
+  }
+}

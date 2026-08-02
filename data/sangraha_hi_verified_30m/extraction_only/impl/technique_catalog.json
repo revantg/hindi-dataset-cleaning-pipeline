@@ -1,0 +1,92 @@
+[
+  {
+    "id": 1,
+    "name": "Residual text extraction baseline",
+    "family": "Implemented on this cache",
+    "required_input": "Flattened text JSONL",
+    "availability": "Available: 50,952 documents",
+    "executed": true,
+    "diagram": "data/sangraha_hi_verified_30m/extraction_only/impl/01_residual-text-baseline.svg"
+  },
+  {
+    "id": 2,
+    "name": "DOM main-content scoring (Trafilatura)",
+    "family": "Heuristic HTML extraction",
+    "required_input": "Original HTML or WARC response",
+    "availability": "Unavailable: source HTML/WARC/URL was not retained",
+    "executed": false,
+    "diagram": "data/sangraha_hi_verified_30m/extraction_only/impl/02_trafilatura-dom-main-content.svg"
+  },
+  {
+    "id": 3,
+    "name": "Block-density boilerplate classification (jusText)",
+    "family": "Heuristic HTML extraction",
+    "required_input": "HTML blocks, hyperlinks, and language stopwords",
+    "availability": "Unavailable: no DOM blocks or hyperlink boundaries",
+    "executed": false,
+    "diagram": "data/sangraha_hi_verified_30m/extraction_only/impl/03_justext-block-density.svg"
+  },
+  {
+    "id": 4,
+    "name": "Layout-aware HTML rendering (Inscriptis)",
+    "family": "HTML-to-text conversion",
+    "required_input": "Original HTML and CSS/layout-relevant structure",
+    "availability": "Unavailable: rendered text has no layout tree",
+    "executed": false,
+    "diagram": "data/sangraha_hi_verified_30m/extraction_only/impl/04_inscriptis-layout.svg"
+  },
+  {
+    "id": 5,
+    "name": "High-throughput DOM/WARC extraction (Resiliparse)",
+    "family": "Scale-oriented HTML extraction",
+    "required_input": "HTML or WARC records",
+    "availability": "Unavailable: no WARC/HTML records",
+    "executed": false,
+    "diagram": "data/sangraha_hi_verified_30m/extraction_only/impl/05_resiliparse-warc.svg"
+  },
+  {
+    "id": 6,
+    "name": "Structured metadata extraction (extruct)",
+    "family": "HTML metadata extraction",
+    "required_input": "HTML containing JSON-LD, Microdata, RDFa, or OpenGraph",
+    "availability": "Unavailable: no HTML metadata payloads",
+    "executed": false,
+    "diagram": "data/sangraha_hi_verified_30m/extraction_only/impl/06_extruct-structured-metadata.svg"
+  },
+  {
+    "id": 7,
+    "name": "PDF text-layer and layout extraction",
+    "family": "Digital PDF extraction",
+    "required_input": "Original PDF bytes and page geometry",
+    "availability": "Logical PDF labels: 6,108; usable PDF files: 0",
+    "executed": false,
+    "diagram": "data/sangraha_hi_verified_30m/extraction_only/impl/07_pdf-text-layout.svg"
+  },
+  {
+    "id": 8,
+    "name": "OCR for scanned PDFs/images",
+    "family": "Image-based extraction",
+    "required_input": "Page images or scanned PDF bytes",
+    "availability": "Unavailable: no images/scans retained",
+    "executed": false,
+    "diagram": "data/sangraha_hi_verified_30m/extraction_only/impl/08_ocr-scanned-documents.svg"
+  },
+  {
+    "id": 9,
+    "name": "Learned HTML sequence labeling (MinerU-HTML / AICC)",
+    "family": "Model-based HTML extraction",
+    "required_input": "Raw HTML/DOM; model runtime",
+    "availability": "Unavailable: no HTML/DOM",
+    "executed": false,
+    "diagram": "data/sangraha_hi_verified_30m/extraction_only/impl/09_mineru-html-sequence-labeling.svg"
+  },
+  {
+    "id": 10,
+    "name": "Per-site semi-structured scripts (SCRIBES)",
+    "family": "Learned/scripted structured extraction",
+    "required_input": "Raw HTML plus groups of same-site pages",
+    "availability": "Unavailable: no URL/domain/page groups",
+    "executed": false,
+    "diagram": "data/sangraha_hi_verified_30m/extraction_only/impl/10_scribes-site-scripts.svg"
+  }
+]

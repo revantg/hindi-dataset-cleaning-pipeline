@@ -1,0 +1,43 @@
+{
+  "version": "residual-extract-hindi-v1",
+  "source_path": "data/sangraha_hi_verified_30m/raw.jsonl",
+  "output_path": "data/sangraha_hi_verified_30m/extraction_only/01_residual_extract.jsonl",
+  "source_sha256": "cabc38b5d3c559e229dd52ad8da670c63b181ecf5f1c36c14fce0902578cd02f",
+  "documents": 50952,
+  "documents_changed": 26,
+  "characters_before": 114296090,
+  "characters_after": 114295217,
+  "estimated_tokens_before": 30000019,
+  "estimated_tokens_after": 29999882,
+  "zwj_before": 0,
+  "zwj_after": 0,
+  "zwnj_before": 0,
+  "zwnj_after": 0,
+  "source_type_counts": {
+    "pdf": 6108,
+    "speech": 81,
+    "web": 44763
+  },
+  "source_artifacts": {
+    "documents_with_boilerplate_phrase": 587,
+    "documents_with_html_tag": 25,
+    "documents_with_json_like_line": 28,
+    "documents_with_url": 191
+  },
+  "extraction_actions": {
+    "block_tags_removed": 12,
+    "boilerplate_lines_removed": 1,
+    "inline_tags_removed": 34,
+    "script_style_blocks_removed": 0
+  },
+  "safe_before_after_sample": {
+    "doc_id": "1dd7935553e1ca56094cdf30580622b57ecaff96",
+    "before_excerpt": "इस आर्टिकल के सहायक लेखक (co-author) हमारी बहुत ही अनुभवी एडिटर और रिसर्चर्स (researchers) टीम से हैं जो इस आर्टिकल में शामिल प्रत्येक जानकारी की सटीकता और व्यापकता की अच्छी तरह से जाँच करते हैं।\nwikiHow's Content Management Team बहुत ही सावधानी से हमारे एडिटोरियल स्टाफ (editorial staff) द्वारा किये गए कार्य को मॉनिटर करती है ये सुनिश्चित करने के लिए कि सभी आर्टिकल्स में दी गई जानकारी उच्च गुणवत्ता की है कि नहीं।\nयह आर्टिकल ४,०९१ बार देखा गया है।\nअपने कंप्यूटर में डिस्क स्पेस फ्री करने के लिए सुरक्षित तरीके से टेम्पररी और अनावश्यक फाइल्स को कैसे डिलीट करना है, यह आप इस विकिहाउ आर्टिकल के जरिए सीखेंगे। विंडोज द्वारा क्रिएट किए गए सभी तरह के टेम्पररी फाइल्स हार्ड ड्राइव में मौजूद होते हैं। हालांकि, यह फाइल्स नुकसान नहीं पहुँचाते हैं, लेकिन यह फाइल्स आपके कंप्यूटर के हार्ड ड्राइव में बेशकीमती स्पेस को कम कर देते हैं। आप प्रीफ़ेच फाइल्स को भी डिलीट कर सकते हैं, जो पहली बार कोई एप लॉन्च करने ",
+    "after_excerpt": "इस आर्टिकल के सहायक लेखक (co-author) हमारी बहुत ही अनुभवी एडिटर और रिसर्चर्स (researchers) टीम से हैं जो इस आर्टिकल में शामिल प्रत्येक जानकारी की सटीकता और व्यापकता की अच्छी तरह से जाँच करते हैं।\nwikiHow's Content Management Team बहुत ही सावधानी से हमारे एडिटोरियल स्टाफ (editorial staff) द्वारा किये गए कार्य को मॉनिटर करती है ये सुनिश्चित करने के लिए कि सभी आर्टिकल्स में दी गई जानकारी उच्च गुणवत्ता की है कि नहीं।\nयह आर्टिकल ४,०९१ बार देखा गया है।\nअपने कंप्यूटर में डिस्क स्पेस फ्री करने के लिए सुरक्षित तरीके से टेम्पररी और अनावश्यक फाइल्स को कैसे डिलीट करना है, यह आप इस विकिहाउ आर्टिकल के जरिए सीखेंगे। विंडोज द्वारा क्रिएट किए गए सभी तरह के टेम्पररी फाइल्स हार्ड ड्राइव में मौजूद होते हैं। हालांकि, यह फाइल्स नुकसान नहीं पहुँचाते हैं, लेकिन यह फाइल्स आपके कंप्यूटर के हार्ड ड्राइव में बेशकीमती स्पेस को कम कर देते हैं। आप प्रीफ़ेच फाइल्स को भी डिलीट कर सकते हैं, जो पहली बार कोई एप लॉन्च करने "
+  },
+  "limitations": [
+    "Input is already flattened text, so original DOM article boundaries, links, tables, and source layout cannot be recovered.",
+    "JSON-like and URL-bearing content is measured but retained; without source semantics, deleting it would be an unsupported quality decision.",
+    "Only exact standalone boilerplate lines are removed; broader content filtering belongs to later stages."
+  ]
+}

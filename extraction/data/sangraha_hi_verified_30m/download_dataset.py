@@ -37,15 +37,15 @@ from pathlib import Path
 DATASET_ID = "ai4bharat/sangraha"
 DATASET_CONFIG = "verified"
 DATASET_SPLIT = "hin"
-# Revision pinned by this project's cleaning pipeline (see
-# data/sangraha_hi_verified_30m/manifest.json and assignment.py);
-# streaming against a fixed revision keeps re-downloads reproducible.
+# Revision pinned by the extraction notebook (see
+# extraction/data/sangraha_hi_verified_30m/manifest.json and
+# extraction/stepwise_cleaning.py); streaming against a fixed revision
+# keeps re-downloads reproducible.
 DATASET_REVISION = "8b813c3f62d37b2fa174d68c31e8b35ae2fe85e8"
 
-# Same fertility assumption used throughout the cleaning pipeline
-# (assignment.py / stepwise_cleaning.py): estimated_tokens = ceil(non-
-# whitespace units * 1.35). It is a cheap proxy, not a real tokenizer, but
-# it is what the notebook pipeline uses to decide when to stop streaming.
+# Same fertility assumption used throughout the extraction notebook:
+# estimated_tokens = ceil(non-whitespace units * 1.35). It is a cheap
+# proxy, not a real tokenizer, but it controls when streaming stops.
 TOKEN_FERTILITY_ASSUMPTION = 1.35
 DEFAULT_TARGET_TOKENS = 30_000_000
 DEFAULT_OUTPUT = Path(__file__).resolve().parent / "raw.jsonl"

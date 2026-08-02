@@ -1,7 +1,7 @@
 # Sangraha Hindi (verified/hin) — ~30M-token sample
 
-This directory backs the Hindi cleaning-pipeline case study in
-`assignment.py` / `stepwise_cleaning.py`. The **full raw cache is not
+This directory is the dataset workspace for
+`extraction/stepwise_cleaning.py`. The **full raw cache is not
 versioned** (it is ~280MB); a **compact, deterministic sample** is tracked
 instead so the notebook pipeline can be exercised and reviewed without
 pulling the full corpus.
@@ -29,8 +29,8 @@ import json
 
 TARGET_TOKENS = 150_000
 token_total = 0
-with open("data/sangraha_hi_verified_30m/raw.jsonl", encoding="utf-8") as src, \
-     open("data/sangraha_hi_verified_30m/sample_raw.jsonl", "w", encoding="utf-8") as dst:
+with open("extraction/data/sangraha_hi_verified_30m/raw.jsonl", encoding="utf-8") as src, \
+     open("extraction/data/sangraha_hi_verified_30m/sample_raw.jsonl", "w", encoding="utf-8") as dst:
     for line in src:
         row = json.loads(line)
         dst.write(json.dumps(
@@ -54,18 +54,18 @@ PY
    with).
 2. **Run the script:**
    ```bash
-   uv run python data/sangraha_hi_verified_30m/download_dataset.py
+   uv run python extraction/data/sangraha_hi_verified_30m/download_dataset.py
    ```
    With no arguments this streams `ai4bharat/sangraha` (config
    `verified`, split `hin`) at the pinned revision below and writes rows,
-   in stream order, to `data/sangraha_hi_verified_30m/raw.jsonl`
+   in stream order, to `extraction/data/sangraha_hi_verified_30m/raw.jsonl`
    (**default output**) until the estimated-token total reaches
    **30,000,000** (**default target**) — the same target the pipeline
    notebooks use. The script does not read or require any existing local
    cache; each run streams fresh from Hugging Face.
 3. **Adjust the run** with flags, e.g. a smaller local test pull:
    ```bash
-   uv run python data/sangraha_hi_verified_30m/download_dataset.py \
+   uv run python extraction/data/sangraha_hi_verified_30m/download_dataset.py \
        --target-tokens 150000 --output /tmp/small_raw.jsonl
    ```
    `--dataset`, `--config`, `--split`, and `--revision` are also
@@ -89,8 +89,8 @@ load_dataset` import is deferred until a download actually runs.
 
 `estimated_tokens` (present in a full `raw.jsonl` rebuild, and in the
 pipeline's cache format) is **not** a real tokenizer count. It is the
-same cheap proxy used throughout the cleaning pipeline
-(`assignment.py`, `stepwise_cleaning.py`):
+same extraction-pipeline token proxy
+(`extraction/stepwise_cleaning.py`):
 
 ```
 estimated_tokens = ceil(non_whitespace_unit_count * 1.35)

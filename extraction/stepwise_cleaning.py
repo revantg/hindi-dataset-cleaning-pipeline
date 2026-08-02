@@ -136,7 +136,11 @@ def download_setup():
     DATASET_CONFIG = "verified"
     DATASET_SPLIT = "hin"
     DATASET_REVISION = "8b813c3f62d37b2fa174d68c31e8b35ae2fe85e8"
-    DATASET_ROOT = _DownloadPath("data/sangraha_hi_verified_30m")
+    DATASET_ROOT = (
+        _DownloadPath(__file__).resolve().parent
+        / "data"
+        / "sangraha_hi_verified_30m"
+    )
     RAW_PATH = DATASET_ROOT / "raw.jsonl"
     DATASET_ROOT.mkdir(parents=True, exist_ok=True)
 
@@ -330,7 +334,11 @@ def html_eval_setup():
     HTML_EVAL_REVISION = "d7fa66c5f9686a055f50dbdaeb0d8950209cf0f8"
     HTML_EVAL_SPLIT = "train"
     HTML_EVAL_VERSION = "html-extraction-family-evaluation-v2"
-    HTML_EVAL_ROOT = _HtmlPath("data/c4_en_html_evaluation")
+    HTML_EVAL_ROOT = (
+        _HtmlPath(__file__).resolve().parent
+        / "data"
+        / "c4_en_html_evaluation"
+    )
     HTML_EVAL_IMPL_DIR = HTML_EVAL_ROOT / "impl"
     HTML_EVAL_RAW_PATH = HTML_EVAL_ROOT / "raw_html.jsonl"
     HTML_EVAL_MANIFEST_PATH = HTML_EVAL_IMPL_DIR / "selection_manifest.json"
@@ -1111,7 +1119,7 @@ def html_eval_controls(mo):
     mo.vstack(
         [
             mo.md(
-                "## Step 1 — Run the shared evaluation corpus\nThe cached corpus lives under `data/c4_en_html_evaluation/`. Running it writes aggregate and document-level measurements without rendering source-page text."
+                "## Step 1 — Run the shared evaluation corpus\nThe cached corpus lives under `extraction/data/c4_en_html_evaluation/`. Running it writes aggregate and document-level measurements without rendering source-page text."
             ),
             mo.hstack([html_eval_target_documents, run_html_evaluation]),
         ]

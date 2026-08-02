@@ -12,20 +12,17 @@ wheels/
 # marimo local session/checkpoint cache (editor runtime state, not source)
 __marimo__/
 
-# Local dataset samples: raw corpora under data/ are gitignored by default
-# (large scraped web/PDF text; most are not implementation deliverables).
-# The Sangraha Hindi raw cache and extraction-output JSONLs are NOT
-# published: only a compact, deterministic sample plus the download
-# script/README/manifest under data/sangraha_hi_verified_30m/ are tracked
-# (see that directory's README.md). The C4 evaluation raw HTML sample
-# stays excluded too.
+# Local dataset caches are not versioned. Extraction's compact Sangraha
+# sample, download script, manifest, and measurements remain tracked under
+# extraction/data/; full raw and extraction-output JSONLs stay local.
 data/*
-!data/c4_en_html_evaluation/
-!data/sangraha_hi_verified_30m/
-data/*/raw.jsonl
-data/*/raw_html.jsonl
-data/*/extraction_only/*.jsonl
-data/*/extraction_only/impl/*.jsonl
+extraction/data/*
+!extraction/data/c4_en_html_evaluation/
+!extraction/data/sangraha_hi_verified_30m/
+extraction/data/*/raw.jsonl
+extraction/data/*/raw_html.jsonl
+extraction/data/*/extraction_only/*.jsonl
+extraction/data/*/extraction_only/impl/*.jsonl
 *.parquet
 .hf_cache/
 

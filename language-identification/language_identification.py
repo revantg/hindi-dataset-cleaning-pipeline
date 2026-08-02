@@ -40,6 +40,7 @@ def runtime_setup():
     import json as _json
     import shutil as _shutil
     from collections import Counter as _Counter
+    from datetime import UTC as _UTC
     from datetime import datetime as _datetime
     from pathlib import Path
     from urllib.request import urlopen as _urlopen
@@ -161,7 +162,7 @@ def runtime_setup():
 
     def _utc_now():
         return (
-            _datetime.now(_datetime.UTC)
+            _datetime.now(_UTC)
             .replace(microsecond=0)
             .isoformat()
             .replace("+00:00", "Z")

@@ -2,5 +2,5 @@ data/sangraha_hi_verified_30m/extraction_only/impl/omp-session-*.html filter=lfs
 quality-filtering/*.pdf filter=lfs diff=lfs merge=lfs -text
 extraction/screenshots/* filter=lfs diff=lfs merge=lfs -text
 language-identification/data/*.jsonl filter=lfs diff=lfs merge=lfs -text
-omp-session-*.jsonl filter=lfs diff=lfs merge=lfs -text
-omp-session-*.html filter=lfs diff=lfs merge=lfs -text
+quality-filtering/omp-session-*.jsonl filter=lfs diff=lfs merge=lfs -text
+quality-filtering/omp-session-*.html filter=lfs diff=lfs merge=lfs -text

@@ -1,0 +1,205 @@
+{
+  "dataset": "bs-modeling-metadata/c4-en-html-with-metadata",
+  "revision": "d7fa66c5f9686a055f50dbdaeb0d8950209cf0f8",
+  "selection_source": "cache",
+  "documents": 30,
+  "raw_html_characters": 1715638,
+  "reference_text_characters": 110039,
+  "library_status": {
+    "Trafilatura": true,
+    "jusText": true,
+    "Inscriptis": true,
+    "Resiliparse": true,
+    "extruct": true,
+    "readability-lxml": true
+  },
+  "metrics": [
+    {
+      "technique": "Residual markup removal",
+      "implementation": "Transparent HTMLParser control",
+      "role": "main-content baseline",
+      "status": "executed",
+      "documents": 30,
+      "nonempty_rate": 100.0,
+      "mean_output_characters": 5304.6,
+      "output_vs_html_percent": 9.276,
+      "mean_reference_token_overlap_percent": 96.15,
+      "aggregate_signals": {
+        "tag_events": 32859
+      }
+    },
+    {
+      "technique": "Block-density selection",
+      "implementation": "Transparent local control",
+      "role": "main-content candidate",
+      "status": "executed",
+      "documents": 30,
+      "nonempty_rate": 100.0,
+      "mean_output_characters": 2418.7,
+      "output_vs_html_percent": 4.229,
+      "mean_reference_token_overlap_percent": 65.26,
+      "aggregate_signals": {
+        "candidate_blocks": 2381,
+        "selected_blocks": 232
+      }
+    },
+    {
+      "technique": "Semantic DOM scoring",
+      "implementation": "Transparent local control",
+      "role": "main-content candidate",
+      "status": "executed",
+      "documents": 30,
+      "nonempty_rate": 100.0,
+      "mean_output_characters": 2770.3,
+      "output_vs_html_percent": 4.844,
+      "mean_reference_token_overlap_percent": 70.7,
+      "aggregate_signals": {
+        "candidate_nodes": 3293,
+        "best_score": 81821
+      }
+    },
+    {
+      "technique": "Layout-preserving rendering",
+      "implementation": "Transparent HTMLParser control",
+      "role": "layout-preserving text",
+      "status": "executed",
+      "documents": 30,
+      "nonempty_rate": 100.0,
+      "mean_output_characters": 11082.5,
+      "output_vs_html_percent": 19.379,
+      "mean_reference_token_overlap_percent": 96.15,
+      "aggregate_signals": {
+        "tag_events": 32859
+      }
+    },
+    {
+      "technique": "Structured metadata extraction",
+      "implementation": "Transparent local JSON-LD control",
+      "role": "metadata only",
+      "status": "executed",
+      "documents": 30,
+      "nonempty_rate": 13.33,
+      "mean_output_characters": 12.2,
+      "output_vs_html_percent": 0.021,
+      "mean_reference_token_overlap_percent": 0.4,
+      "aggregate_signals": {
+        "jsonld_scripts": 5,
+        "jsonld_parsed": 5
+      }
+    },
+    {
+      "technique": "Trafilatura",
+      "implementation": "trafilatura 2.2.0",
+      "role": "library main-content extraction",
+      "status": "executed",
+      "documents": 30,
+      "nonempty_rate": 100.0,
+      "mean_output_characters": 2729.2,
+      "output_vs_html_percent": 4.772,
+      "mean_reference_token_overlap_percent": 72.52,
+      "aggregate_signals": {
+        "library": "trafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilaturatrafilatura"
+      }
+    },
+    {
+      "technique": "jusText",
+      "implementation": "jusText 3.0.2",
+      "role": "library boilerplate classification",
+      "status": "executed",
+      "documents": 30,
+      "nonempty_rate": 100.0,
+      "mean_output_characters": 2286.7,
+      "output_vs_html_percent": 3.999,
+      "mean_reference_token_overlap_percent": 64.18,
+      "aggregate_signals": {
+        "paragraphs": 4079,
+        "content_paragraphs": 265
+      }
+    },
+    {
+      "technique": "Inscriptis",
+      "implementation": "inscriptis 2.7.3",
+      "role": "library layout-preserving text",
+      "status": "executed",
+      "documents": 30,
+      "nonempty_rate": 100.0,
+      "mean_output_characters": 9546.8,
+      "output_vs_html_percent": 16.694,
+      "mean_reference_token_overlap_percent": 95.92,
+      "aggregate_signals": {
+        "library": "inscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptisinscriptis"
+      }
+    },
+    {
+      "technique": "Resiliparse",
+      "implementation": "resiliparse 1.0.9",
+      "role": "library high-throughput text extraction",
+      "status": "executed",
+      "documents": 30,
+      "nonempty_rate": 100.0,
+      "mean_output_characters": 3469.2,
+      "output_vs_html_percent": 6.066,
+      "mean_reference_token_overlap_percent": 75.25,
+      "aggregate_signals": {
+        "library": "resiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparseresiliparse"
+      }
+    },
+    {
+      "technique": "readability-lxml",
+      "implementation": "readability-lxml 0.8.4.1",
+      "role": "library main-content extraction",
+      "status": "executed",
+      "documents": 30,
+      "nonempty_rate": 100.0,
+      "mean_output_characters": 2235.7,
+      "output_vs_html_percent": 3.909,
+      "mean_reference_token_overlap_percent": 62.97,
+      "aggregate_signals": {
+        "library": "readability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxmlreadability-lxml",
+        "tag_events": 1805
+      }
+    },
+    {
+      "technique": "extruct",
+      "implementation": "extruct 0.18.0",
+      "role": "library structured metadata extraction",
+      "status": "executed",
+      "documents": 30,
+      "nonempty_rate": 13.33,
+      "mean_output_characters": 14.8,
+      "output_vs_html_percent": 0.026,
+      "mean_reference_token_overlap_percent": 0.43,
+      "aggregate_signals": {
+        "library": "extructextructextructextructextructextructextructextructextructextructextructextructextructextructextructextructextructextructextructextructextructextructextructextructextructextructextructextructextructextruct",
+        "jsonld_records": 5
+      }
+    },
+    {
+      "technique": "MinerU-HTML / AICC",
+      "implementation": "Learned HTML sequence-labeling model",
+      "role": "model-based main-content extraction",
+      "status": "not executed: model/runtime unavailable; no Hindi validation claim",
+      "documents": 0,
+      "nonempty_rate": null,
+      "mean_output_characters": null,
+      "output_vs_html_percent": null,
+      "mean_reference_token_overlap_percent": null,
+      "aggregate_signals": {}
+    },
+    {
+      "technique": "SCRIBES",
+      "implementation": "Per-site semi-structured script generation",
+      "role": "site-specific structured extraction",
+      "status": "not executed: no runtime; requires same-site page groups",
+      "documents": 0,
+      "nonempty_rate": null,
+      "mean_output_characters": null,
+      "output_vs_html_percent": null,
+      "mean_reference_token_overlap_percent": null,
+      "aggregate_signals": {}
+    }
+  ],
+  "manifest_path": "data/c4_en_html_evaluation/impl/selection_manifest.json",
+  "metrics_path": "data/c4_en_html_evaluation/impl/technique_metrics.json",
+  "document_metrics_path": "data/c4_en_html_evaluation/impl/document_metrics.jsonl"
+}

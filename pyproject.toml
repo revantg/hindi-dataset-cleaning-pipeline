@@ -5,11 +5,15 @@ description = "ERA V5 Session 4 data cleaning assignment workspace"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "GlotScript==2.0",
     "datasets>=5.0.1",
     "extruct>=0.18.0",
+    "fasttext-wheel==0.9.2",
     "huggingface-hub>=1.26.0",
     "inscriptis>=2.7.3",
     "justext>=3.0.2",
+    "lingua-language-detector==2.2.0",
+    "numpy<2",
     "readability-lxml>=0.8.4.1",
     "resiliparse>=1.0.9",
     "tqdm>=4.70.0",

@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111111">
+  <meta name="description" content="Notebook-grounded report of the HTML extraction techniques implemented in stepwise_cleaning.py.">
+  <title>Notebook / Extraction techniques</title>
+  <style>
+    :root {
+      --ink: #111111;
+      --white: #ffffff;
+      --cloud: #f5f5f5;
+      --charcoal: #39393b;
+      --mute: #5f5f61;
+      --stone: #9e9ea0;
+      --line: #cacacb;
+      --soft-line: #e5e5e5;
+      --teal: #0a7281;
+      --teal-soft: #dff1f2;
+      --pink: #ed1aa0;
+      --red: #d30005;
+      --green: #007d48;
+      --display: 'Nike Futura ND', 'Helvetica Now Display Medium', 'Barlow Condensed', 'Liberation Sans', sans-serif;
+      --body: 'Helvetica Now Text', 'Helvetica Now Text Medium', Inter, 'Liberation Sans', sans-serif;
+      --pad: clamp(20px, 5vw, 80px);
+      --max: 1480px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; overflow-x: hidden; background: var(--white); color: var(--ink); font: 15px/1.5 var(--body); }
+    a { color: inherit; }
+    button { font: inherit; }
+    svg { display: block; max-width: 100%; }
+    ::selection { background: var(--ink); color: var(--white); }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+    .utility { display: flex; justify-content: space-between; gap: 18px; min-height: 36px; padding: 0 var(--pad); align-items: center; border-bottom: 1px solid var(--soft-line); background: var(--cloud); color: var(--mute); font-size: 10px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+    .utility strong { color: var(--ink); }
+    .nav { position: sticky; top: 0; z-index: 5; display: flex; min-height: 64px; align-items: center; gap: 28px; padding: 0 var(--pad); border-bottom: 1px solid var(--soft-line); background: rgba(255,255,255,.97); backdrop-filter: blur(12px); }
+    .brand { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 900; letter-spacing: -.04em; text-decoration: none; }
+    .brand-mark { display: grid; width: 29px; height: 29px; place-items: center; border-radius: 50%; background: var(--ink); color: var(--white); font-size: 10px; letter-spacing: 0; }
+    .nav-links { display: flex; gap: 24px; margin-left: auto; align-items: center; }
+    .nav-links a { color: var(--mute); font-size: 11px; font-weight: 800; letter-spacing: .1em; text-decoration: none; text-transform: uppercase; }
+    .nav-links a:hover, .nav-links a:focus-visible { color: var(--ink); }
+    .nav-links .nav-file { padding: 10px 16px; border-radius: 999px; background: var(--ink); color: var(--white); }
+    .nav-menu { display: none; margin-left: auto; border: 0; background: transparent; cursor: pointer; }
+    .wrap { width: min(100%, var(--max)); margin: 0 auto; padding-inline: var(--pad); }
+    .hero { display: grid; grid-template-columns: minmax(0, .9fr) minmax(420px, 1.1fr); gap: clamp(28px, 6vw, 96px); align-items: end; min-height: 650px; padding-top: clamp(70px, 10vw, 138px); padding-bottom: clamp(54px, 8vw, 108px); }
+    .hero > div { min-width: 0; }
+    .eyebrow, .kicker { margin: 0 0 17px; color: var(--mute); font-size: 10px; font-weight: 900; letter-spacing: .15em; text-transform: uppercase; }
+    .hero h1, h2 { font-family: var(--display); font-weight: 900; letter-spacing: -.045em; line-height: .84; text-transform: uppercase; }
+    .hero h1 { max-width: 750px; margin: 0; font-size: clamp(56px, 6vw, 176px); }
+    .hero h1 em { color: var(--teal); font-style: normal; }
+    .hero-copy { max-width: 580px; margin: 28px 0 0; color: var(--charcoal); font-size: clamp(17px, 1.45vw, 21px); line-height: 1.45; }
+    .hero-note { display: flex; flex-wrap: wrap; gap: 22px; margin-top: 38px; color: var(--mute); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .hero-note strong { color: var(--ink); }
+    .hero-art { min-height: 470px; overflow: hidden; background: var(--ink); }
+    .hero-art svg { width: 100%; min-height: 470px; }
+    .hero-art text { font-family: var(--body); }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+    .stat { min-height: 130px; padding: 22px 24px 20px 0; border-right: 1px solid var(--line); }
+    .stat:not(:first-child) { padding-left: 24px; }
+    .stat:last-child { border-right: 0; }
+    .stat small { display: block; color: var(--mute); font-size: 10px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+    .stat strong { display: block; margin-top: 8px; font-family: var(--display); font-size: clamp(32px, 4vw, 58px); line-height: .86; text-transform: uppercase; }
+    .stat span { display: block; margin-top: 9px; color: var(--mute); font-size: 12px; }
+    .section { padding-block: clamp(64px, 9vw, 120px); }
+    .section + .section { border-top: 1px solid var(--soft-line); }
+    .section-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, .62fr); gap: 32px; align-items: end; margin-bottom: 38px; }
+    .section-head h2 { max-width: 900px; margin: 0; font-size: clamp(52px, 7.5vw, 104px); }
+    .section-lede { max-width: 510px; margin: 0; color: var(--charcoal); font-size: 16px; }
+    .notice { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; margin: 0 0 34px; padding: 18px 20px; border-left: 5px solid var(--pink); background: var(--cloud); }
+    .notice b { color: var(--pink); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+    .notice p { margin: 0; color: var(--charcoal); font-size: 13px; }
+    .filters { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 18px; align-items: center; margin-bottom: 20px; }
+    .filters p { margin: 0; color: var(--mute); font-size: 12px; }
+    .filter-set { display: flex; flex-wrap: wrap; gap: 8px; }
+    .filter { min-height: 38px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--white); color: var(--ink); cursor: pointer; font-size: 12px; font-weight: 800; }
+    .filter[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--white); }
+    .method-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; border: 1px solid var(--line); background: var(--line); }
+    .method-card { display: flex; min-height: 430px; flex-direction: column; padding: 26px; background: var(--white); }
+    .method-card[hidden] { display: none; }
+    .method-top { display: flex; justify-content: space-between; gap: 18px; align-items: start; }
+    .method-tag { display: inline-flex; min-height: 24px; align-items: center; padding: 0 9px; border-radius: 999px; background: var(--cloud); color: var(--mute); font-size: 10px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+    .method-tag.control { background: var(--teal-soft); color: var(--teal); }
+    .method-tag.library { background: #f7e4f1; color: #a40d6c; }
+    .method-icon { width: 54px; height: 54px; color: var(--ink); }
+    .method-card h3 { margin: 20px 0 8px; font-size: 24px; line-height: 1.05; }
+    .method-card .role { margin: 0; color: var(--mute); font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+    .method-card .what { margin: 16px 0 0; color: var(--charcoal); font-size: 15px; line-height: 1.45; }
+    .method-details { display: grid; gap: 0; margin-top: 20px; border-top: 1px solid var(--soft-line); }
+    .method-detail { display: grid; grid-template-columns: 88px 1fr; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--soft-line); font-size: 12px; line-height: 1.35; }
+    .method-detail b { color: var(--teal); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+    .method-result { margin-top: auto; padding-top: 20px; }
+    .result-bar { height: 7px; background: var(--cloud); }
+    .result-bar i { display: block; height: 100%; background: var(--teal); }
+    .result-line { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; color: var(--mute); font-size: 11px; }
+    .result-line strong { color: var(--ink); }
+    .method-card details { margin-top: 18px; }
+    .method-card summary { list-style: none; cursor: pointer; color: var(--ink); font-size: 11px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+    .method-card summary::-webkit-details-marker { display: none; }
+    .method-card summary::after { content: '+'; float: right; font-size: 16px; line-height: 12px; }
+    .method-card details[open] summary::after { content: '−'; }
+    .detail-copy { padding-top: 10px; color: var(--charcoal); font-size: 13px; }
+    .comparison { display: grid; grid-template-columns: minmax(0, .75fr) minmax(0, 1.25fr); gap: 24px; align-items: stretch; }
+    .comparison-copy { padding: 28px; background: var(--ink); color: var(--white); }
+    .comparison-copy h3 { margin: 0; font-family: var(--display); font-size: 52px; line-height: .88; text-transform: uppercase; }
+    .comparison-copy p { margin: 22px 0 0; color: var(--stone); font-size: 14px; }
+    .comparison-copy ul { display: grid; gap: 0; margin: 24px 0 0; padding: 0; list-style: none; }
+    .comparison-copy li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; padding: 11px 0; border-top: 1px solid #39393b; color: #dedede; font-size: 13px; }
+    .comparison-copy li b { color: var(--teal); }
+    .chart { padding: 24px; border: 1px solid var(--line); background: var(--cloud); }
+    .chart-title { display: flex; justify-content: space-between; gap: 12px; color: var(--mute); font-size: 10px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+    .chart-row { display: grid; grid-template-columns: 150px 1fr 62px; gap: 12px; align-items: center; margin-top: 18px; }
+    .chart-label { overflow: hidden; color: var(--charcoal); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+    .chart-track { height: 12px; background: var(--white); border: 1px solid var(--line); }
+    .chart-track i { display: block; height: 100%; background: var(--teal); }
+    .chart-value { color: var(--ink); font-size: 12px; font-weight: 800; text-align: right; }
+    .table-wrap { overflow-x: auto; margin-top: 26px; border: 1px solid var(--line); }
+    table { width: 100%; min-width: 940px; border-collapse: collapse; background: var(--white); }
+    th, td { padding: 13px 14px; border-bottom: 1px solid var(--soft-line); text-align: left; vertical-align: top; }
+    th { background: var(--cloud); color: var(--mute); font-size: 10px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+    td { color: var(--charcoal); font-size: 12px; }
+    td:first-child { color: var(--ink); font-weight: 800; }
+    tr:last-child td { border-bottom: 0; }
+    .status-executed { color: var(--green); font-weight: 800; }
+    .status-not { color: var(--red); font-weight: 800; }
+    .footnote { margin: 14px 0 0; color: var(--mute); font-size: 12px; }
+    .results-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; border: 1px solid var(--line); background: var(--line); }
+    .result-card { min-height: 220px; padding: 24px; background: var(--white); }
+    .result-card small { color: var(--mute); font-size: 10px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+    .result-card h3 { margin: 16px 0 8px; font-size: 21px; line-height: 1.1; }
+    .result-card p { margin: 0; color: var(--charcoal); font-size: 14px; }
+    .result-card strong { color: var(--teal); }
+    .limits { background: var(--cloud); }
+    .limit-grid { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 24px; }
+    .limit-copy { padding: 28px; background: var(--white); border: 1px solid var(--line); }
+    .limit-copy h3 { margin: 0; font-family: var(--display); font-size: 55px; line-height: .88; text-transform: uppercase; }
+    .limit-copy p { margin: 22px 0 0; color: var(--charcoal); font-size: 14px; }
+    .limit-list { display: grid; gap: 1px; margin: 0; padding: 0; list-style: none; background: var(--line); border: 1px solid var(--line); }
+    .limit-list li { display: grid; grid-template-columns: 28px 1fr; gap: 12px; padding: 18px 20px; background: var(--white); color: var(--charcoal); font-size: 14px; }
+    .limit-list b { color: var(--pink); }
+    .artifacts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+    .artifact-link { display: inline-flex; min-height: 42px; align-items: center; padding: 0 16px; border: 1px solid var(--ink); border-radius: 999px; color: var(--ink); font-size: 12px; font-weight: 800; text-decoration: none; }
+    .artifact-link:hover, .artifact-link:focus-visible { background: var(--ink); color: var(--white); }
+    footer { padding: 28px var(--pad) 44px; border-top: 1px solid var(--ink); color: var(--mute); font-size: 11px; }
+    .footer-inner { width: min(100%, var(--max)); margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; }
+    footer strong { color: var(--ink); }
+    @media (max-width: 980px) {
+      .hero, .section-head, .comparison, .limit-grid { grid-template-columns: 1fr; }
+      .hero-art { min-height: 390px; }
+      .hero-art svg { min-height: 390px; }
+      .method-grid { grid-template-columns: 1fr; }
+      .results-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 680px) {
+      .utility { padding-inline: 16px; font-size: 9px; }
+      .nav { padding-inline: 16px; }
+      .nav-menu { display: block; width: 40px; height: 40px; }
+      .nav-links { display: none; position: absolute; top: 58px; left: 16px; right: 16px; flex-direction: column; align-items: stretch; gap: 0; padding: 8px; border: 1px solid var(--ink); background: var(--white); }
+      .nav-links.is-open { display: flex; }
+      .nav-links a { padding: 12px; }
+      .nav-links .nav-file { text-align: center; }
+      .hero { padding-top: 58px; }
+      .hero h1 { font-size: clamp(52px, 14vw, 112px); }
+      .hero h1, h2, .comparison-copy h3, .limit-copy h3 { line-height: .98; }
+      .hero-art, .hero-art svg { min-height: 330px; }
+      .stats { grid-template-columns: 1fr 1fr; }
+      .stat, .stat:not(:first-child) { min-height: 110px; padding: 16px; }
+      .stat:nth-child(2) { border-right: 0; }
+      .stat:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      .section-head h2 { font-size: clamp(48px, 15vw, 82px); }
+      .filters { align-items: flex-start; flex-direction: column; }
+      .method-card { min-height: 0; padding: 20px; }
+      .chart-row { grid-template-columns: 100px 1fr 50px; gap: 8px; }
+      .comparison-copy h3, .limit-copy h3 { font-size: 48px; }
+      .notice { grid-template-columns: 1fr; gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="utility"><span>Notebook / <strong>stepwise_cleaning.py</strong></span><span>Stage 01 / HTML extraction · local report</span></div>
+  <nav class="nav" aria-label="Primary navigation">
+    <a class="brand" href="#top" aria-label="Back to report top"><span class="brand-mark">01</span><span>EXTRACTION / WORKBOOK</span></a>
+    <button class="nav-menu" type="button" aria-expanded="false" aria-controls="nav-links"><span class="sr-only">Open menu</span>☰</button>
+    <div class="nav-links" id="nav-links">
+      <a href="#methods">Methods</a>
+      <a href="#comparison">Comparison</a>
+      <a href="#results">Results</a>
+      <a href="#limits">Limits</a>
+      <a class="nav-file" href="../EXTRACTION_TECHNIQUES.md">Read source guide ↗</a>
+    </div>
+  </nav>
+
+  <main id="top">
+    <section class="wrap hero">
+      <div>
+        <p class="eyebrow">Notebook-grounded / HTML extraction only</p>
+        <h1>Extraction<br><em>in<br>practice.</em></h1>
+        <p class="hero-copy">This page isolates the extraction chapter of <code>stepwise_cleaning.py</code>. It explains every method the notebook actually ran and shows the measurements written by the final comparison cell.</p>
+        <div class="hero-note"><span><strong>11</strong> executed methods</span><span><strong>30</strong> HTML documents</span><span><strong>0</strong> hidden quality claims</span></div>
+      </div>
+      <div class="hero-art" aria-label="Notebook extraction pipeline diagram">
+        <svg viewBox="0 0 680 470" role="img" aria-labelledby="hero-title hero-desc">
+          <title id="hero-title">Raw HTML through extraction methods to measured output</title>
+          <desc id="hero-desc">Raw HTML enters control and library methods, producing text, metadata, and comparison metrics.</desc>
+          <rect width="680" height="470" fill="#111111"/>
+          <g stroke="#39393b" stroke-width="1"><path d="M42 74H638M42 140H638M42 206H638M42 272H638M42 338H638M42 404H638"/></g>
+          <g fill="#9e9ea0" font-size="11" font-weight="800" letter-spacing="1.4"><text x="42" y="42">RAW HTML</text><text x="254" y="42">METHODS</text><text x="510" y="42">MEASURE</text></g>
+          <g fill="#ffffff"><rect x="42" y="93" width="108" height="26"/><rect x="42" y="159" width="80" height="26"/><rect x="42" y="225" width="136" height="26"/><rect x="42" y="291" width="96" height="26" fill="#ed1aa0"/></g>
+          <g fill="#0a7281"><rect x="254" y="85" width="122" height="18"/><rect x="254" y="111" width="90" height="18"/><rect x="254" y="151" width="150" height="18"/><rect x="254" y="177" width="106" height="18"/><rect x="254" y="217" width="132" height="18"/><rect x="254" y="243" width="164" height="18"/></g>
+          <g fill="#ed1aa0"><rect x="254" y="283" width="112" height="18"/><rect x="254" y="309" width="138" height="18"/></g>
+          <g stroke="#ffffff" stroke-width="2" fill="none"><path d="M166 106H236M138 172H236M192 238H236"/><path d="M440 94H496M440 160H496M440 226H496M440 292H496"/></g>
+          <g fill="#ffffff"><rect x="510" y="84" width="116" height="18"/><rect x="510" y="150" width="82" height="18"/><rect x="510" y="216" width="130" height="18"/><rect x="510" y="282" width="54" height="18"/></g>
+          <g fill="#9e9ea0" font-size="11" font-weight="800" letter-spacing="1"><text x="42" y="385">HTML / URL / REFERENCE TEXT</text><text x="254" y="385">CONTROLS + LIBRARIES</text><text x="510" y="385">CHARS / OVERLAP / RATE</text></g>
+          <text x="42" y="438" fill="#ffffff" font-family="Arial Narrow,Impact,sans-serif" font-size="38" font-weight="900" letter-spacing="-1" textLength="555" lengthAdjust="spacingAndGlyphs">EXECUTE · MEASURE · QUALIFY</text>
+          <circle cx="630" cy="42" r="5" fill="#0a7281"/><circle cx="610" cy="42" r="5" fill="#ed1aa0"/>
+        </svg>
+      </div>
+    </section>
+
+    <section class="wrap stats" aria-label="Evaluation summary">
+      <div class="stat"><small>Evaluation set</small><strong>30</strong><span>cached raw-HTML documents</span></div>
+      <div class="stat"><small>Raw input</small><strong>1.72M</strong><span>HTML characters</span></div>
+      <div class="stat"><small>Reference</small><strong>110K</strong><span>supplied text characters</span></div>
+      <div class="stat"><small>Methods</small><strong>11</strong><span>executed; 2 recorded as unavailable</span></div>
+    </section>
+
+    <section class="wrap section" id="methods">
+      <p class="kicker">01 / the implemented techniques</p>
+      <div class="section-head"><h2>Read the method.<br>Then read its result.</h2><p class="section-lede">The notebook compares five transparent controls with six installed libraries. The cards below use the same names, roles, and metrics as <code>technique_metrics.json</code>.</p></div>
+      <div class="notice"><b>Important boundary</b><p>The 30-document evaluation corpus is English C4 HTML. Its overlap values show executable behavior against supplied reference text; they are <strong>not Hindi extraction quality</strong> and are not a license to copy English thresholds into the Sangraha Hindi corpus.</p></div>
+      <div class="filters"><p><strong id="method-count">11</strong> executed methods shown · open a card for the notebook interpretation</p><div class="filter-set" role="group" aria-label="Filter methods"><button class="filter" type="button" data-filter="all" aria-pressed="true">All</button><button class="filter" type="button" data-filter="control" aria-pressed="false">Transparent controls</button><button class="filter" type="button" data-filter="library" aria-pressed="false">Installed libraries</button><button class="filter" type="button" data-filter="metadata" aria-pressed="false">Metadata</button></div></div>
+      <div class="method-grid" id="method-grid"></div>
+    </section>
+
+    <section class="wrap section" id="comparison">
+      <p class="kicker">02 / unified comparison</p>
+      <div class="section-head"><h2>Output size is<br>not quality.</h2><p class="section-lede">The same 30 inputs went through every executed method. The chart visualizes mean token-overlap agreement with the supplied C4 text; the table preserves the full measurement context.</p></div>
+      <div class="comparison">
+        <div class="comparison-copy"><h3>How to<br>read this.</h3><p>Each metric answers a different question. No single column ranks the methods.</p><ul><li><b>01</b><span><strong>Overlap:</strong> token-set agreement with supplied reference text.</span></li><li><b>02</b><span><strong>Output / HTML:</strong> how much raw page material remains.</span></li><li><b>03</b><span><strong>Mean characters:</strong> output length per document, not correctness.</span></li><li><b>04</b><span><strong>Metadata:</strong> JSON-LD/extruct are not article prose extractors.</span></li></ul></div>
+        <div class="chart"><div class="chart-title"><span>Mean reference-token overlap</span><span>0 — 100%</span></div><div id="overlap-chart"></div></div>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>Technique</th><th>Implementation</th><th>Role</th><th>Status</th><th>Docs</th><th>Nonempty</th><th>Mean chars</th><th>HTML retained</th><th>Reference overlap</th></tr></thead><tbody id="metrics-table"></tbody></table></div>
+      <p class="footnote">All executed methods processed 30 documents. “Reference overlap” is a supplied-C4 agreement proxy computed by token-set intersection; it is not a human-labelled score.</p>
+    </section>
+
+    <section class="wrap section" id="results">
+      <p class="kicker">03 / what the run tells us</p>
+      <div class="section-head"><h2>Results with<br>context.</h2><p class="section-lede">These are the conclusions supported by the recorded run — and the conclusions it deliberately does not support.</p></div>
+      <div class="results-grid"><article class="result-card"><small>Highest agreement</small><h3>Residual + layout controls</h3><p>Residual markup removal and layout-preserving rendering both reached <strong>96.15%</strong> mean reference overlap. Layout rendering retained more material: <strong>19.379%</strong> of raw HTML versus <strong>9.276%</strong>.</p></article><article class="result-card"><small>Library behavior</small><h3>Inscriptis keeps shape</h3><p>Inscriptis retained <strong>9,546.8</strong> mean characters and reached <strong>95.92%</strong> overlap. That is evidence of layout-preserving output, not proof that all retained boilerplate is useful.</p></article><article class="result-card"><small>Main-content trade-off</small><h3>Shorter is not automatically better</h3><p>Trafilatura, Resiliparse, jusText, and Readability produced compact candidates with overlap from <strong>62.97%</strong> to <strong>75.25%</strong>. Their output must be reviewed for omission and boilerplate, not selected by length alone.</p></article></div>
+    </section>
+
+    <section class="limits section" id="limits">
+      <div class="wrap">
+        <p class="kicker">04 / boundary and artifacts</p>
+        <div class="limit-grid"><div class="limit-copy"><h3>Be exact<br>about what ran.</h3><p>The notebook documents two additional methods but records them as unavailable rather than fabricating results. The main Sangraha corpus is flattened text, so this chapter uses the separate raw-HTML proxy to execute extraction code.</p><div class="artifacts"><a class="artifact-link" href="../results/technique_metrics.json">Metrics JSON ↗</a><a class="artifact-link" href="../results/selection_manifest.json">Selection manifest ↗</a><a class="artifact-link" href="../stepwise_cleaning.py">Notebook source ↗</a></div></div><ul class="limit-list"><li><b>01</b><span><strong>Corpus:</strong> <code>bs-modeling-metadata/c4-en-html-with-metadata</code>, train split, revision <code>d7fa66c5…</code>.</span></li><li><b>02</b><span><strong>Selection:</strong> first sequential non-empty HTML records under 500,000 characters; 30 requested, 30 retained, none skipped.</span></li><li><b>03</b><span><strong>Not executed:</strong> MinerU-HTML / AICC had no model/runtime; SCRIBES required same-site page groups and runtime support.</span></li><li><b>04</b><span><strong>Hindi boundary:</strong> no Hindi-quality claim is made from the English proxy. Validate with Hindi-literate source labels before deployment.</span></li></ul></div>
+      </div>
+    </section>
+  </main>
+
+  <footer><div class="footer-inner"><span><strong>EXTRACTION / WORKBOOK</strong> · local HTML report for <code>stepwise_cleaning.py</code></span><span>Frontend and backup kept under <code>extraction/</code> · no deployment</span></div></footer>
+
+  <script>
+    (function () {
+      const methods = [
+        {key:'residual_markup', name:'Residual markup removal', family:'control', label:'Transparent control', role:'main-content baseline', implementation:'HTMLParser control', docs:30, nonempty:100, chars:5304.6, retained:9.276, overlap:96.15, what:'Removes tags and control markup while retaining the text stream as a conservative baseline.', input:'Raw HTML → HTMLParser', keeps:'Text order and entities decoded by parser', risk:'Does not select the main article; navigation and footer can remain.', note:'Use as the control for measuring a later selector or candidate extractor. The notebook records 32,859 tag events.'},
+        {key:'block_density', name:'Block-density selection', family:'control', label:'Transparent control', role:'main-content candidate', implementation:'Local block-density heuristic', docs:30, nonempty:100, chars:2418.7, retained:4.229, overlap:65.26, what:'Collects paragraph-like blocks, then keeps blocks at least 80 characters long with link ratio at most 0.30.', input:'HTML → paragraph blocks', keeps:'Longer, low-link-density blocks', risk:'Short prose, headings, lists, and language-specific text can be dropped.', note:'The notebook records 2,381 candidate blocks and 232 selected blocks across the evaluation run.'},
+        {key:'semantic_dom', name:'Semantic DOM scoring', family:'control', label:'Transparent control', role:'main-content candidate', implementation:'Local DOM scoring heuristic', docs:30, nonempty:100, chars:2770.3, retained:4.844, overlap:70.70, what:'Scores nested article/main/section/div/body candidates using text volume, link penalty, and article-like markers.', input:'HTML → nested semantic candidates', keeps:'One best-scoring DOM subtree', risk:'A plausible container can still be the wrong region on unusual templates.', note:'The notebook records 3,293 candidate nodes and exposes the best score as a diagnostic signal.'},
+        {key:'layout_renderer', name:'Layout-preserving rendering', family:'control', label:'Transparent control', role:'layout-preserving text', implementation:'HTMLParser layout control', docs:30, nonempty:100, chars:11082.5, retained:19.379, overlap:96.15, what:'Walks block tags and emits line breaks so lists, tables, and page-like spacing remain legible.', input:'HTML → block-aware text', keeps:'Reading boundaries and layout cues', risk:'It preserves boilerplate too; high retention is not a quality win.', note:'It uses the same parser as residual markup removal, changing representation rather than hiding the implementation difference.'},
+        {key:'jsonld_metadata', name:'Structured metadata extraction', family:'control', label:'Transparent control', role:'metadata only', implementation:'Local JSON-LD parser', docs:30, nonempty:13.33, chars:12.2, retained:0.021, overlap:0.40, what:'Reads JSON-LD scripts and collects conservative headline, name, description, and articleBody fields.', input:'HTML → JSON-LD records', keeps:'Publisher-supplied metadata fields', risk:'Metadata is incomplete or stale and is not article-body ground truth.', note:'Only 5 JSON-LD scripts parsed across the run. Do not compare its yield with prose extractors.'},
+        {key:'trafilatura', name:'Trafilatura', family:'library', label:'Installed library', role:'library main-content extraction', implementation:'trafilatura 2.2.0', docs:30, nonempty:100, chars:2729.2, retained:4.772, overlap:72.52, what:'Parses raw HTML, deprioritizes page furniture, and assembles an article-like text candidate.', input:'Raw HTML + optional URL', keeps:'Article-like prose, optional tables', risk:'Can choose the wrong dense region on non-article or custom-template pages.', note:'Notebook call: comments excluded, tables kept, duplicate extraction disabled. Hindi source labels are still required.'},
+        {key:'justext', name:'jusText', family:'library', label:'Installed library', role:'library boilerplate classification', implementation:'jusText 3.0.2', docs:30, nonempty:100, chars:2286.7, retained:3.999, overlap:64.18, what:'Classifies paragraph blocks using length, link density, stopword density, and neighboring-block revision.', input:'HTML → paragraph blocks', keeps:'Blocks judged content rather than boilerplate', risk:'English stoplists and whitespace assumptions do not transfer blindly to Hindi/Hinglish.', note:'The run processed 4,079 paragraphs and retained 265 content paragraphs in aggregate.'},
+        {key:'inscriptis', name:'Inscriptis', family:'library', label:'Installed library', role:'library layout-preserving text', implementation:'inscriptis 2.7.3', docs:30, nonempty:100, chars:9546.8, retained:16.694, overlap:95.92, what:'Renders HTML into readable text while preserving useful display boundaries instead of selecting one article region.', input:'HTML → layout-aware text', keeps:'Paragraph, list, and table-related boundaries', risk:'Navigation, footer, and other page furniture may remain.', note:'Interpret its high retained text as layout preservation, not as a main-content quality score.'},
+        {key:'resiliparse', name:'Resiliparse', family:'library', label:'Installed library', role:'library high-throughput text extraction', implementation:'resiliparse 1.0.9', docs:30, nonempty:100, chars:3469.2, retained:6.066, overlap:75.25, what:'Uses an optimized HTML path to extract readable text at crawl scale, with main-content mode enabled.', input:'Raw HTML → optimized DOM traversal', keeps:'High-throughput main-content text', risk:'Speed does not resolve article-boundary ambiguity or unusual templates.', note:'Notebook call: formatting preserved, main_content=True. Benchmark speed and quality separately.'},
+        {key:'readability', name:'readability-lxml', family:'library', label:'Installed library', role:'library main-content extraction', implementation:'readability-lxml 0.8.4.1', docs:30, nonempty:100, chars:2235.7, retained:3.909, overlap:62.97, what:'Scores candidate DOM containers and returns the one most like a primary article.', input:'HTML → scored article candidate', keeps:'One compact article-like subtree', risk:'Poor fit for forums, catalogs, dashboards, multi-article pages, and tables.', note:'The notebook renders Readability’s selected HTML through the shared residual renderer for a fairer serializer comparison.'},
+        {key:'extruct', name:'extruct', family:'library', label:'Installed library', role:'library structured metadata extraction', implementation:'extruct 0.18.0', docs:30, nonempty:13.33, chars:14.8, retained:0.026, overlap:0.43, what:'Extracts machine-readable HTML metadata; it routes and enriches a corpus rather than replacing article extraction.', input:'HTML → JSON-LD records', keeps:'Publisher titles, dates, authors, schema fields', risk:'Fields can be missing, inconsistent, or unrelated to visible text.', note:'Notebook requests JSON-LD only and collects a conservative field subset. Low coverage is a source characteristic.'}
+      ];
+      const fmt = (value, digits) => value == null ? '—' : Number(value).toLocaleString('en-US', {maximumFractionDigits: digits ?? 2});
+      const icon = (key) => {
+        const common = 'fill="none" stroke="currentColor" stroke-width="2"';
+        if (key === 'block_density' || key === 'justext') return `<svg class="method-icon" viewBox="0 0 54 54" aria-hidden="true"><path d="M7 13h40M7 27h28M7 41h36" ${common}/><circle cx="43" cy="27" r="4" fill="#0a7281"/></svg>`;
+        if (key === 'semantic_dom' || key === 'readability') return `<svg class="method-icon" viewBox="0 0 54 54" aria-hidden="true"><circle cx="13" cy="13" r="5" ${common}/><circle cx="41" cy="27" r="5" ${common}/><circle cx="13" cy="41" r="5" ${common}/><path d="M18 16l18 8M18 38l18-8" ${common}/></svg>`;
+        if (key === 'layout_renderer' || key === 'inscriptis') return `<svg class="method-icon" viewBox="0 0 54 54" aria-hidden="true"><rect x="7" y="8" width="40" height="38" ${common}/><path d="M7 20h40M7 32h40M20 8v38" ${common}/></svg>`;
+        if (key === 'jsonld_metadata' || key === 'extruct') return `<svg class="method-icon" viewBox="0 0 54 54" aria-hidden="true"><path d="M14 7h26v40H14z" ${common}/><path d="M20 17h14M20 26h14M20 35h9" ${common}/><circle cx="41" cy="40" r="5" fill="#ed1aa0"/></svg>`;
+        if (key === 'trafilatura' || key === 'resiliparse') return `<svg class="method-icon" viewBox="0 0 54 54" aria-hidden="true"><rect x="7" y="8" width="40" height="38" ${common}/><path d="M13 18h28M13 27h20M13 36h25" ${common}/></svg>`;
+        return `<svg class="method-icon" viewBox="0 0 54 54" aria-hidden="true"><path d="M7 27h7l5-13 8 26 6-20 5 12h9" ${common}/></svg>`;
+      };
+      const card = (method) => {
+        const bar = Math.max(2, Math.min(100, method.overlap ?? 0));
+        const tagClass = method.family === 'control' ? 'control' : method.family === 'library' ? 'library' : '';
+        return `<article class="method-card" data-family="${method.family}" data-key="${method.key}"><div class="method-top"><span class="method-tag ${tagClass}">${method.label}</span>${icon(method.key)}</div><h3>${method.name}</h3><p class="role">${method.role}</p><p class="what">${method.what}</p><div class="method-details"><div class="method-detail"><b>Input</b><span>${method.input}</span></div><div class="method-detail"><b>Preserves</b><span>${method.keeps}</span></div><div class="method-detail"><b>Failure</b><span>${method.risk}</span></div></div><div class="method-result"><div class="result-bar"><i style="width:${bar}%"></i></div><div class="result-line"><span>reference overlap <strong>${fmt(method.overlap)}%</strong></span><span>${fmt(method.chars, 1)} mean chars</span></div></div><details><summary>Notebook interpretation</summary><div class="detail-copy">${method.note}</div></details></article>`;
+      };
+      const grid = document.querySelector('#method-grid');
+      grid.innerHTML = methods.map(card).join('');
+      const filters = document.querySelectorAll('[data-filter]');
+      const count = document.querySelector('#method-count');
+      filters.forEach((button) => button.addEventListener('click', () => {
+        const filter = button.dataset.filter;
+        filters.forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+        let visible = 0;
+        document.querySelectorAll('.method-card').forEach((item) => {
+          const show = filter === 'all' || item.dataset.family === filter || (filter === 'metadata' && (item.dataset.key === 'jsonld_metadata' || item.dataset.key === 'extruct'));
+          item.hidden = !show;
+          if (show) visible += 1;
+        });
+        count.textContent = visible;
+      }));
+      const chart = document.querySelector('#overlap-chart');
+      chart.innerHTML = methods.filter((method) => method.key !== 'jsonld_metadata' && method.key !== 'extruct').sort((a,b) => b.overlap - a.overlap).map((method) => `<div class="chart-row"><span class="chart-label" title="${method.name}">${method.name}</span><span class="chart-track"><i style="width:${method.overlap}%"></i></span><span class="chart-value">${fmt(method.overlap)}%</span></div>`).join('');
+      document.querySelector('#metrics-table').innerHTML = methods.map((method) => `<tr><td>${method.name}</td><td>${method.implementation}</td><td>${method.role}</td><td><span class="status-executed">executed</span></td><td>${method.docs}</td><td>${fmt(method.nonempty)}%</td><td>${fmt(method.chars, 1)}</td><td>${fmt(method.retained, 3)}%</td><td>${fmt(method.overlap)}%</td></tr>`).join('');
+      const navButton = document.querySelector('.nav-menu');
+      const navLinks = document.querySelector('#nav-links');
+      navButton.addEventListener('click', () => { const open = navLinks.classList.toggle('is-open'); navButton.setAttribute('aria-expanded', String(open)); });
+      navLinks.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => { navLinks.classList.remove('is-open'); navButton.setAttribute('aria-expanded', 'false'); }));
+    }());
+  </script>
+</body>
+</html>

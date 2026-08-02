@@ -1,0 +1,10 @@
+{
+  "dataset": "bs-modeling-metadata/c4-en-html-with-metadata",
+  "revision": "d7fa66c5f9686a055f50dbdaeb0d8950209cf0f8",
+  "split": "train",
+  "selection": "first sequential non-empty HTML records under 500,000 characters",
+  "requested_documents": 30,
+  "retained_documents": 30,
+  "skipped_oversized_or_empty": 0,
+  "raw_path": "data/c4_en_html_evaluation/raw_html.jsonl"
+}

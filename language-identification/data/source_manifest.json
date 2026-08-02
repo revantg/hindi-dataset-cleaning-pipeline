@@ -1,0 +1,98 @@
+{
+  "dataset_id": "ai4bharat/sangraha",
+  "dataset_revision": "8b813c3f62d37b2fa174d68c31e8b35ae2fe85e8",
+  "license": "CC-BY-4.0",
+  "selection_rule": "For each fixed source/configuration pair, retain the first 20 stream rows with a non-empty doc_id and non-whitespace text; preserve stream order; do not shuffle or inspect predictions.",
+  "max_analysis_characters": 4000,
+  "materialized_at_utc": "2026-08-02T01:28:45Z",
+  "sources": [
+    {
+      "source_config": "verified",
+      "source_split": "eng",
+      "claimed_language": "eng",
+      "claimed_script": "Latn",
+      "role": "English baseline",
+      "documents": 20,
+      "source_characters": 46127,
+      "analysis_characters": 41430,
+      "truncated": 2
+    },
+    {
+      "source_config": "verified",
+      "source_split": "hin",
+      "claimed_language": "hin",
+      "claimed_script": "Deva",
+      "role": "Hindi native script",
+      "documents": 20,
+      "source_characters": 71300,
+      "analysis_characters": 43062,
+      "truncated": 3
+    },
+    {
+      "source_config": "verified",
+      "source_split": "ben",
+      "claimed_language": "ben",
+      "claimed_script": "Beng",
+      "role": "Bengali native script",
+      "documents": 20,
+      "source_characters": 33828,
+      "analysis_characters": 33344,
+      "truncated": 1
+    },
+    {
+      "source_config": "verified",
+      "source_split": "tam",
+      "claimed_language": "tam",
+      "claimed_script": "Taml",
+      "role": "Tamil native script",
+      "documents": 20,
+      "source_characters": 44027,
+      "analysis_characters": 38744,
+      "truncated": 1
+    },
+    {
+      "source_config": "verified",
+      "source_split": "tel",
+      "claimed_language": "tel",
+      "claimed_script": "Telu",
+      "role": "Telugu native script",
+      "documents": 20,
+      "source_characters": 36088,
+      "analysis_characters": 35872,
+      "truncated": 1
+    },
+    {
+      "source_config": "verified",
+      "source_split": "urd",
+      "claimed_language": "urd",
+      "claimed_script": "Arab",
+      "role": "Urdu native script",
+      "documents": 20,
+      "source_characters": 36543,
+      "analysis_characters": 32787,
+      "truncated": 1
+    },
+    {
+      "source_config": "synthetic",
+      "source_split": "hin_Latn",
+      "claimed_language": "hin",
+      "claimed_script": "Latn",
+      "role": "Hindi transliteration limitation case",
+      "documents": 20,
+      "source_characters": 34540,
+      "analysis_characters": 32774,
+      "truncated": 2
+    },
+    {
+      "source_config": "synthetic",
+      "source_split": "tel_Latn",
+      "claimed_language": "tel",
+      "claimed_script": "Latn",
+      "role": "Telugu transliteration limitation case",
+      "documents": 20,
+      "source_characters": 86444,
+      "analysis_characters": 46905,
+      "truncated": 7
+    }
+  ]
+}

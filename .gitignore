@@ -29,3 +29,5 @@ extraction/data/*/extraction_only/impl/*.jsonl
 # Local Netlify folder
 .netlify
 
+# OMP shell sidecars are local execution logs, not assignment artifacts.
+quality-filtering/omp-session-*/*.bash-original.log

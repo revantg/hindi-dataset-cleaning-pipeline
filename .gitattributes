@@ -6,3 +6,4 @@ language-identification/omp-session-*.html filter=lfs diff=lfs merge=lfs -text
 language-identification/omp-session-*.jsonl filter=lfs diff=lfs merge=lfs -text
 quality-filtering/omp-session-*.jsonl filter=lfs diff=lfs merge=lfs -text
 quality-filtering/omp-session-*.html filter=lfs diff=lfs merge=lfs -text
+quality-filtering/data/sarvam_quality_classifier/*.jsonl filter=lfs diff=lfs merge=lfs -text

@@ -16,6 +16,15 @@ __marimo__/
 # sample, download script, manifest, and measurements remain tracked under
 # extraction/data/; full raw and extraction-output JSONLs stay local.
 data/*
+!quality-filtering/data/
+quality-filtering/data/sarvam_quality_classifier/*
+!quality-filtering/data/sarvam_quality_classifier/classifier_summary.json
+!quality-filtering/data/sarvam_quality_classifier/held_out_predictions.jsonl
+!quality-filtering/data/sarvam_quality_classifier/held_out_controls.jsonl
+!quality-filtering/data/sarvam_quality_classifier/sarvam_source_annotations.jsonl
+!quality-filtering/data/sarvam_quality_classifier/synthetic_bad_examples.jsonl
+!quality-filtering/data/sarvam_quality_classifier/unverified_pool.jsonl
+!quality-filtering/data/sarvam_quality_classifier/unverified_candidate.jsonl
 extraction/data/*
 !extraction/data/c4_en_html_evaluation/
 !extraction/data/sangraha_hi_verified_30m/

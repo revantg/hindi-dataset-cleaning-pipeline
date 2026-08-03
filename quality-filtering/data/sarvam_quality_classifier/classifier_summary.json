@@ -1,0 +1,166 @@
+{
+  "pipeline_version": "sarvam-hindi-quality-classifier-2026-08-04-v2",
+  "created_at_utc": "2026-08-03T23:51:55.304446+00:00",
+  "source": {
+    "trusted_input_path": "/Users/revant.gupta/timepass/dataset-cleaning-assignment/extraction/data/sangraha_hi_verified_30m/sample_raw.jsonl",
+    "candidate_input_path": "/Users/revant.gupta/timepass/dataset-cleaning-assignment/quality-filtering/data/sarvam_quality_classifier/unverified_pool.jsonl",
+    "trusted_input_sha256": "fa0d675eaa5c97a68efa6aae9d48f84984aaa9dca2016e89835ef5e1bfde1097",
+    "candidate_input_sha256": "98dca36df05dbd53703c34b4f837828e5669e85cdfe9feac1abd351ba5a63306",
+    "source_documents": 1600,
+    "trusted_pool_documents": 264,
+    "candidate_pool_documents": 1742,
+    "selection_rule": "deterministic stratification by origin × type × length × transparent risk band, then SHA-256 ordering"
+  },
+  "sarvam": {
+    "model": "sarvam-105b",
+    "pricing_rupees_per_million_tokens": {
+      "input": 4.0,
+      "output": 16.0
+    },
+    "annotation_character_cap": 1500,
+    "annotation_excerpt_policy": "head, middle, and tail retained when a document exceeds the cap",
+    "batch_size": 12,
+    "temperature": 0,
+    "seed": 20260804,
+    "seed_policy": "best effort only; monitor system_fingerprint for backend drift when supplied",
+    "reasoning_effort": null,
+    "response_contract": "native strict JSON Schema",
+    "annotation_usage": {
+      "requests_made_this_run": 0,
+      "retries_this_run": 0,
+      "total_estimated_cost_rupees": 11.083672,
+      "total_prompt_tokens": 1794116,
+      "total_completion_tokens": 245043
+    },
+    "api_key_persisted": false
+  },
+  "label_policy": {
+    "labels": [
+      "keep",
+      "reject",
+      "review"
+    ],
+    "classifier_labels": [
+      "reject",
+      "retain"
+    ],
+    "automatic_deletion_policy": "none; reject predictions require a separate human or deterministic-rule decision",
+    "known_bad_examples": [
+      "residual_markup",
+      "link_farm_or_seo",
+      "symbol_debris",
+      "repetition_or_keyword_stuffing",
+      "malformed_or_unusable_text"
+    ],
+    "protected_forms": [
+      "Devanagari",
+      "।",
+      "॥",
+      "Hinglish",
+      "lists",
+      "verse",
+      "short usable text"
+    ]
+  },
+  "training": {
+    "train_documents": 4227,
+    "held_out_documents": 953,
+    "synthetic_bad_documents": 3200,
+    "real_sarvam_rejects": 12,
+    "real_reject_multiplier": 40,
+    "source_group_split": "sha256('source-group-split-v2' + source_doc_id) % 5 == 0 held out",
+    "model": "fastText supervised binary router: retain (Sarvam keep/review) versus reject; character subwords 2-5 plus word bigrams",
+    "review_threshold": 0.7
+  },
+  "held_out_evaluation": {
+    "documents": 953,
+    "all_rows": {
+      "documents": 953,
+      "accuracy": 0.9139559286463799,
+      "reject_recall": 0.8718354430379747,
+      "false_reject_rate": 0.001049317943336831
+    },
+    "real_weak_label_test": {
+      "documents": 312,
+      "accuracy": 0.9871794871794872,
+      "reject_recall": 0.0,
+      "false_reject_rate": 0.003205128205128205
+    },
+    "confusion_matrix": {
+      "reject": {
+        "reject": 551,
+        "retain": 81
+      },
+      "retain": {
+        "reject": 1,
+        "retain": 320
+      }
+    },
+    "synthetic_control_reject_recall": 0.875993640699523,
+    "bad_kind_breakdown": {
+      "residual_markup": {
+        "documents": 120,
+        "caught_as_reject": 120
+      },
+      "link_farm_or_seo": {
+        "documents": 126,
+        "caught_as_reject": 126
+      },
+      "symbol_debris": {
+        "documents": 141,
+        "caught_as_reject": 141
+      },
+      "repetition_or_keyword_stuffing": {
+        "documents": 129,
+        "caught_as_reject": 51
+      },
+      "malformed_or_unusable_text": {
+        "documents": 113,
+        "caught_as_reject": 113
+      }
+    },
+    "by_origin": {
+      "candidate_source": {
+        "documents": 259,
+        "accuracy": 0.9922779922779923,
+        "reject_recall": 0.0,
+        "false_reject_rate": 0.003861003861003861
+      },
+      "protected_control": {
+        "documents": 12,
+        "accuracy": 1.0,
+        "reject_recall": null,
+        "false_reject_rate": 0.0
+      },
+      "synthetic_bad": {
+        "documents": 629,
+        "accuracy": 0.875993640699523,
+        "reject_recall": 0.875993640699523,
+        "false_reject_rate": 0.0
+      },
+      "trusted_source": {
+        "documents": 53,
+        "accuracy": 0.9622641509433962,
+        "reject_recall": 0.0,
+        "false_reject_rate": 0.0
+      }
+    },
+    "evaluation_contract": {
+      "real_weak_label_test": "Grouped held-out Sarvam weak labels; not human gold or an external generalization claim.",
+      "synthetic_controls": "Deterministic counterfactual coverage only; excluded from real weak-label metrics.",
+      "protected_controls": "Safety regression checks for false rejections of protected Indic forms."
+    }
+  },
+  "artifacts": {
+    "source_annotations": "/Users/revant.gupta/timepass/dataset-cleaning-assignment/quality-filtering/data/sarvam_quality_classifier/sarvam_source_annotations.jsonl",
+    "synthetic_bad_examples": "/Users/revant.gupta/timepass/dataset-cleaning-assignment/quality-filtering/data/sarvam_quality_classifier/synthetic_bad_examples.jsonl",
+    "held_out_controls": "/Users/revant.gupta/timepass/dataset-cleaning-assignment/quality-filtering/data/sarvam_quality_classifier/held_out_controls.jsonl",
+    "held_out_predictions": "/Users/revant.gupta/timepass/dataset-cleaning-assignment/quality-filtering/data/sarvam_quality_classifier/held_out_predictions.jsonl"
+  },
+  "limitations": [
+    "Sarvam labels are model-generated weak supervision, not human gold labels.",
+    "Synthetic controls measure corruption-family detection only and are excluded from real weak-label metrics.",
+    "The binary local classifier routes Sarvam review labels to retain; it cannot replace a human review queue.",
+    "A locked human-labeled Hindi test set and downstream training ablation are required before an external generalization or production-quality claim."
+  ]
+}

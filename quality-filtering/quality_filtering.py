@@ -38,7 +38,7 @@ language-aware review rather than English assumptions.
 | 1 | Extract | Separate assignment stage; HTML/layout extraction is not inferred from Sangraha's flattened `text`. |
 | 2 | Normalize | NFC is used only on an in-memory measurement copy; raw cache is never overwritten. |
 | 3 | Language validation | Separate stage; the `hin` label is not treated as proof of document language. |
-| 4 | **Quality filtering** | **Executed here:** transparent length, Unicode, residue, link, line, and repetition signals. |
+| 4 | **Quality filtering** | **Executed here:** transparent length, Unicode, residue, link, line, repetition, and an audited Sarvam-assisted classifier experiment. |
 | 5 | Deduplication | Separate inter-document exact/near dedup stage; repeated lines here are intra-document review signals only. |
 | 6 | PII scrubbing | Separate canonical scrubber; candidate previews use display-only masking and never expose values. |
 | 7 | Decontamination | Separate benchmark/evaluation-content check; no benchmark corpus is silently substituted here. |
@@ -882,27 +882,22 @@ scores rank similarity to a reference distribution; they do not define truth.
 - **Execution status:** **executed only when the run button is clicked**. The output label is **reference-distribution similarity, not truth or an automatic reject rule**. Production CCNet/Sangraha use per-language 5-gram KenLM-style reference LMs; `kenlm` is absent here, so this is a pedagogical proxy, not a substitute.
 - **Primary sources:** [CCNet](https://arxiv.org/abs/1911.00359), [IndicLLMSuite](https://arxiv.org/abs/2403.06350).
 
-### Reference-corpus classifier — explanatory only
+### Sarvam-105B → fastText Hindi/Indic quality router — executed baseline; upgraded experiment ready
 
-- **What it measures:** learned probability that a document resembles genuinely trusted examples rather than genuinely noisy examples.
-- **Internal calculation:** train fastText or logistic regression on a labelled reference corpus, then score held-out documents; calibrate by language, source, and document type.
-- **Why/when useful:** combines many weak signals when labels represent the target quality policy.
-- **Advantages:** cheap inference after training and adaptable to source-specific noise.
-- **Failure modes:** inherited label/source bias, shortcut learning, domain shift, and probability miscalibration.
-- **Indic/Hinglish handling:** labels must include valid code-mixed Hindi, Indic scripts, and relevant genres; do not use `verified/hin` versus synthetic corruption because that would score the artificial corruption.
-- **Execution status:** **not executed**; this notebook has no genuinely labelled Hindi trusted/noisy reference set.
-- **Primary sources:** [C4](https://arxiv.org/abs/1910.10683), [FineWeb](https://arxiv.org/abs/2406.17557).
+This is the report's **learned quality-filtering component**. Its design follows the
+teacher→student pattern of [FineWeb-Edu](https://arxiv.org/abs/2406.17557) and
+[DataComp-LM](https://arxiv.org/abs/2406.11794): Sarvam-105B provides structured
+weak labels; a local fastText student performs reproducible, low-latency routing.
+Sarvam is never a live dependency of the corpus pipeline.
 
-### Multilingual neural quality scorer or LLM judge — explanatory only
-
-- **What it measures:** a classifier or judge's learned assessment of coherence, educational value, fluency, relevance, or other task-specific quality dimensions.
-- **Internal calculation:** run a validated multilingual encoder or LLM, optionally distill its reviewed scores into a cheaper model, then audit calibration and disagreements.
-- **Why/when useful:** captures semantic/document-level properties that counts and n-grams miss.
-- **Advantages:** can integrate context, multilingual evidence, and a richer rubric.
-- **Failure modes:** expensive inference, prompt/model bias, hallucinated rationales, language imbalance, and false confidence on rare Indic forms.
-- **Indic/Hinglish handling:** require Hindi/Indic validation sets and human adjudication; fluency in English is not a Hindi quality target.
-- **Execution status:** **not executed**; no pretrained encoder or LLM is downloaded in this bounded workbook.
-- **Primary sources:** [FineWeb](https://arxiv.org/abs/2406.17557), [IndicLLMSuite](https://arxiv.org/abs/2403.06350).
+- **Decision:** `keep` / `review` / `reject` under a Hindi-aware usability rubric. The student conservatively maps `keep` and `review` to `retain`. A `reject` score must reach the calibrated **0.70 review threshold** and remains a **review candidate**, never an automatic deletion.
+- **Hindi/Indic safety:** the rubric protects Devanagari marks and danda, Hinglish/Romanized Hindi, code mixing, lists, tables, verse, short useful notices, and recoverable OCR. Separate held-out protected controls measure false rejection of these forms; any failure is reported as a safety regression.
+- **Professional data design:** the upgraded run samples both `verified` Hindi and a separate `unverified` candidate pool deterministically across origin × document type × length × transparent risk band—rather than taking the first rows in file order. The risk band is a sampling aid only, not a hidden filtering rule.
+- **Teacher contract:** PII is masked before annotation. Sarvam is asked for native strict JSON-Schema output, with reasoning disabled; long documents preserve head, middle, and tail evidence. The seed is only best-effort—the run records backend-drift evidence when available.
+- **Evaluation contract:** real grouped held-out Sarvam labels, synthetic corruption-family controls, and protected Indic safety controls are reported separately. Synthetic controls are never counted as real defects or as real-world accuracy. A human-labeled Hindi test set and downstream training ablation remain necessary for any external generalization claim.
+- **Baseline evidence:** the earlier 264-document cached run cost **₹2.12912** (312,240 prompt and 55,022 completion tokens at Sarvam's listed ₹4/M input and ₹16/M output rates). It established that protected controls were retained and exposed a missed repetition control; it is deliberately **not** promoted to a production-performance claim.
+- **Execution status:** baseline artifacts are superseded by the completed **1,600-document stratified experiment**: 264 trusted and 1,336 unverified-candidate documents, 12 real Sarvam rejects, **₹11.08367** observed annotation cost, and a 0.70 safety-calibrated review threshold. Its grouped real weak-label audit is 98.7% accurate with 0.32% false-reject rate; protected Indic controls have 0% false rejects. Real-reject recall was 0% at this safety threshold, so the model is an auditable review signal—not a standalone removal rule. The ₹1,000 cap and annotation checkpoints remain in place for reruns.
+- **Primary sources:** [Sarvam-105B](https://docs.sarvam.ai/api/getting-started/models/sarvam-105b), [Sarvam structured outputs](https://docs.sarvam.ai/api-reference/chat/chat-completions), [Sarvam pricing](https://docs.sarvam.ai/api/getting-started/pricing), [FineWeb](https://arxiv.org/abs/2406.17557), [DataComp-LM](https://arxiv.org/abs/2406.11794), [fastText supervised classification](https://fasttext.cc/docs/en/supervised-tutorial.html).
 
 ### Line-level filtering — explanatory only
 
@@ -930,6 +925,230 @@ scores rank similarity to a reference distribution; they do not define truth.
 
 
 @app.cell(hide_code=True)
+def sarvam_classifier_plan(mo):
+    import importlib.util as _importlib_util
+    from pathlib import Path as _Path
+    _classifier_script = _Path("sarvam_quality_classifier.py")
+    _candidate_path = _Path("data/sarvam_quality_classifier/unverified_pool.jsonl")
+    if not _classifier_script.exists() or not _candidate_path.exists():
+        classifier_plan_view = mo.md(
+            "## Upgraded classifier experiment plan\n"
+            "The local candidate pool is unavailable, so the upgraded annotation plan cannot be materialized."
+        )
+    else:
+        _spec = _importlib_util.spec_from_file_location("_quality_router", _classifier_script)
+        _router = _importlib_util.module_from_spec(_spec)
+        _spec.loader.exec_module(_router)
+        _trusted = _router.load_records(
+            _router.default_input_path(), 264, origin="trusted_source"
+        )
+        _candidate = _router.load_records(_candidate_path, 1_742, origin="candidate_source")
+        _records = _router.deterministic_stratified_sample(_trusted + _candidate, 1_600)
+        _classifier_plan = _router.annotation_plan(_records, batch_size=12, character_cap=1_500)
+        _origin_rows = [
+            {
+                "origin": origin,
+                "documents": sum(record["origin"] == origin for record in _records),
+            }
+            for origin in sorted({record["origin"] for record in _records})
+        ]
+        _risk_rows = [
+            {
+                "transparent risk band": risk,
+                "documents": sum(
+                    _router.heuristic_risk_band(record["text"]) == risk
+                    for record in _records
+                ),
+            }
+            for risk in ("high", "medium", "low")
+        ]
+        classifier_plan_view = mo.vstack([
+            mo.md(
+                "## Upgraded classifier experiment plan\n"
+                "Materialized locally with **no API request**. The plan balances the small verified pool "
+                "with the unverified candidate pool, samples origin × type × length × transparent risk band, "
+                "then uses SHA-256 ordering. Risk is used only to select an annotation cohort."
+            ),
+            mo.ui.table(_origin_rows),
+            mo.ui.table(_risk_rows),
+            mo.ui.table([_classifier_plan]),
+            mo.md(
+                "The displayed ₹ value is a pre-request upper estimate, not spend. The completed run annotated "
+                "1,600 documents for ₹11.08367, found 12 real Sarvam rejects, and uses a 0.70 threshold calibrated "
+                "to protect held-out Indic controls. Low real-reject recall at that threshold is reported explicitly; "
+                "more candidate hard-negative mining is required before any stronger automation claim."
+            ),
+        ])
+    classifier_plan_view
+
+
+@app.cell(hide_code=True)
+def sarvam_classifier_button(mo):
+    run_classifier_button = mo.ui.run_button(
+        label="Run or refresh cached Sarvam classifier experiment"
+    )
+    mo.vstack([
+        mo.md(
+            "## Sarvam-assisted classifier control\n"
+            "Shows cached baseline evidence without an API call. Clicking runs the upgraded, stratified "
+            "teacher→student experiment only when `SARVAM_API_KEY` is available; the key is never written "
+            "to this notebook or its artifacts."
+        ),
+        run_classifier_button,
+    ])
+    return (run_classifier_button,)
+
+
+@app.cell(hide_code=True)
+def sarvam_classifier_controls(run_classifier_button):
+    import os as _os
+    import subprocess as _subprocess
+    import sys as _sys
+    from pathlib import Path as _Path
+
+    classifier_root = _Path("data/sarvam_quality_classifier")
+    classifier_script = _Path("sarvam_quality_classifier.py")
+    if run_classifier_button.value:
+        api_key = _os.environ.get("SARVAM_API_KEY")
+        if not api_key:
+            classifier_run_status = (
+                "Set `SARVAM_API_KEY` in the shell that starts Marimo. Cached results remain viewable."
+            )
+        else:
+            completed = _subprocess.run(
+                [
+                    _sys.executable,
+                    str(classifier_script),
+                    "--max-documents", "1600",
+                    "--trusted-documents", "264",
+                    "--candidate-documents", "1742",
+                    "--batch-size", "12",
+                    "--character-cap", "1500",
+                    "--synthetics-per-source", "2",
+                    "--minimum-real-rejects", "10",
+                    "--real-reject-multiplier", "40",
+                    "--credit-budget-rupees", "1000",
+                ],
+                check=False,
+                env={**_os.environ, "SARVAM_API_KEY": api_key},
+                capture_output=True,
+                text=True,
+                timeout=3600,
+            )
+            classifier_run_status = (
+                completed.stdout.strip()
+                if completed.returncode == 0
+                else f"Classifier run failed: {completed.stderr.strip()}"
+            )
+    else:
+        classifier_run_status = "Cached classifier artifacts loaded; no Sarvam request was made."
+    return classifier_root, classifier_run_status
+
+
+@app.cell(hide_code=True)
+def sarvam_classifier_results(classifier_root, classifier_run_status, mo):
+    import json as _json
+    from collections import Counter as _Counter
+
+    summary_path = classifier_root / "classifier_summary.json"
+    annotations_path = classifier_root / "sarvam_source_annotations.jsonl"
+    if not summary_path.exists() or not annotations_path.exists():
+        classifier_report = mo.md(
+            "## Sarvam-assisted classifier evidence\n"
+            f"{classifier_run_status}\n\nNo persisted classifier artifacts are available yet."
+        )
+    else:
+        _classifier_summary = _json.loads(summary_path.read_text(encoding="utf-8"))
+        annotations = [
+            _json.loads(line)
+            for line in annotations_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        labels = _Counter(row["label"] for row in annotations)
+        reasons = _Counter(row["reason_code"] for row in annotations)
+        sarvam = _classifier_summary["sarvam"]
+        usage = sarvam["annotation_usage"]
+        evaluation = _classifier_summary["held_out_evaluation"]
+        is_upgraded = _classifier_summary.get("pipeline_version", "").endswith("-v2")
+        cost_rows = [{
+            "model": sarvam["model"],
+            "source documents annotated": _classifier_summary["source"]["source_documents"],
+            "prompt tokens": usage["total_prompt_tokens"],
+            "completion tokens": usage["total_completion_tokens"],
+            "estimated cost (₹)": round(usage["total_estimated_cost_rupees"], 5),
+            "input ₹ / M tokens": sarvam["pricing_rupees_per_million_tokens"]["input"],
+            "output ₹ / M tokens": sarvam["pricing_rupees_per_million_tokens"]["output"],
+            "API key persisted": sarvam["api_key_persisted"],
+        }]
+        label_rows = [
+            {"Sarvam source label": label, "documents": count}
+            for label, count in sorted(labels.items())
+        ]
+        reason_rows = [
+            {"Sarvam source reason": reason, "documents": count}
+            for reason, count in reasons.most_common()
+        ]
+        bad_rows = [
+            {"synthetic control family": family, **values}
+            for family, values in evaluation["bad_kind_breakdown"].items()
+        ]
+        audit_rows = [
+            {"audit slice": source, **values}
+            for source, values in evaluation["by_origin"].items()
+        ]
+        confusion_rows = [
+            {"expected": expected, **predicted}
+            for expected, predicted in evaluation["confusion_matrix"].items()
+        ]
+        if is_upgraded:
+            real_evaluation = evaluation["real_weak_label_test"]
+            synthetic_recall = evaluation["synthetic_control_reject_recall"]
+            metrics_text = (
+                "### Evidence-separated grouped audit\n"
+                f"Real weak-label test: **{real_evaluation['documents']}** documents · "
+                f"accuracy: **{real_evaluation['accuracy']:.1%}** · "
+                f"false-reject rate: **{real_evaluation['false_reject_rate']:.1%}**.\n\n"
+                f"Synthetic-control reject recall: **{synthetic_recall:.1%}**. This is coverage of "
+                "deterministic corruption families, not real-corpus recall."
+            )
+            experiment_text = (
+                "Upgraded stratified experiment: real weak-label metrics exclude synthetic controls; "
+                "Sarvam is an upstream weak-label teacher, not a production inference dependency."
+            )
+        else:
+            metrics_text = (
+                f"### Baseline grouped audit\nAggregate held-out accuracy: **{evaluation['accuracy']:.1%}** · "
+                f"synthetic-control reject recall: **{evaluation['reject_recall']:.1%}**. "
+                "These blended baseline figures are retained for traceability, not presented as real-world accuracy."
+            )
+            experiment_text = (
+                "Cached baseline: file-order source selection and blended synthetic controls. "
+                "Run the upgraded experiment to replace it with evidence-separated metrics."
+            )
+        classifier_report = mo.vstack([
+            mo.md(
+                "## Sarvam-105B → fastText classifier evidence\n"
+                f"{experiment_text} The ₹ amount is observed annotation spend—not the ₹1,000 cap."
+            ),
+            mo.ui.table(cost_rows),
+            mo.md("### Sarvam weak-label distribution"),
+            mo.ui.table(label_rows),
+            mo.ui.table(reason_rows),
+            mo.md(metrics_text),
+            mo.ui.table(confusion_rows),
+            mo.ui.table(audit_rows),
+            mo.md("### Deterministic corruption-control coverage"),
+            mo.ui.table(bad_rows),
+            mo.md(
+                "Controls are persisted separately and never counted as real Sangraha defects. "
+                "No classifier prediction deletes source text automatically. A locked human-labeled Hindi test set "
+                "and downstream-ablation evidence are required before any external generalization claim."
+            ),
+        ])
+    classifier_report
+
+
+@app.cell(hide_code=True)
 def run_quality_workbook(
     DATASET_CONFIG,
     DATASET_ID,
@@ -949,6 +1168,7 @@ def run_quality_workbook(
     run_button,
     run_character_trigram_proxy,
 ):
+
     import hashlib as _hashlib
     import json as _json
     import os as _os

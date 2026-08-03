@@ -1,0 +1,369 @@
+URL: https://docs.sarvam.ai/api/getting-started/models/sarvam-105b
+Content-Type: text/markdown
+Method: md-suffix
+Notes: Found .md suffix version
+
+---
+
+> For clean Markdown of any page, append `.md` to the page URL.
+> For a complete documentation index, see https://docs.sarvam.ai/llms.txt.
+> For full documentation content in one file, see https://docs.sarvam.ai/llms-full.txt.
+> For AI client integration (Claude Code, Cursor, etc.), connect to the MCP server at https://docs.sarvam.ai/_mcp/server.
+
+# Sarvam-105B
+
+> Sarvam-105B - 105B parameter flagship multilingual language model delivering state-of-the-art performance on Indian language understanding, reasoning, and generation tasks.
+
+**Sarvam-105B (Flagship Chat LLM)**
+
+Sarvam AI's flagship Mixture-of-Experts reasoning model trained from scratch, with Multi-head Latent Attention (MLA) for efficient long-context inference. Matches or outperforms most open and closed-source frontier models of its class across knowledge, reasoning, and agentic benchmarks.
+
+**Highlights:**
+
+* **105B+ total parameters** — our most capable MoE model with Multi-head Latent Attention
+* Pre-trained on **12 trillion tokens** across code, math, multilingual, and web data
+* **98.6 on Math500**, **88.3 on AIME 25** (96.7 with tools), **49.5 on BrowseComp**
+* State-of-the-art Indian language performance: wins 90% of pairwise comparisons
+* Powers **Indus**, Sarvam's AI assistant for complex reasoning and agentic workflows
+* OpenAI-compatible chat completions API | Apache 2.0 open-source
+
+## At a Glance
+
+|                       |                                                                                                                                         |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **Model ID**          | `sarvam-105b`                                                                                                                           |
+| **What it does**      | Flagship chat LLM — complex reasoning, coding, and agentic workflows (105B+ MoE with MLA)                                               |
+| **Languages**         | 10 most-spoken Indian languages + English; native script, romanized, and code-mixed input                                               |
+| **APIs**              | [Chat Completions](/api/api-guides-tutorials/chat-completion/overview) (`/v1/chat/completions`, OpenAI-compatible, streaming supported) |
+| **Input limits**      | 128K-token context window — [all limits](#limits)                                                                                       |
+| **Benchmarks**        | [Key Features](#key-features) and the [model blog](https://www.sarvam.ai/blogs/sarvam-30b-105b)                                         |
+| **Pricing**           | [Pricing page](/api/getting-started/pricing)                                                                                            |
+| **Best for**          | Multi-step reasoning, code generation, long-context document analysis, agentic tool use                                                 |
+| **Known limitations** | [See below](#known-limitations)                                                                                                         |
+
+## Key Features
+
+#### Flagship Indian Language Support
+
+Wins 90% of pairwise comparisons across Indian language benchmarks and 84% on STEM, math, and coding. Trained extensively on native script, romanized, and code-mixed inputs across the 10 most-spoken Indian languages.
+
+#### Advanced Reasoning
+
+98.6 on Math500, 88.3 on AIME 25 (96.7 with tools), 85.8 on HMMT, and 69.1 on Beyond AIME — reflecting deep multi-step reasoning and complex mathematical problem solving.
+
+#### Agentic Capabilities
+
+49.5 on BrowseComp and 68.3 on Tau2 (avg.) — highest among compared models. Optimized for tool use, long-horizon reasoning, and environment interaction in real-world workflows.
+
+#### Efficient MoE Architecture
+
+Mixture-of-Experts Transformer with 128 sparse experts and Multi-head Latent Attention (MLA), a compressed attention formulation that reduces memory requirements for long-context inference.
+
+## Learn More
+
+For detailed information on architecture, training methodology, performance benchmarks, and inference optimizations, visit [our blog](https://www.sarvam.ai/blogs/sarvam-30b-105b).
+
+## Model Specifications
+
+#### Key Considerations
+
+<ul>
+  <li>
+    Model ID: 
+
+    <code>sarvam-105b</code>
+  </li>
+
+  <li>
+    Total Parameters: 105B+ with MoE architecture and 128 sparse experts
+  </li>
+
+  <li>
+    Attention: Multi-head Latent Attention (MLA)
+  </li>
+
+  <li>
+    Pre-training Data: 12T tokens
+  </li>
+
+  <li>
+    Temperature range: 0 to 2
+  </li>
+
+  <li>
+    Top-p range: 0 to 1
+  </li>
+
+  <li>
+    Supports streaming and non-streaming responses
+  </li>
+
+  <li>
+    OpenAI-compatible chat completions format
+  </li>
+
+  <li>
+    License: Apache 2.0
+  </li>
+</ul>
+
+**Sarvam-105B** is our flagship chat model, delivering the highest quality outputs for complex reasoning and agentic tasks. **Sarvam-M (24B)** has been [deprecated](/api/getting-started/models/sarvam-m) and is no longer available through the API.
+
+## Key Capabilities
+
+#### Basic Chat Completion
+
+Simple, one-turn interaction where the user asks a question and the model replies with the highest quality response leveraging its 105B parameter knowledge.
+
+#### Python
+
+```python
+from sarvamai import SarvamAI
+
+client = SarvamAI(
+    api_subscription_key="YOUR_SARVAM_API_KEY",
+)
+
+response = client.chat.completions(
+    model="sarvam-105b",
+    messages=[
+        {"role": "user", "content": "Explain the economic impact of GST implementation in India."}
+    ],
+    temperature=0.5,
+    top_p=1,
+    max_tokens=2000,
+)
+
+print(response.choices[0].message.content)
+```
+
+#### JavaScript
+
+```javascript
+import { SarvamAIClient } from "sarvamai";
+
+const client = new SarvamAIClient({
+    apiSubscriptionKey: "YOUR_SARVAM_API_KEY",
+});
+
+async function main() {
+    const response = await client.chat.completions({
+        model: "sarvam-105b",
+        messages: [
+            {
+                role: "user",
+                content: "Explain the economic impact of GST implementation in India.",
+            },
+        ],
+        temperature: 0.5,
+        top_p: 1,
+        max_tokens: 2000,
+    });
+
+    console.log(response.choices[0].message.content);
+}
+
+main();
+```
+
+#### cURL
+
+```bash
+curl -X POST https://api.sarvam.ai/v1/chat/completions \
+  -H "api-subscription-key: $SARVAM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "Explain the economic impact of GST implementation in India."}
+    ],
+    "model": "sarvam-105b",
+    "temperature": 0.5,
+    "top_p": 1,           
+    "max_tokens": 2000
+  }'
+```
+
+#### Multi-turn Conversation
+
+Involves multiple exchanges between the system, user, and assistant. Sarvam-105B excels at maintaining deep context across long conversations.
+
+#### Python
+
+```python
+from sarvamai import SarvamAI
+
+client = SarvamAI(
+    api_subscription_key="YOUR_SARVAM_API_KEY",
+)
+
+response = client.chat.completions(
+    model="sarvam-105b",
+    messages=[
+        {"role": "system", "content": "You are a senior legal advisor specializing in Indian corporate law."},
+        {"role": "user", "content": "What are the key compliance requirements for a startup in India?"},
+        {"role": "assistant", "content": "Key compliance requirements include company registration under the Companies Act 2013, GST registration, PF/ESI registration for employees, and annual filings with MCA."},
+        {"role": "user", "content": "Can you elaborate on the annual filing requirements and deadlines?"}
+    ],
+    temperature=0.3,
+    top_p=1,
+    max_tokens=2000
+)
+
+print(response.choices[0].message.content)
+```
+
+#### JavaScript
+
+```javascript
+import { SarvamAIClient } from "sarvamai";
+
+const client = new SarvamAIClient({
+    apiSubscriptionKey: "YOUR_SARVAM_API_KEY"
+});
+
+async function main() {
+    const response = await client.chat.completions({
+        model: "sarvam-105b",
+        messages: [
+            { role: "system", content: "You are a senior legal advisor specializing in Indian corporate law." },
+            { role: "user", content: "What are the key compliance requirements for a startup in India?" },
+            { role: "assistant", content: "Key compliance requirements include company registration under the Companies Act 2013, GST registration, PF/ESI registration for employees, and annual filings with MCA." },
+            { role: "user", content: "Can you elaborate on the annual filing requirements and deadlines?" }
+        ],
+        temperature: 0.3,
+        top_p: 1,
+        max_tokens: 2000
+    });
+    
+    console.log(response.choices[0].message.content);
+}
+
+main();
+```
+
+#### cURL
+
+```bash
+curl -X POST https://api.sarvam.ai/v1/chat/completions \
+  -H "api-subscription-key: $SARVAM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [
+      {"role": "system", "content": "You are a senior legal advisor specializing in Indian corporate law."},
+      {"role": "user", "content": "What are the key compliance requirements for a startup in India?"},
+      {"role": "assistant", "content": "Key compliance requirements include company registration under the Companies Act 2013, GST registration, PF/ESI registration for employees, and annual filings with MCA."},
+      {"role": "user", "content": "Can you elaborate on the annual filing requirements and deadlines?"}
+    ],
+    "model": "sarvam-105b",
+    "temperature": 0.3,
+    "top_p": 1,           
+    "max_tokens": 2000
+  }'
+```
+
+#### Streaming
+
+Stream responses token-by-token for real-time output. Ideal for chat interfaces and applications requiring progressive response rendering.
+
+#### Python
+
+```python
+from sarvamai import SarvamAI
+
+client = SarvamAI(
+    api_subscription_key="YOUR_SARVAM_API_KEY",
+)
+
+for chunk in client.chat.completions(
+    model="sarvam-105b",
+    messages=[
+        {"role": "user", "content": "Write a detailed analysis of India's digital transformation journey."}
+    ],
+    temperature=0.7,
+    max_tokens=2000,
+    stream=True,
+):
+    if chunk.choices:
+        delta = chunk.choices[0].delta
+        if delta.content:
+            print(delta.content, end="", flush=True)
+
+print()
+```
+
+#### JavaScript
+
+```javascript
+import { SarvamAIClient } from "sarvamai";
+
+const client = new SarvamAIClient({
+    apiSubscriptionKey: "YOUR_SARVAM_API_KEY"
+});
+
+async function main() {
+    const stream = await client.chat.completions({
+        model: "sarvam-105b",
+        messages: [
+            { role: "user", content: "Write a detailed analysis of India's digital transformation journey." }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000,
+        stream: true,
+    });
+
+    for await (const chunk of stream) {
+        if (chunk.choices?.[0]?.delta?.content) {
+            process.stdout.write(chunk.choices[0].delta.content);
+        }
+    }
+    console.log();
+}
+
+main();
+```
+
+#### cURL
+
+```bash
+curl -X POST https://api.sarvam.ai/v1/chat/completions \
+  -H "api-subscription-key: $SARVAM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "Write a detailed analysis of India'\''s digital transformation journey."}
+    ],
+    "model": "sarvam-105b",
+    "temperature": 0.7,
+    "max_tokens": 2000,
+    "stream": true
+  }'
+```
+
+## Limits
+
+| Limit                                    | Value                                                                                          |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Context window                           | 128K tokens                                                                                    |
+| `max_tokens`                             | Starter 4096 / Pro 16384 / Business 128000                                                     |
+| `temperature`                            | 0–2 (default 0.5 when reasoning is enabled — the default — and 0.2 when reasoning is disabled) |
+| `top_p`                                  | 0–1                                                                                            |
+| `n` (completions per request)            | 1–128                                                                                          |
+| `frequency_penalty` / `presence_penalty` | -2 to 2                                                                                        |
+| `stop`                                   | Up to 4 sequences                                                                              |
+| Rate limits                              | See [Rate Limits](/api/getting-started/ratelimits)                                             |
+
+## Known Limitations
+
+| Limitation                         | Detail                                                                                                                                                                                | Workaround                                                                                                    |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Thinking mode is on by default** | Reasoning (`reasoning_effort`, default `low`) is enabled by default, and reasoning tokens count toward completion tokens — a small `max_tokens` can be consumed entirely by reasoning | Increase `max_tokens` to leave room for the visible answer, or disable reasoning with `reasoning_effort=None` |
+
+## Next Steps
+
+#### [Developer quickstart](/api/api-guides-tutorials/chat-completion/overview)
+
+Learn how to integrate chat completion into your application.
+
+#### [API Reference](/api-reference/chat/chat-completions)
+
+Complete API documentation for chat completion endpoints.

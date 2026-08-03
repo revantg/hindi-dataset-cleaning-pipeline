@@ -1,0 +1,363 @@
+URL: https://docs.sarvam.ai/api/getting-started/sdks
+Content-Type: text/markdown
+Method: md-suffix
+Notes: Found .md suffix version
+
+---
+
+> For clean Markdown of any page, append `.md` to the page URL.
+> For a complete documentation index, see https://docs.sarvam.ai/llms.txt.
+> For full documentation content in one file, see https://docs.sarvam.ai/llms-full.txt.
+> For AI client integration (Claude Code, Cursor, etc.), connect to the MCP server at https://docs.sarvam.ai/_mcp/server.
+
+# Libraries & SDKs
+
+The official SDKs wrap every Sarvam AI API — Speech-to-Text, Text-to-Speech, Translation, Chat Completion, and Document AI — behind a typed, ergonomic client. They handle auth, serialization, multipart uploads, and error mapping so you don't have to hand-roll HTTP calls.
+
+| Language                | Package                                                     | Install                |
+| ----------------------- | ----------------------------------------------------------- | ---------------------- |
+| Python                  | [`sarvamai` on PyPI](https://pypi.org/project/sarvamai/)    | `pip install sarvamai` |
+| JavaScript / TypeScript | [`sarvamai` on npm](https://www.npmjs.com/package/sarvamai) | `npm install sarvamai` |
+
+**Official SDKs vs. generated request snippets.** The Python and JavaScript SDKs above are hand-tested, fully supported clients. The per-endpoint snippets you see in other languages (cURL, Go, Swift, etc.) on API Reference pages are auto-generated request examples — useful as a starting point, but only Python and JavaScript are first-class SDKs.
+
+## Initialize the client
+
+Pass your API key directly, or let the SDK read it from the `SARVAM_API_KEY` environment variable.
+
+#### Python
+
+```python
+from sarvamai import SarvamAI
+
+client = SarvamAI(api_subscription_key="YOUR_SARVAM_API_KEY")
+
+response = client.text.translate(
+    input="Hello, how are you?",
+    source_language_code="auto",
+    target_language_code="hi-IN",
+)
+print(response)
+```
+
+#### JavaScript
+
+```javascript
+import { SarvamAIClient } from "sarvamai";
+
+const client = new SarvamAIClient({
+  apiSubscriptionKey: process.env.SARVAM_API_KEY,
+});
+
+const response = await client.text.translate({
+  input: "Hello, how are you?",
+  source_language_code: "auto",
+  target_language_code: "hi-IN",
+});
+console.log(response);
+```
+
+## Async usage
+
+Both SDKs support fully asynchronous calls — use them when you need concurrency (e.g. fanning out many requests, or inside an async web server or voice agent).
+
+#### Python — AsyncSarvamAI
+
+```python
+import asyncio
+from sarvamai import AsyncSarvamAI
+
+client = AsyncSarvamAI(api_subscription_key="YOUR_SARVAM_API_KEY")
+
+async def main():
+    # Run several translations concurrently
+    inputs = ["Good morning", "How are you?", "Thank you"]
+    results = await asyncio.gather(*[
+        client.text.translate(
+            input=text,
+            source_language_code="en-IN",
+            target_language_code="hi-IN",
+        )
+        for text in inputs
+    ])
+    for r in results:
+        print(r)
+
+asyncio.run(main())
+```
+
+#### JavaScript
+
+```javascript
+import { SarvamAIClient } from "sarvamai";
+
+const client = new SarvamAIClient({
+  apiSubscriptionKey: process.env.SARVAM_API_KEY,
+});
+
+const inputs = ["Good morning", "How are you?", "Thank you"];
+
+const results = await Promise.all(
+  inputs.map((text) =>
+    client.text.translate({
+      input: text,
+      source_language_code: "en-IN",
+      target_language_code: "hi-IN",
+    })
+  )
+);
+
+results.forEach((r) => console.log(r));
+```
+
+In JavaScript, every method is already `Promise`-based — `await` it directly. In Python, the synchronous `SarvamAI` and asynchronous `AsyncSarvamAI` expose the exact same method names and arguments, so you can switch with a one-line change.
+
+## Timeouts and retries
+
+Configure timeouts and automatic retries either globally (on the client) or per request. Per-request options override the client defaults.
+
+#### Python
+
+```python
+from sarvamai import SarvamAI
+
+# Client-level: applies to every request
+client = SarvamAI(
+    api_subscription_key="YOUR_SARVAM_API_KEY",
+    timeout=30.0,  # seconds
+)
+
+# Per-request: override timeout and set automatic retries
+response = client.text.translate(
+    input="Hello, how are you?",
+    source_language_code="auto",
+    target_language_code="hi-IN",
+    request_options={
+        "timeout_in_seconds": 60,
+        "max_retries": 3,
+    },
+)
+```
+
+#### JavaScript
+
+```javascript
+import { SarvamAIClient } from "sarvamai";
+
+// Client-level: applies to every request
+const client = new SarvamAIClient({
+  apiSubscriptionKey: process.env.SARVAM_API_KEY,
+  timeoutInSeconds: 30,
+  maxRetries: 3,
+});
+
+// Per-request: override timeout/retries and pass an AbortSignal
+const controller = new AbortController();
+
+const response = await client.text.translate(
+  {
+    input: "Hello, how are you?",
+    source_language_code: "auto",
+    target_language_code: "hi-IN",
+  },
+  {
+    timeoutInSeconds: 60,
+    maxRetries: 3,
+    abortSignal: controller.signal,
+  }
+);
+```
+
+Retries use exponential backoff and apply to transient failures (HTTP `429`, `5xx`, and connection errors). For a full retry/backoff helper and idempotency guidance, see [Errors & Troubleshooting](/api/getting-started/errors-troubleshooting).
+
+## Handling errors
+
+The SDKs raise typed exceptions mapped to HTTP status codes, so you can catch exactly the failure you care about. Catch the base class to handle everything.
+
+#### Python
+
+```python
+from sarvamai import SarvamAI, TooManyRequestsError
+from sarvamai.core.api_error import ApiError
+
+client = SarvamAI(api_subscription_key="YOUR_SARVAM_API_KEY")
+
+try:
+    response = client.text.translate(
+        input="Hello, how are you?",
+        source_language_code="auto",
+        target_language_code="hi-IN",
+    )
+except TooManyRequestsError:
+    print("Rate limited — back off and retry")
+except ApiError as e:
+    # Base class for every API error
+    print(f"API error {e.status_code}: {e.body}")
+```
+
+#### JavaScript
+
+```javascript
+import {
+  SarvamAIClient,
+  SarvamAI,
+  SarvamAIError,
+  SarvamAITimeoutError,
+} from "sarvamai";
+
+const client = new SarvamAIClient({
+  apiSubscriptionKey: process.env.SARVAM_API_KEY,
+});
+
+try {
+  const response = await client.text.translate({
+    input: "Hello, how are you?",
+    source_language_code: "auto",
+    target_language_code: "hi-IN",
+  });
+} catch (err) {
+  if (err instanceof SarvamAI.TooManyRequestsError) {
+    console.log("Rate limited — back off and retry");
+  } else if (err instanceof SarvamAITimeoutError) {
+    console.log("Request timed out");
+  } else if (err instanceof SarvamAIError) {
+    // Base class for every API error
+    console.log(`API error ${err.statusCode}: ${JSON.stringify(err.body)}`);
+  } else {
+    throw err;
+  }
+}
+```
+
+### Exception reference
+
+| HTTP status                    | Python exception           | JavaScript exception                |
+| ------------------------------ | -------------------------- | ----------------------------------- |
+| `400` Bad request              | `BadRequestError`          | `SarvamAI.BadRequestError`          |
+| `403` Forbidden / invalid key¹ | `ForbiddenError`           | `SarvamAI.ForbiddenError`           |
+| `404` Not found                | `NotFoundError`            | `SarvamAI.NotFoundError`            |
+| `413` Payload too large        | `ContentTooLargeError`     | `SarvamAI.ContentTooLargeError`     |
+| `422` Unprocessable entity     | `UnprocessableEntityError` | `SarvamAI.UnprocessableEntityError` |
+| `429` Rate limited / quota     | `TooManyRequestsError`     | `SarvamAI.TooManyRequestsError`     |
+| `500` Server error             | `InternalServerError`      | `SarvamAI.InternalServerError`      |
+| `503` Service unavailable      | `ServiceUnavailableError`  | `SarvamAI.ServiceUnavailableError`  |
+| Any of the above (base)        | `ApiError`                 | `SarvamAIError`                     |
+| Client-side timeout            | `httpx.TimeoutException`   | `SarvamAITimeoutError`              |
+
+¹ Auth failures return **HTTP 403** (`invalid_api_key_error`), not 401 — see the [auth status-code note](/api/getting-started/errors-troubleshooting).
+
+## Streaming support
+
+Several APIs stream results instead of returning a single response. Here's what each SDK supports:
+
+| Capability                                                                             | Method                                                                  | Python | JavaScript |
+| -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------ | ---------- |
+| TTS over HTTP stream                                                                   | `text_to_speech.convert_stream` / `textToSpeech.convertStream`          | ✅      | ✅          |
+| TTS over WebSocket                                                                     | `text_to_speech_streaming` / `textToSpeechStreaming`                    | ✅      | ✅          |
+| STT over WebSocket                                                                     | `speech_to_text_streaming` / `speechToTextStreaming`                    | ✅      | ✅          |
+| STT-translate over WebSocket *(legacy — prefer STT WebSocket with `mode="translate"`)* | `speech_to_text_translate_streaming` / `speechToTextTranslateStreaming` | ✅      | ✅          |
+
+* **HTTP streaming** returns an iterable/`BinaryResponse` of raw audio bytes — see the [HTTP Streaming guide](/api/api-guides-tutorials/text-to-speech/streaming-api/http-stream).
+* **WebSocket streaming** uses the async clients (`AsyncSarvamAI` / `SarvamAIClient`) with an event-driven connection — see the [TTS WebSocket](/api/api-guides-tutorials/text-to-speech/streaming-api/web-socket) and [STT WebSocket](/api/api-guides-tutorials/speech-to-text/streaming-api) guides.
+
+## Document AI (file uploads)
+
+Document AI is the one group that takes **file uploads** rather than JSON, so its call shape differs from the rest of the SDK. Both clients expose it as a `doc_ai` / `docAi` group, and a job is created in a single `digitise()` or `extract()` call.
+
+| Capability                           | Python                     | JavaScript              |
+| ------------------------------------ | -------------------------- | ----------------------- |
+| Digitise a document (full-page OCR)  | `doc_ai.digitise`          | `docAi.digitise`        |
+| Extract schema-defined fields        | `doc_ai.extract`           | `docAi.extract`         |
+| Poll job status                      | `doc_ai.get_status`        | `docAi.getStatus`       |
+| Fetch extracted fields               | `doc_ai.get_results`       | `docAi.getResults`      |
+| Get a download URL for the output    | `doc_ai.get_download_url`  | `docAi.getDownloadUrl`  |
+| Pre-upload a file, then reference it | `doc_ai.create_upload_url` | `docAi.createUploadUrl` |
+
+#### Python
+
+```python
+import os, time
+from sarvamai import SarvamAI
+
+client = SarvamAI(api_subscription_key=os.environ["SARVAM_API_KEY"])
+
+# `file` takes a list of (filename, fileobj, content_type) tuples
+with open("document.pdf", "rb") as f:
+    job = client.doc_ai.digitise(
+        file=[("document.pdf", f, "application/pdf")],
+        language="hi-IN",
+        output_format="md",   # "html" (default) or "md"
+    )
+
+TERMINAL = {"completed", "partially_completed", "failed", "rejected"}
+while True:
+    st = client.doc_ai.get_status(job_id=job.job_id)
+    if st.status.lower() in TERMINAL:
+        break
+    time.sleep(5)
+
+dl = client.doc_ai.get_download_url(job_id=job.job_id)
+print("download:", dl.method, dl.url)
+```
+
+#### JavaScript
+
+```javascript
+import fs from "fs";
+import { SarvamAIClient } from "sarvamai";
+
+const client = new SarvamAIClient({ apiSubscriptionKey: process.env.SARVAM_API_KEY });
+
+// `file` takes an array, and fields use wire names (output_format, not outputFormat)
+const job = await client.docAi.digitise({
+  file: [fs.createReadStream("document.pdf")],
+  language: "hi-IN",
+  output_format: "md",
+});
+
+const TERMINAL = new Set(["completed", "partially_completed", "failed", "rejected"]);
+let st;
+while (true) {
+  st = await client.docAi.getStatus(job.job_id);   // positional, not { job_id }
+  if (TERMINAL.has(st.status.toLowerCase())) break;
+  await new Promise((resolve) => setTimeout(resolve, 5000));
+}
+
+const dl = await client.docAi.getDownloadUrl(job.job_id);
+console.log("download:", dl.method, dl.url);
+```
+
+**Three call-shape gotchas, all specific to this group:**
+
+1. **`file` is a list**, even for a single document. In JavaScript a bare stream fails with `TypeError: request.file is not iterable`.
+2. **`job_id` is positional** — `getStatus(job_id)`, not `getStatus({ job_id })`. Passing an object sends `[object Object]` as the path segment and the service rejects it as a non-UUID.
+3. **`schema` is a JSON string**, not an object, because it's sent as a multipart form field — `json.dumps(schema)` in Python, `JSON.stringify(schema)` in JavaScript.
+
+The JavaScript SDK is generated without a serialization layer, so request parameters and response fields use wire names (`output_format`, `job_id`, `pages_processed`), not camelCase. This is unlike the rest of the SDK.
+
+See the [Document AI overview](/api/api-guides-tutorials/document-intelligence/overview) for schema rules, output formats, and the full job lifecycle. The older `document_intelligence` group (`create_job()` / `upload_file()` / `start()` / `wait_until_complete()` / `download_output()`) is still present for existing integrations, but new work should use `doc_ai`.
+
+## Versioning
+
+The SDKs follow [semantic versioning](https://semver.org). Pin a version in production and review the [API changelog](/api/getting-started/changelog) before upgrading across a major version. Always develop against the latest release:
+
+#### Python
+
+```bash
+pip install --upgrade sarvamai
+```
+
+#### JavaScript
+
+```bash
+npm install sarvamai@latest
+```
+
+## Resources
+
+| Resource                     | Link                                                                           |
+| ---------------------------- | ------------------------------------------------------------------------------ |
+| Example notebooks & agents   | [GitHub cookbook](https://github.com/sarvamai/sarvam-ai-cookbook)              |
+| Errors, retries & exceptions | [Errors & Troubleshooting](/api/getting-started/errors-troubleshooting)        |
+| Community support            | [Discord](https://discord.com/invite/5rAsykttcs)                               |
+| Machine-readable API schema  | `https://docs.sarvam.ai/openapi.json` · `https://docs.sarvam.ai/asyncapi.json` |

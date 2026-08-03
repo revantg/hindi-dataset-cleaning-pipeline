@@ -1,0 +1,431 @@
+URL: https://docs.sarvam.ai/api/getting-started/quickstart
+Content-Type: text/markdown
+Method: md-suffix
+Notes: Found .md suffix version
+
+---
+
+> For clean Markdown of any page, append `.md` to the page URL.
+> For a complete documentation index, see https://docs.sarvam.ai/llms.txt.
+> For full documentation content in one file, see https://docs.sarvam.ai/llms-full.txt.
+> For AI client integration (Claude Code, Cursor, etc.), connect to the MCP server at https://docs.sarvam.ai/_mcp/server.
+
+# Developer Quickstart
+
+> Learn how to make your first API request with Sarvam AI in under 5 minutes. Complete guide with code examples for chat completion, speech-to-text, and translation APIs.
+
+**Get started with Sarvam APIs in 30 seconds:** create a key, install the SDK, and make your first call with just a few lines of code.
+
+**Prerequisites:**
+
+* A Sarvam AI account and API key. [Create one on the dashboard](https://dashboard.sarvam.ai) if you don't have one yet.
+* Python 3.9+ or Node.js 18+ (or skip both and call the REST API directly with `curl`).
+
+**By the end of this quickstart**, you'll have made a live call to a Sarvam AI API and gotten back a real result: a transcript, a playable audio file, a translation, or a chat reply, depending on which API you try below.
+
+## Setup
+
+#### Create an API Key
+
+Visit the [Sarvam AI dashboard](https://dashboard.sarvam.ai) and create a new API key. Keep this key secure; you'll need it to authenticate your requests.
+
+#### Set Up Your Environment
+
+Export your API key as an environment variable:
+
+#### macOS / Linux
+
+```bash
+export SARVAM_API_KEY="YOUR_SARVAM_API_KEY"
+```
+
+#### Windows
+
+```powershell
+$env:SARVAM_API_KEY="YOUR_SARVAM_API_KEY"
+```
+
+#### Install the SDK
+
+Choose your preferred language and install our SDK. Need a different language or an older version? See [Libraries & SDKs](/api/getting-started/sdks).
+
+#### Python
+
+```bash
+pip install -U sarvamai
+```
+
+#### JavaScript
+
+```bash
+npm install sarvamai@latest
+```
+
+#### Make Your First API Call
+
+Here's a Chat Completion example using the key and SDK you just set up. Paste it in and run it:
+
+#### Python
+
+```python
+from sarvamai import SarvamAI
+
+client = SarvamAI(
+    api_subscription_key="YOUR_SARVAM_API_KEY",
+)
+
+response = client.chat.completions(
+    model="sarvam-105b",
+    messages=[
+        {"role": "user", "content": "What is the capital of India?"}
+    ],
+)
+print(response.choices[0].message.content)
+# → "The capital of India is New Delhi."
+```
+
+#### JavaScript
+
+```javascript
+import { SarvamAIClient } from "sarvamai";
+
+const client = new SarvamAIClient({
+    apiSubscriptionKey: "YOUR_SARVAM_API_KEY"
+});
+
+const response = await client.chat.completions({
+    model: "sarvam-105b",
+    messages: [
+        { role: "user", content: "What is the capital of India?" }
+    ]
+});
+console.log(response.choices[0].message.content);
+// → "The capital of India is New Delhi."
+```
+
+#### cURL
+
+```bash
+curl -X POST https://api.sarvam.ai/v1/chat/completions \
+  -H "api-subscription-key: <YOUR_SARVAM_API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "sarvam-105b",
+    "messages": [
+      {
+        "role": "user",
+        "content": "What is the capital of India?"
+      }
+    ]
+  }'
+```
+
+Prefer Speech to Text, Text to Speech, or Translation instead? Jump to [Try an API](#try-an-api) below, each comes with its own Python, JavaScript, and cURL example.
+
+**Keep your key safe.** Store it in an environment variable or a secrets manager, and never commit it to version control. Getting a `403`? See [Authentication](/api-reference/authentication#status-codes-for-authentication-failures). Getting a `429`? See [Credits & Rate Limits](/api/getting-started/ratelimits). Any other error code is listed in [Errors & Troubleshooting](/api/getting-started/errors-troubleshooting).
+
+## Try an API
+
+Sarvam AI covers four core capabilities below. Pick a tab, and copy-paste your way to a working call.
+
+#### Speech to Text
+
+Saaras v3 is our latest speech recognition model. It supports multiple output modes: `transcribe` (default, original language), `translate` (to English), `verbatim` (word-for-word), `translit` (romanization), and `codemix` (mixed script).
+
+#### Python
+
+```python
+from sarvamai import SarvamAI
+
+client = SarvamAI(
+    api_subscription_key="YOUR_SARVAM_API_KEY",
+)
+
+try:
+    response = client.speech_to_text.transcribe(
+        file=open("audio.wav", "rb"),  # path to your own audio file
+        model="saaras:v3",
+        mode="transcribe",  # or "translate", "verbatim", "translit", "codemix"
+    )
+    print(response.transcript)
+except Exception as e:
+    print(f"Error: {e}")
+```
+
+#### JavaScript
+
+```javascript
+import {SarvamAIClient} from "sarvamai";
+import fs from 'fs';
+
+const client = new SarvamAIClient({
+    apiSubscriptionKey: process.env.SARVAM_API_KEY
+});
+
+const audioFile = fs.createReadStream("audio.wav"); // path to your own audio file
+
+try {
+    const response = await client.speechToText.transcribe({
+        file: audioFile,
+        model: "saaras:v3",
+        mode: "transcribe",  // or "translate", "verbatim", "translit", "codemix"
+    });
+    console.log(response.transcript);
+} catch (error) {
+    console.error("Error:", error);
+}
+```
+
+#### cURL
+
+```bash
+# Replace audio.wav with the path to your own audio file
+curl -X POST https://api.sarvam.ai/speech-to-text \
+  -H "api-subscription-key: <YOUR_SARVAM_API_KEY>" \
+  -H "Content-Type: multipart/form-data" \
+  -F model="saaras:v3" \
+  -F mode="transcribe" \
+  -F file=@audio.wav
+```
+
+Use `transcribe` for same-language output, `translate` to convert audio to English text, or `verbatim`/`translit`/`codemix` for specialized formatting. `mode` defaults to `transcribe` when omitted.
+
+#### Text to Speech
+
+Bulbul v3 converts text into natural-sounding speech across Indian languages. The API returns **base64-encoded audio**, so decode it before saving or playing the file.
+
+#### Python
+
+```python
+from sarvamai import SarvamAI
+from sarvamai.play import save
+
+client = SarvamAI(
+    api_subscription_key="YOUR_SARVAM_API_KEY",
+)
+
+try:
+    audio = client.text_to_speech.convert(
+        text="Welcome to Sarvam AI!",
+        language_code="hi-IN",
+        model="bulbul:v3",
+        speaker="shubh",
+    )
+    save(audio, "output.wav")
+except Exception as e:
+    print(f"Error: {e}")
+```
+
+#### JavaScript
+
+```javascript
+import { SarvamAIClient } from "sarvamai";
+import fs from "fs";
+
+const client = new SarvamAIClient({
+    apiSubscriptionKey: "YOUR_SARVAM_API_KEY"
+});
+
+try {
+    const response = await client.textToSpeech.convert({
+        text: "Welcome to Sarvam AI!",
+        language_code: "hi-IN",
+        model: "bulbul:v3",
+        speaker: "shubh",
+    });
+
+    // Decode the base64 audio before saving, since writing the raw string produces a corrupted file
+    const audio = Buffer.from(response.audios.join(""), "base64");
+    fs.writeFileSync("output.wav", audio);
+} catch (error) {
+    console.error("Error:", error);
+}
+```
+
+#### cURL
+
+```bash
+curl -X POST https://api.sarvam.ai/text-to-speech \
+  -H "api-subscription-key: <YOUR_SARVAM_API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Welcome to Sarvam AI!",
+    "language_code": "hi-IN",
+    "model": "bulbul:v3",
+    "speaker": "shubh"
+  }' -o response.json
+
+# Decode the base64 audio into a playable file
+python3 -c "import json, base64; d = json.load(open('response.json')); open('output.wav', 'wb').write(base64.b64decode(''.join(d['audios'])))"
+```
+
+The `audios` field is base64-encoded, so always decode it before writing to a file, or the audio will be corrupted. See the [TTS best practices guide](/api/api-guides-tutorials/text-to-speech/best-practices) for streaming and more voice options.
+
+#### Text Translation
+
+Sarvam Translate converts text across English and 22 Indian languages, with automatic source-language detection when `source_language_code` is `"auto"`.
+
+#### Python
+
+```python
+from sarvamai import SarvamAI
+
+client = SarvamAI(
+    api_subscription_key="YOUR_SARVAM_API_KEY",
+)
+
+try:
+    response = client.text.translate(
+        input="Hello, how are you?",
+        source_language_code="auto",
+        target_language_code="hi-IN",
+        speaker_gender="Male"
+    )
+    print(response.translated_text)
+    # → e.g. "नमस्ते, आप कैसे हैं?"
+except Exception as e:
+    print(f"Error: {e}")
+```
+
+#### JavaScript
+
+```javascript
+import { SarvamAIClient } from "sarvamai";
+
+const client = new SarvamAIClient({
+    apiSubscriptionKey: "YOUR_SARVAM_API_KEY"
+});
+
+try {
+    const response = await client.text.translate({
+        input: "Hello, how are you?",
+        source_language_code: "auto",
+        target_language_code: "hi-IN",
+        speaker_gender: "Male"
+    });
+    console.log(response.translatedText);
+    // → e.g. "नमस्ते, आप कैसे हैं?"
+} catch (error) {
+    console.error("Error:", error);
+}
+```
+
+#### cURL
+
+```bash
+curl -X POST https://api.sarvam.ai/translate \
+  -H "api-subscription-key: <YOUR_SARVAM_API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input": "Hello, how are you?",
+    "source_language_code": "auto",
+    "target_language_code": "hi-IN",
+    "speaker_gender": "Male"
+  }'
+```
+
+`speaker_gender` adjusts grammatical gender agreement in the translation for languages where verb forms change by gender, such as Hindi. See the [Sarvam Translate model page](/api/getting-started/models/sarvam-translate) for the full list of supported languages.
+
+#### Chat Completion
+
+Sarvam-105B is a chat model with hybrid reasoning and native support for Indian languages.
+
+#### Python
+
+```python
+from sarvamai import SarvamAI
+
+client = SarvamAI(
+    api_subscription_key="YOUR_SARVAM_API_KEY"
+)
+
+try:
+    response = client.chat.completions(
+        model="sarvam-105b",
+        messages=[
+            {"role": "user", "content": "What is the capital of India?"}
+        ],
+    )
+    print(response.choices[0].message.content)
+    # → "The capital of India is New Delhi."
+except Exception as e:
+    print(f"Error: {e}")
+```
+
+#### JavaScript
+
+```javascript
+import { SarvamAIClient } from "sarvamai";
+
+// Initialize the SarvamAI client with your API key
+const client = new SarvamAIClient({
+    apiSubscriptionKey: "YOUR_SARVAM_API_KEY"
+});
+
+async function main() {
+    try {
+        const response = await client.chat.completions({
+            model: "sarvam-105b",
+            messages: [
+                {
+                    role: "user",
+                    content: "What is the capital of India?"
+                }
+            ]
+        });
+        console.log(response.choices[0].message.content);
+        // → "The capital of India is New Delhi."
+    } catch (error) {
+        console.error("Error:", error);
+    }
+}
+
+main();
+```
+
+#### cURL
+
+```bash
+curl -X POST https://api.sarvam.ai/v1/chat/completions \
+  -H "api-subscription-key: <YOUR_SARVAM_API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "sarvam-105b",
+    "messages": [
+      {
+        "role": "user",
+        "content": "What is the capital of India?"
+      }
+    ]
+  }'
+```
+
+`sarvam-105b` is the flagship model for the highest-quality reasoning. See [Models](/api/getting-started/models) for the full lineup, thinking mode, and wiki-grounded responses.
+
+## Next Steps
+
+Pick up where you left off, based on the API you just tried:
+
+#### [Speech to Text](/api/api-guides-tutorials/speech-to-text/overview)
+
+REST, Batch, and Streaming APIs, output modes, and language support.
+
+#### [Text to Speech](/api/api-guides-tutorials/text-to-speech/best-practices)
+
+Voices, pacing, audio formats, and streaming output.
+
+#### [Chat Completion](/api/api-guides-tutorials/chat-completion/overview)
+
+Available models, reasoning mode, and wiki-grounded responses.
+
+#### [Text Translation](/api/getting-started/models/sarvam-translate)
+
+Supported languages and translation model options.
+
+#### [Browse the Cookbook](/api/cookbook)
+
+Step-by-step tutorials and end-to-end example projects.
+
+#### [Join our Discord](https://discord.com/invite/5rAsykttcs)
+
+Get support and talk directly with the Sarvam AI team.

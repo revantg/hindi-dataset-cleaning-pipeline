@@ -1,0 +1,24 @@
+{
+  "pipeline_version": "s4-deduplication-2026-08-05-v1",
+  "source_url": "https://huggingface.co/datasets/ai4bharat/sangraha",
+  "dataset_id": "ai4bharat/sangraha",
+  "config": "verified",
+  "split": "hin",
+  "revision": "8b813c3f62d37b2fa174d68c31e8b35ae2fe85e8",
+  "license": "CC BY 4.0",
+  "field_schema": [
+    "doc_id",
+    "type",
+    "text"
+  ],
+  "selection_timestamp_utc": "2026-08-05T19:44:34.743677+00:00",
+  "selection_rule": "first 20000 non-empty rows in deterministic streaming source order; no shuffle or transformation",
+  "requested_documents": 20000,
+  "retained_documents": 20000,
+  "characters": 44219944,
+  "estimated_tokens": 11612877,
+  "token_estimate_formula": "ceil(non_whitespace_units * 1.35)",
+  "elapsed_seconds": 35.048,
+  "raw_path": "deduplication/data/raw.jsonl",
+  "raw_sha256": "68ac55238fb48d37c0ec65710a288d5791356d8337507d7c58276491cc59474b"
+}

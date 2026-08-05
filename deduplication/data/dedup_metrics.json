@@ -1,0 +1,82 @@
+{
+  "pipeline_version": "s4-deduplication-2026-08-05-v1",
+  "generated_utc": "2026-08-05T19:56:59.420088+00:00",
+  "dataset": {
+    "id": "ai4bharat/sangraha",
+    "config": "verified",
+    "split": "hin",
+    "revision": "8b813c3f62d37b2fa174d68c31e8b35ae2fe85e8",
+    "license": "CC BY 4.0",
+    "raw_sha256": "68ac55238fb48d37c0ec65710a288d5791356d8337507d7c58276491cc59474b"
+  },
+  "notebook_sha256": "2defcb24d356b03dee228ea5cd02b3d874f2d8f6ed83b8f8594b8a157c031baf",
+  "parameters": {
+    "sample_documents": 20000,
+    "shingle_k": 5,
+    "num_hashes": 112,
+    "lsh_bands": 14,
+    "lsh_rows": 8,
+    "jaccard_threshold": 0.75,
+    "minhash_seed": 20260804,
+    "min_tokens_for_minhash": 15,
+    "max_bucket_size": 500
+  },
+  "funnel": {
+    "raw": {
+      "documents": 20000,
+      "characters": 44219944,
+      "estimated_tokens": 11612877
+    },
+    "after_exact_dedup": {
+      "documents": 19672,
+      "characters": 43025184,
+      "estimated_tokens": 11336679
+    },
+    "after_near_dedup": {
+      "documents": 19644,
+      "characters": 42969178,
+      "estimated_tokens": 11321643
+    }
+  },
+  "removal": {
+    "exact_removed": 328,
+    "exact_groups": 8,
+    "exact_largest_group": 293,
+    "near_removed": 28,
+    "clusters": 2,
+    "largest_cluster": 25,
+    "total_removed": 356,
+    "removed_fraction": 0.0178,
+    "too_short_for_minhash": 1,
+    "oversized_buckets_skipped": 0,
+    "removals_by_type": {
+      "web": 356
+    }
+  },
+  "near_dedup": {
+    "candidate_pairs": 287,
+    "verified_pairs": 277,
+    "confirmed_pairs": 277,
+    "confirmation_rate": 1.0,
+    "estimator_mean_abs_error": 0.0197,
+    "estimator_max_abs_error": 0.0702,
+    "all_pairs_comparisons": 193483956,
+    "lsh_reduction_factor": 674160,
+    "threshold_sensitivity": {
+      "0.50": 277,
+      "0.60": 277,
+      "0.70": 277,
+      "0.75": 277,
+      "0.80": 259,
+      "0.90": 138
+    }
+  },
+  "timings": {
+    "exact": 1.227,
+    "signatures": 18.039,
+    "lsh": 1.568,
+    "verify": 0.007,
+    "clusters": 0.003
+  },
+  "elapsed_seconds": 23.564
+}

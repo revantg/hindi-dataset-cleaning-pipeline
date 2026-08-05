@@ -26,3 +26,9 @@ dev = [
     "pydantic-ai>=2.21.0",
     "ruff>=0.16.1",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# marimo notebooks: each cell is a function whose final bare expression is the
+# rendered output (B018) and whose generated wrapper ends in `return` (PLR1711).
+# Both are intrinsic to marimo's saved format, not authoring defects.
+"deduplication/deduplication.py" = ["B018", "PLR1711"]

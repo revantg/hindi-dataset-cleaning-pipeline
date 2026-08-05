@@ -39,7 +39,7 @@ The main pipeline runs these eight stages in order:
 | 2 | **Normalize** | Decodes HTML entities, repairs selected mojibake, applies Unicode NFC, normalizes whitespace and line breaks, removes control/formatting artifacts, and removes inconsistent chat markers. Indic ZWJ/ZWNJ are preserved. |
 | 3 | **Language ID and validation** | Checks the actual text for Hindi Devanagari, Hindi Latin-script, and Hindi–Latin code-mixed content instead of trusting the `hin` label. Other or unknown text is removed by the main case-study policy. The [`language-identification/`](language-identification/) notebook provides a broader detector comparison and routing study. |
 | 4 | **Quality filtering** | Flags transparent low-value signals: too-short text, malformed symbols or repeated characters, link-heavy spam, low vocabulary diversity, and repetitive text. These are policy signals, not universal quality scores. |
-| 5 | **Deduplication** | Removes exact duplicates with SHA-256, then uses a local MinHash/LSH approximation for near duplicates: 16 permutations, four-row bands, length-ratio guard, and similarity threshold. This is intentionally a bounded local approximation rather than global corpus deduplication. |
+| 5 | **Deduplication** | Removes exact duplicates with SHA-256, then uses a local MinHash/LSH approximation for near duplicates: 16 permutations, four-row bands, length-ratio guard, and similarity threshold. This is intentionally a bounded local approximation rather than global corpus deduplication. The separate [`deduplication/deduplication.py`](deduplication/deduplication.py) notebook surveys nine deduplication techniques and executes exact-hash plus FineWeb-parameter MinHash/LSH near-duplicate detection on a 20,000-document Sangraha sample. |
 | 6 | **PII scrubbing** | Redacts email addresses, Indian phone numbers, IPv4 addresses, credential-like values, and Aadhaar-like numbers. The report exposes category counts only; removed values are never displayed. |
 | 7 | **Decontamination** | Runs a limited textual proxy for named benchmark/evaluation markers such as GSM8K, MMLU, HellaSwag, ARC Challenge, and eval-harness terms. No full benchmark corpus is downloaded, so this is not a complete contamination guarantee. |
 | 8 | **Manifest / provenance** | Writes source URL, dataset revision, license, split, selection rule, hashes, token-estimation rule, pipeline version, UTC run time, dedup method, decontamination scope, and final statistics. |
@@ -55,6 +55,7 @@ The pipeline avoids English-only assumptions. It preserves meaningful Brahmic Un
 - [`extraction/site/index.html`](extraction/site/index.html) — local extraction-method report
 - [`language-identification/language_identification.py`](language-identification/language_identification.py) — bounded Indic language-ID comparison and routing study
 - [`quality-filtering/quality_filtering.py`](quality-filtering/quality_filtering.py) — bounded quality-signal workbook
+- [`deduplication/deduplication.py`](deduplication/deduplication.py) — nine-technique deduplication survey with one executed MinHash/LSH pipeline
 - [`extraction/data/sangraha_hi_verified_30m/download_dataset.py`](extraction/data/sangraha_hi_verified_30m/download_dataset.py) — deterministic source-cache rebuild script
 
 ## Run locally

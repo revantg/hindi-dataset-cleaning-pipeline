@@ -32,6 +32,11 @@ extraction/data/*/raw.jsonl
 extraction/data/*/raw_html.jsonl
 extraction/data/*/extraction_only/*.jsonl
 extraction/data/*/extraction_only/impl/*.jsonl
+deduplication/data/*
+!deduplication/data/.gitignore
+!deduplication/data/README.md
+!deduplication/data/selection_manifest.json
+!deduplication/data/dedup_metrics.json
 *.parquet
 .hf_cache/
 

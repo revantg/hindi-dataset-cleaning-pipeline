@@ -1,0 +1,64 @@
+{
+  "built_utc": "2026-08-05T19:36:30.545449+00:00",
+  "builder": "decontamination/data/build_decontamination_cache.py",
+  "purpose": "held-out contamination measurement for Session 4 stage 7",
+  "corpus": {
+    "dataset": "ai4bharat/sangraha",
+    "revision": "8b813c3f62d37b2fa174d68c31e8b35ae2fe85e8",
+    "config": "verified",
+    "split": "hin",
+    "license": "CC-BY-4.0",
+    "split_rows": 1048577,
+    "windows": 120,
+    "window_rows": 100,
+    "stride": 8738,
+    "selection_rule": "120 fixed-stride windows of 100 consecutive rows; offset_i = i * floor(1048577 / 120); stream order preserved; no shuffling and no contamination-conditioned selection",
+    "documents": 12000,
+    "characters": 25690123,
+    "path": "decontamination/data/sangraha_hin_stride_probe.jsonl",
+    "sha256": "48d18f1e0390adc69c8dfe4caca1d8b0cfcb50ed95a1be40f177647139ade64a"
+  },
+  "eval_suite": {
+    "path": "decontamination/data/eval_suite.jsonl",
+    "sha256": "3016db77820333ac12047dadf536106163d26d57bcf4ada2ad4f59a37ffe724c",
+    "items": 20102,
+    "sources": [
+      {
+        "eval_id": "indicqa.hi",
+        "dataset": "ai4bharat/IndicQA",
+        "revision": "main",
+        "config": null,
+        "split": "test",
+        "license": "CC-BY-4.0",
+        "role": "extractive QA over Wikipedia-derived Hindi passages",
+        "why": "highest-risk surface: eval contexts are long prose paragraphs sourced from the same open web a crawl ingests",
+        "items": 261,
+        "characters": 747448
+      },
+      {
+        "eval_id": "milu.hindi",
+        "dataset": "murthyrudra/milu-cleaned",
+        "revision": "main",
+        "config": "Hindi",
+        "split": "test",
+        "license": "CC-BY-4.0",
+        "role": "multiple-choice knowledge exam, Hindi subset",
+        "why": "short stems; tests whether a 13-gram window can even span an evaluation item",
+        "items": 14831,
+        "characters": 1569330
+      },
+      {
+        "eval_id": "xnli.hi",
+        "dataset": "facebook/xnli",
+        "revision": "main",
+        "config": "hi",
+        "split": "test",
+        "license": "CC-BY-NC-4.0",
+        "role": "natural-language inference, translated Hindi test split",
+        "why": "translationese premises; a near-duplicate detector should see these differently from native web prose",
+        "items": 5010,
+        "characters": 792329
+      }
+    ]
+  }
+}

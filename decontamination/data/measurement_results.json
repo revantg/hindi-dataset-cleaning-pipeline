@@ -1,0 +1,1629 @@
+{
+  "run_utc": "2026-08-05T20:03:17.365130+00:00",
+  "runner": "decontamination/run_measurement.py",
+  "parameters": {
+    "ngram_sizes": [
+      8,
+      13,
+      20
+    ],
+    "normalizers": [
+      "indic_safe",
+      "naive"
+    ],
+    "reference_ngram_size": 13,
+    "minhash": {
+      "permutations": 128,
+      "bands": 32,
+      "rows": 4,
+      "shingle_size": 5
+    },
+    "assumed_clean_accuracy": 0.41,
+    "assumed_memorized_accuracy": 1.0,
+    "token_estimator": "ceil(non-whitespace units x 1.35)"
+  },
+  "corpus": {
+    "documents": 12000,
+    "characters": 25690123,
+    "estimated_tokens": 27883586
+  },
+  "eval_suite": {
+    "items": 20102,
+    "by_eval": {
+      "indicqa.hi": 261,
+      "milu.hindi": 14831,
+      "xnli.hi": 5010
+    }
+  },
+  "overlap": {
+    "n8_indic_safe": {
+      "ngram_size": 8,
+      "normalizer": "indic_safe",
+      "flagged_documents": 60,
+      "flag_rate": 0.005,
+      "eval_ngrams_indexed": 336551,
+      "eval_items_indexable": 18394,
+      "eval_items_total": 20102,
+      "reached_eval_items": {
+        "indicqa.hi": 14,
+        "milu.hindi": 131,
+        "xnli.hi": 3
+      },
+      "cost_characters": 493143,
+      "cost_character_share": 0.019195820899728662,
+      "cost_tokens": 541676,
+      "cost_token_share": 0.019426339209024264,
+      "top_flags": [
+        {
+          "doc_id": "a3a1cc8cedd3aabbb957bd0094be8d0e331158e9",
+          "stream_offset": 568020,
+          "source_type": "web",
+          "shared_ngrams": 697,
+          "document_ngrams": 7045,
+          "shared_fraction": 0.09893541518807665,
+          "longest_shared": "गुरुजनों के आज्ञानुसार दशरथ की अन्त्येष्टि क्रिया कर",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              32
+            ],
+            [
+              "indicqa.hi",
+              179
+            ],
+            [
+              "indicqa.hi",
+              247
+            ]
+          ]
+        },
+        {
+          "doc_id": "544f0843035406af839128aee374f88723bcfbc5",
+          "stream_offset": 104948,
+          "source_type": "web",
+          "shared_ngrams": 190,
+          "document_ngrams": 2777,
+          "shared_fraction": 0.06841915736406194,
+          "longest_shared": "पुरातत्त्वज्ञ ग्रेगरी पोस्सेह्ल के अनुसार ये मूर्तियाँ योग",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              157
+            ],
+            [
+              "indicqa.hi",
+              219
+            ]
+          ]
+        },
+        {
+          "doc_id": "4155470d450eb92e04952dd206a8ed08c64fd7ce",
+          "stream_offset": 506900,
+          "source_type": "web",
+          "shared_ngrams": 26,
+          "document_ngrams": 3170,
+          "shared_fraction": 0.008201892744479496,
+          "longest_shared": "बौद्ध सम्प्रदाय महायान बज्रयान थेरवाद आदि के अनुसार",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              32
+            ],
+            [
+              "indicqa.hi",
+              169
+            ]
+          ]
+        },
+        {
+          "doc_id": "aa26be008b8195bac7df7e43ccd8d141c6cda7f4",
+          "stream_offset": 498131,
+          "source_type": "web",
+          "shared_ngrams": 18,
+          "document_ngrams": 3394,
+          "shared_fraction": 0.005303476723629935,
+          "longest_shared": "प्रस्तुत होती है और वहाँ के प्रसिद्ध ऐतिहासिक",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              147
+            ]
+          ]
+        },
+        {
+          "doc_id": "ac29eca8fda35e6aa6b1af02e3ad9bce6fafbbab",
+          "stream_offset": 375734,
+          "source_type": "web",
+          "shared_ngrams": 12,
+          "document_ngrams": 884,
+          "shared_fraction": 0.013574660633484163,
+          "longest_shared": "खानदान से थे और मातृपक्ष का संबंध चंगेज",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              19
+            ]
+          ]
+        },
+        {
+          "doc_id": "37ec8c7a20d7e9e9b8f734b96c8eb1f714e14d59",
+          "stream_offset": 1004872,
+          "source_type": "web",
+          "shared_ngrams": 10,
+          "document_ngrams": 983,
+          "shared_fraction": 0.01017293997965412,
+          "longest_shared": "शरीर के अंग गिरे वहां वहां शक्तिपीठों की",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              137
+            ]
+          ]
+        },
+        {
+          "doc_id": "12f0404bbe08fb221ffa8773356785a4f3ea3114",
+          "stream_offset": 672925,
+          "source_type": "web",
+          "shared_ngrams": 7,
+          "document_ngrams": 555,
+          "shared_fraction": 0.012612612612612612,
+          "longest_shared": "धार्मिक इतिहास के संदर्भ में निम्नलिखित कथनों पर",
+          "eval_items_touched": [
+            [
+              "milu.hindi",
+              3002
+            ],
+            [
+              "milu.hindi",
+              3004
+            ],
+            [
+              "milu.hindi",
+              3867
+            ],
+            [
+              "milu.hindi",
+              6904
+            ],
+            [
+              "milu.hindi",
+              7850
+            ]
+          ]
+        },
+        {
+          "doc_id": "76a4e3faf6eb99a42ee7092d838a9f16fe62e3b7",
+          "stream_offset": 699132,
+          "source_type": "web",
+          "shared_ngrams": 6,
+          "document_ngrams": 1155,
+          "shared_fraction": 0.005194805194805195,
+          "longest_shared": "अनुसूचित जाति और अनुसूचित जनजाति अत्याचार निवारण अधिनियम",
+          "eval_items_touched": [
+            [
+              "milu.hindi",
+              1723
+            ],
+            [
+              "milu.hindi",
+              1725
+            ],
+            [
+              "milu.hindi",
+              1726
+            ],
+            [
+              "milu.hindi",
+              1727
+            ],
+            [
+              "milu.hindi",
+              1728
+            ]
+          ]
+        },
+        {
+          "doc_id": "0d8f45f703431dd8203989348686461341c4bd50",
+          "stream_offset": 882543,
+          "source_type": "web",
+          "shared_ngrams": 5,
+          "document_ngrams": 1288,
+          "shared_fraction": 0.0038819875776397515,
+          "longest_shared": "कानून के तहत उन्हें क्या लाभ उपलब्ध हैं",
+          "eval_items_touched": [
+            [
+              "milu.hindi",
+              3002
+            ],
+            [
+              "milu.hindi",
+              3004
+            ],
+            [
+              "milu.hindi",
+              3867
+            ],
+            [
+              "milu.hindi",
+              6904
+            ],
+            [
+              "milu.hindi",
+              7850
+            ]
+          ]
+        },
+        {
+          "doc_id": "639a3f18d89aeb8672724af060d245352bfd632d",
+          "stream_offset": 585452,
+          "source_type": "web",
+          "shared_ngrams": 4,
+          "document_ngrams": 389,
+          "shared_fraction": 0.010282776349614395,
+          "longest_shared": "और 30 वर्ष से अधिक नहीं होनी चाहिए",
+          "eval_items_touched": [
+            [
+              "milu.hindi",
+              3026
+            ],
+            [
+              "milu.hindi",
+              12970
+            ]
+          ]
+        },
+        {
+          "doc_id": "9f6c2188639c80dc896cadac2df10f0095ca42bc",
+          "stream_offset": 987491,
+          "source_type": "web",
+          "shared_ngrams": 4,
+          "document_ngrams": 597,
+          "shared_fraction": 0.006700167504187605,
+          "longest_shared": "सीईओ के रूप में किसे नियुक्त किया गया",
+          "eval_items_touched": [
+            [
+              "milu.hindi",
+              270
+            ],
+            [
+              "milu.hindi",
+              1816
+            ],
+            [
+              "milu.hindi",
+              1820
+            ],
+            [
+              "milu.hindi",
+              1927
+            ],
+            [
+              "milu.hindi",
+              2311
+            ]
+          ]
+        },
+        {
+          "doc_id": "7c184f7ab621f0df7c94b5080f73bb3ccc2d5210",
+          "stream_offset": 61202,
+          "source_type": "web",
+          "shared_ngrams": 3,
+          "document_ngrams": 2118,
+          "shared_fraction": 0.00141643059490085,
+          "longest_shared": "निम्नलिखित कथनों में से कौन सा सही है",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              32
+            ],
+            [
+              "milu.hindi",
+              3083
+            ],
+            [
+              "milu.hindi",
+              3084
+            ],
+            [
+              "milu.hindi",
+              10077
+            ],
+            [
+              "milu.hindi",
+              10516
+            ]
+          ]
+        }
+      ]
+    },
+    "n8_naive": {
+      "ngram_size": 8,
+      "normalizer": "naive",
+      "flagged_documents": 8740,
+      "flag_rate": 0.7283333333333334,
+      "eval_ngrams_indexed": 664685,
+      "eval_items_indexable": 19933,
+      "eval_items_total": 20102,
+      "reached_eval_items": {
+        "indicqa.hi": 261,
+        "milu.hindi": 8526,
+        "xnli.hi": 1653
+      },
+      "cost_characters": 21316805,
+      "cost_character_share": 0.829766560479294,
+      "cost_tokens": 23175962,
+      "cost_token_share": 0.831168630892741,
+      "top_flags": [
+        {
+          "doc_id": "a3a1cc8cedd3aabbb957bd0094be8d0e331158e9",
+          "stream_offset": 568020,
+          "source_type": "web",
+          "shared_ngrams": 1544,
+          "document_ngrams": 13724,
+          "shared_fraction": 0.112503643252696,
+          "longest_shared": "पभवन म चल गई दशरथ जब मन न",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              0
+            ],
+            [
+              "indicqa.hi",
+              4
+            ],
+            [
+              "indicqa.hi",
+              6
+            ],
+            [
+              "indicqa.hi",
+              11
+            ],
+            [
+              "indicqa.hi",
+              12
+            ]
+          ]
+        },
+        {
+          "doc_id": "544f0843035406af839128aee374f88723bcfbc5",
+          "stream_offset": 104948,
+          "source_type": "web",
+          "shared_ngrams": 948,
+          "document_ngrams": 5340,
+          "shared_fraction": 0.17752808988764046,
+          "longest_shared": "य न परण य अवश षण अवस थ",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              7
+            ],
+            [
+              "indicqa.hi",
+              23
+            ],
+            [
+              "indicqa.hi",
+              30
+            ],
+            [
+              "indicqa.hi",
+              37
+            ],
+            [
+              "indicqa.hi",
+              54
+            ]
+          ]
+        },
+        {
+          "doc_id": "388bd111b5882ee647d1c99482587956ae28793c",
+          "stream_offset": 402012,
+          "source_type": "web",
+          "shared_ngrams": 411,
+          "document_ngrams": 11358,
+          "shared_fraction": 0.03618594823032224,
+          "longest_shared": "त करन पर सहमत व यक त क",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              0
+            ],
+            [
+              "indicqa.hi",
+              6
+            ],
+            [
+              "indicqa.hi",
+              7
+            ],
+            [
+              "indicqa.hi",
+              8
+            ],
+            [
+              "indicqa.hi",
+              9
+            ]
+          ]
+        },
+        {
+          "doc_id": "56b0c1282644f6590fe0464e0337c5974ab367a4",
+          "stream_offset": 305836,
+          "source_type": "web",
+          "shared_ngrams": 293,
+          "document_ngrams": 12460,
+          "shared_fraction": 0.02351524879614767,
+          "longest_shared": "क छठ सबस बड अर थव यवस थ",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              0
+            ],
+            [
+              "indicqa.hi",
+              3
+            ],
+            [
+              "indicqa.hi",
+              6
+            ],
+            [
+              "indicqa.hi",
+              7
+            ],
+            [
+              "indicqa.hi",
+              8
+            ]
+          ]
+        },
+        {
+          "doc_id": "af3a402a0fe2c273c6cfa38e53f22abfbda4b6fc",
+          "stream_offset": 830177,
+          "source_type": "web",
+          "shared_ngrams": 280,
+          "document_ngrams": 10113,
+          "shared_fraction": 0.027687135370315436,
+          "longest_shared": "रत क 15व प रध नमन त र",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              0
+            ],
+            [
+              "indicqa.hi",
+              6
+            ],
+            [
+              "indicqa.hi",
+              8
+            ],
+            [
+              "indicqa.hi",
+              10
+            ],
+            [
+              "indicqa.hi",
+              11
+            ]
+          ]
+        },
+        {
+          "doc_id": "4155470d450eb92e04952dd206a8ed08c64fd7ce",
+          "stream_offset": 506900,
+          "source_type": "web",
+          "shared_ngrams": 257,
+          "document_ngrams": 6211,
+          "shared_fraction": 0.04137819996779907,
+          "longest_shared": "उत तर प रद श क जनस ख",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              0
+            ],
+            [
+              "indicqa.hi",
+              7
+            ],
+            [
+              "indicqa.hi",
+              8
+            ],
+            [
+              "indicqa.hi",
+              11
+            ],
+            [
+              "indicqa.hi",
+              12
+            ]
+          ]
+        },
+        {
+          "doc_id": "2ee7b8657b8c2b0a33b17e693e0d971ba9ae9c77",
+          "stream_offset": 166046,
+          "source_type": "web",
+          "shared_ngrams": 251,
+          "document_ngrams": 22442,
+          "shared_fraction": 0.011184386418322787,
+          "longest_shared": "आवश यकत ओ क प र करन क",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              5
+            ],
+            [
+              "indicqa.hi",
+              8
+            ],
+            [
+              "indicqa.hi",
+              11
+            ],
+            [
+              "indicqa.hi",
+              12
+            ],
+            [
+              "indicqa.hi",
+              27
+            ]
+          ]
+        },
+        {
+          "doc_id": "4812e6c1cafd353dcac4f975e4708ce16e3f5077",
+          "stream_offset": 340862,
+          "source_type": "web",
+          "shared_ngrams": 217,
+          "document_ngrams": 15215,
+          "shared_fraction": 0.014262241209332895,
+          "longest_shared": "तक भ रत य उपमह द व प",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              0
+            ],
+            [
+              "indicqa.hi",
+              1
+            ],
+            [
+              "indicqa.hi",
+              8
+            ],
+            [
+              "indicqa.hi",
+              11
+            ],
+            [
+              "indicqa.hi",
+              12
+            ]
+          ]
+        },
+        {
+          "doc_id": "352c0fdd9d8b3b6134b8f63503befc53ac7ac8b5",
+          "stream_offset": 393224,
+          "source_type": "web",
+          "shared_ngrams": 205,
+          "document_ngrams": 20417,
+          "shared_fraction": 0.010040652397511878,
+          "longest_shared": "क उपय ग क य ज सकत ह",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              0
+            ],
+            [
+              "indicqa.hi",
+              6
+            ],
+            [
+              "indicqa.hi",
+              7
+            ],
+            [
+              "indicqa.hi",
+              10
+            ],
+            [
+              "indicqa.hi",
+              11
+            ]
+          ]
+        },
+        {
+          "doc_id": "244e76d7f5b5e7c05c3759aa2123580c7113a84d",
+          "stream_offset": 375827,
+          "source_type": "web",
+          "shared_ngrams": 186,
+          "document_ngrams": 6164,
+          "shared_fraction": 0.03017521090201168,
+          "longest_shared": "क छठ सबस बड अर थव यवस थ",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              0
+            ],
+            [
+              "indicqa.hi",
+              7
+            ],
+            [
+              "indicqa.hi",
+              8
+            ],
+            [
+              "indicqa.hi",
+              11
+            ],
+            [
+              "indicqa.hi",
+              12
+            ]
+          ]
+        },
+        {
+          "doc_id": "b896f10fb290cdf99a2519e782051e0153be858d",
+          "stream_offset": 760289,
+          "source_type": "web",
+          "shared_ngrams": 176,
+          "document_ngrams": 7365,
+          "shared_fraction": 0.023896809232858113,
+          "longest_shared": "वरण वन और जलव य पर वर तन",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              0
+            ],
+            [
+              "indicqa.hi",
+              2
+            ],
+            [
+              "indicqa.hi",
+              3
+            ],
+            [
+              "indicqa.hi",
+              8
+            ],
+            [
+              "indicqa.hi",
+              11
+            ]
+          ]
+        },
+        {
+          "doc_id": "7c184f7ab621f0df7c94b5080f73bb3ccc2d5210",
+          "stream_offset": 61202,
+          "source_type": "web",
+          "shared_ngrams": 175,
+          "document_ngrams": 4016,
+          "shared_fraction": 0.04357569721115538,
+          "longest_shared": "unesco क व श व धर हर स",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              6
+            ],
+            [
+              "indicqa.hi",
+              7
+            ],
+            [
+              "indicqa.hi",
+              8
+            ],
+            [
+              "indicqa.hi",
+              9
+            ],
+            [
+              "indicqa.hi",
+              26
+            ]
+          ]
+        }
+      ]
+    },
+    "n13_indic_safe": {
+      "ngram_size": 13,
+      "normalizer": "indic_safe",
+      "flagged_documents": 6,
+      "flag_rate": 0.0005,
+      "eval_ngrams_indexed": 277244,
+      "eval_items_indexable": 13510,
+      "eval_items_total": 20102,
+      "reached_eval_items": {
+        "indicqa.hi": 7
+      },
+      "cost_characters": 99208,
+      "cost_character_share": 0.0038617175947347547,
+      "cost_tokens": 109111,
+      "cost_token_share": 0.003913090662011694,
+      "top_flags": [
+        {
+          "doc_id": "a3a1cc8cedd3aabbb957bd0094be8d0e331158e9",
+          "stream_offset": 568020,
+          "source_type": "web",
+          "shared_ngrams": 639,
+          "document_ngrams": 7067,
+          "shared_fraction": 0.0904202631951323,
+          "longest_shared": "कुटिलता के लिये बहुत भर्तस्ना की और गुरुजनों के आज्ञानुसार दशरथ की अन्त्येष्टि",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              247
+            ]
+          ]
+        },
+        {
+          "doc_id": "544f0843035406af839128aee374f88723bcfbc5",
+          "stream_offset": 104948,
+          "source_type": "web",
+          "shared_ngrams": 113,
+          "document_ngrams": 2792,
+          "shared_fraction": 0.04047277936962751,
+          "longest_shared": "प्राचीन ब्रह्मनिक ग्रंथों में प्रस्तुत अंतर विचित्र है बुद्ध के अनुसार ध्यानापरणीय अवस्था",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              157
+            ],
+            [
+              "indicqa.hi",
+              219
+            ]
+          ]
+        },
+        {
+          "doc_id": "aa26be008b8195bac7df7e43ccd8d141c6cda7f4",
+          "stream_offset": 498131,
+          "source_type": "web",
+          "shared_ngrams": 12,
+          "document_ngrams": 3389,
+          "shared_fraction": 0.0035408675125405725,
+          "longest_shared": "विशाल नदी के रूप में प्रस्तुत होती है और वहाँ के प्रसिद्ध ऐतिहासिक",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              147
+            ]
+          ]
+        },
+        {
+          "doc_id": "4155470d450eb92e04952dd206a8ed08c64fd7ce",
+          "stream_offset": 506900,
+          "source_type": "web",
+          "shared_ngrams": 7,
+          "document_ngrams": 3165,
+          "shared_fraction": 0.0022116903633491313,
+          "longest_shared": "विश्व के सभी बौद्ध सम्प्रदाय महायान बज्रयान थेरवाद आदि के अनुसार यह स्थान",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              169
+            ]
+          ]
+        },
+        {
+          "doc_id": "ac29eca8fda35e6aa6b1af02e3ad9bce6fafbbab",
+          "stream_offset": 375734,
+          "source_type": "web",
+          "shared_ngrams": 4,
+          "document_ngrams": 879,
+          "shared_fraction": 0.004550625711035267,
+          "longest_shared": "उसके वंशज तैमूर लंग के खानदान से थे और मातृपक्ष का संबंध चंगेज",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              19
+            ]
+          ]
+        },
+        {
+          "doc_id": "37ec8c7a20d7e9e9b8f734b96c8eb1f714e14d59",
+          "stream_offset": 1004872,
+          "source_type": "web",
+          "shared_ngrams": 4,
+          "document_ngrams": 978,
+          "shared_fraction": 0.00408997955010225,
+          "longest_shared": "कि जब शिव सती की मृत देह को लेकर कैलाश पर्वत जा रहे",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              137
+            ]
+          ]
+        }
+      ]
+    },
+    "n13_naive": {
+      "ngram_size": 13,
+      "normalizer": "naive",
+      "flagged_documents": 822,
+      "flag_rate": 0.0685,
+      "eval_ngrams_indexed": 641724,
+      "eval_items_indexable": 18930,
+      "eval_items_total": 20102,
+      "reached_eval_items": {
+        "indicqa.hi": 81,
+        "milu.hindi": 633,
+        "xnli.hi": 24
+      },
+      "cost_characters": 3007772,
+      "cost_character_share": 0.11707892562445107,
+      "cost_tokens": 3302989,
+      "cost_token_share": 0.11845639223018159,
+      "top_flags": [
+        {
+          "doc_id": "a3a1cc8cedd3aabbb957bd0094be8d0e331158e9",
+          "stream_offset": 568020,
+          "source_type": "web",
+          "shared_ngrams": 1233,
+          "document_ngrams": 13963,
+          "shared_fraction": 0.08830480555754494,
+          "longest_shared": "षस बन गन धर व कबन ध क वध करक उसक उद ध",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              60
+            ],
+            [
+              "indicqa.hi",
+              221
+            ],
+            [
+              "indicqa.hi",
+              247
+            ],
+            [
+              "milu.hindi",
+              5582
+            ],
+            [
+              "milu.hindi",
+              7481
+            ]
+          ]
+        },
+        {
+          "doc_id": "544f0843035406af839128aee374f88723bcfbc5",
+          "stream_offset": 104948,
+          "source_type": "web",
+          "shared_ngrams": 812,
+          "document_ngrams": 5403,
+          "shared_fraction": 0.15028687766055895,
+          "longest_shared": "परण य अवस थ एकम त र अ त नह ह उच चतम",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              157
+            ],
+            [
+              "indicqa.hi",
+              219
+            ],
+            [
+              "milu.hindi",
+              2889
+            ]
+          ]
+        },
+        {
+          "doc_id": "4155470d450eb92e04952dd206a8ed08c64fd7ce",
+          "stream_offset": 506900,
+          "source_type": "web",
+          "shared_ngrams": 125,
+          "document_ngrams": 6233,
+          "shared_fraction": 0.020054548371570672,
+          "longest_shared": "रक लग यत सभ ब द ध धर म क सम प रय",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              169
+            ],
+            [
+              "milu.hindi",
+              10650
+            ]
+          ]
+        },
+        {
+          "doc_id": "e5c12a357bcaeea5c6f6c8f20139361aa9030926",
+          "stream_offset": 838908,
+          "source_type": "web",
+          "shared_ngrams": 50,
+          "document_ngrams": 1386,
+          "shared_fraction": 0.03607503607503607,
+          "longest_shared": "गणर ज य ह ज सक द व सदन त मक स सद",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              168
+            ]
+          ]
+        },
+        {
+          "doc_id": "aa26be008b8195bac7df7e43ccd8d141c6cda7f4",
+          "stream_offset": 498131,
+          "source_type": "web",
+          "shared_ngrams": 42,
+          "document_ngrams": 6239,
+          "shared_fraction": 0.006731848052572527,
+          "longest_shared": "गर छ ट स न ध बतव और क न उल ल खन",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              79
+            ],
+            [
+              "indicqa.hi",
+              147
+            ]
+          ]
+        },
+        {
+          "doc_id": "aee6209d89ec124505f6780fab35e3089902101ad1ce91923c4313d16f17b23e",
+          "stream_offset": 17514,
+          "source_type": "web",
+          "shared_ngrams": 28,
+          "document_ngrams": 4627,
+          "shared_fraction": 0.006051437216338881,
+          "longest_shared": "और औद य ग क अन स ध न पर षद स एसआईआर",
+          "eval_items_touched": [
+            [
+              "milu.hindi",
+              1644
+            ],
+            [
+              "milu.hindi",
+              3061
+            ],
+            [
+              "milu.hindi",
+              5924
+            ],
+            [
+              "milu.hindi",
+              6751
+            ],
+            [
+              "milu.hindi",
+              7912
+            ]
+          ]
+        },
+        {
+          "doc_id": "ac29eca8fda35e6aa6b1af02e3ad9bce6fafbbab",
+          "stream_offset": 375734,
+          "source_type": "web",
+          "shared_ngrams": 24,
+          "document_ngrams": 1763,
+          "shared_fraction": 0.013613159387407828,
+          "longest_shared": "उसक व शज त म र ल ग क ख नद न स",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              19
+            ]
+          ]
+        },
+        {
+          "doc_id": "56b0c1282644f6590fe0464e0337c5974ab367a4",
+          "stream_offset": 305836,
+          "source_type": "web",
+          "shared_ngrams": 23,
+          "document_ngrams": 12578,
+          "shared_fraction": 0.0018285896008904436,
+          "longest_shared": "ट र स रक ष पर षद म एक स थ य स",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              3
+            ],
+            [
+              "indicqa.hi",
+              168
+            ],
+            [
+              "milu.hindi",
+              3974
+            ],
+            [
+              "milu.hindi",
+              4667
+            ],
+            [
+              "milu.hindi",
+              4946
+            ]
+          ]
+        },
+        {
+          "doc_id": "37ec8c7a20d7e9e9b8f734b96c8eb1f714e14d59",
+          "stream_offset": 1004872,
+          "source_type": "web",
+          "shared_ngrams": 23,
+          "document_ngrams": 1720,
+          "shared_fraction": 0.013372093023255814,
+          "longest_shared": "ह क ल कर क ल श पर वत ज रह थ तब",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              137
+            ]
+          ]
+        },
+        {
+          "doc_id": "a70bb550e69e5d6b40881ab0488af0ff45d450be96bf6f3dc94bc2bd8f7384ca",
+          "stream_offset": 244720,
+          "source_type": "web",
+          "shared_ngrams": 22,
+          "document_ngrams": 1464,
+          "shared_fraction": 0.015027322404371584,
+          "longest_shared": "य व ज ञ न और प र द य ग क सहय",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              0
+            ],
+            [
+              "milu.hindi",
+              1644
+            ],
+            [
+              "milu.hindi",
+              6751
+            ],
+            [
+              "milu.hindi",
+              7321
+            ],
+            [
+              "milu.hindi",
+              7912
+            ]
+          ]
+        },
+        {
+          "doc_id": "11923322e88b34b40849bf46fd4c071e48c0688ebf4114a9bd8eeb3d36177373",
+          "stream_offset": 3,
+          "source_type": "web",
+          "shared_ngrams": 21,
+          "document_ngrams": 4716,
+          "shared_fraction": 0.004452926208651399,
+          "longest_shared": "अन स च त जनज त अत य च र न व रण",
+          "eval_items_touched": [
+            [
+              "milu.hindi",
+              1723
+            ],
+            [
+              "milu.hindi",
+              1725
+            ],
+            [
+              "milu.hindi",
+              1726
+            ],
+            [
+              "milu.hindi",
+              1727
+            ],
+            [
+              "milu.hindi",
+              1728
+            ]
+          ]
+        },
+        {
+          "doc_id": "388bd111b5882ee647d1c99482587956ae28793c",
+          "stream_offset": 402012,
+          "source_type": "web",
+          "shared_ngrams": 20,
+          "document_ngrams": 11752,
+          "shared_fraction": 0.0017018379850238256,
+          "longest_shared": "रत क न य त रक एव मह ल ख पर क षक",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              0
+            ],
+            [
+              "indicqa.hi",
+              12
+            ],
+            [
+              "indicqa.hi",
+              136
+            ],
+            [
+              "milu.hindi",
+              1670
+            ],
+            [
+              "milu.hindi",
+              2315
+            ]
+          ]
+        }
+      ]
+    },
+    "n20_indic_safe": {
+      "ngram_size": 20,
+      "normalizer": "indic_safe",
+      "flagged_documents": 3,
+      "flag_rate": 0.00025,
+      "eval_ngrams_indexed": 219956,
+      "eval_items_indexable": 7987,
+      "eval_items_total": 20102,
+      "reached_eval_items": {
+        "indicqa.hi": 4
+      },
+      "cost_characters": 72317,
+      "cost_character_share": 0.002814972898339179,
+      "cost_tokens": 79599,
+      "cost_token_share": 0.0028546902109362836,
+      "top_flags": [
+        {
+          "doc_id": "a3a1cc8cedd3aabbb957bd0094be8d0e331158e9",
+          "stream_offset": 568020,
+          "source_type": "web",
+          "shared_ngrams": 577,
+          "document_ngrams": 7094,
+          "shared_fraction": 0.08133634056949535,
+          "longest_shared": "माता कैकेयी की उसकी कुटिलता के लिये बहुत भर्तस्ना की और गुरुजनों के आज्ञानुसार दशरथ की अन्त्येष्टि क्रिया कर दिया",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              247
+            ]
+          ]
+        },
+        {
+          "doc_id": "544f0843035406af839128aee374f88723bcfbc5",
+          "stream_offset": 104948,
+          "source_type": "web",
+          "shared_ngrams": 52,
+          "document_ngrams": 2806,
+          "shared_fraction": 0.018531717747683536,
+          "longest_shared": "प्राचीन ब्रह्मनिक ग्रंथों में प्रस्तुत अंतर विचित्र है बुद्ध के अनुसार ध्यानापरणीय अवस्था एकमात्र अंत नहीं है उच्चतम ध्यानापरणीय स्थिती",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              157
+            ],
+            [
+              "indicqa.hi",
+              219
+            ]
+          ]
+        },
+        {
+          "doc_id": "aa26be008b8195bac7df7e43ccd8d141c6cda7f4",
+          "stream_offset": 498131,
+          "source_type": "web",
+          "shared_ngrams": 5,
+          "document_ngrams": 3382,
+          "shared_fraction": 0.0014784151389710231,
+          "longest_shared": "प्रयाग मुख्य है प्रयाग में यमुना एक विशाल नदी के रूप में प्रस्तुत होती है और वहाँ के प्रसिद्ध ऐतिहासिक",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              147
+            ]
+          ]
+        }
+      ]
+    },
+    "n20_naive": {
+      "ngram_size": 20,
+      "normalizer": "naive",
+      "flagged_documents": 22,
+      "flag_rate": 0.0018333333333333333,
+      "eval_ngrams_indexed": 555175,
+      "eval_items_indexable": 16000,
+      "eval_items_total": 20102,
+      "reached_eval_items": {
+        "indicqa.hi": 9,
+        "milu.hindi": 22
+      },
+      "cost_characters": 249164,
+      "cost_character_share": 0.009698824719523531,
+      "cost_tokens": 274823,
+      "cost_token_share": 0.009856085225193057,
+      "top_flags": [
+        {
+          "doc_id": "a3a1cc8cedd3aabbb957bd0094be8d0e331158e9",
+          "stream_offset": 568020,
+          "source_type": "web",
+          "shared_ngrams": 1147,
+          "document_ngrams": 14028,
+          "shared_fraction": 0.08176504134587967,
+          "longest_shared": "बन गन धर व कबन ध क वध करक उसक उद ध र क य और शबर क आश रम",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              247
+            ]
+          ]
+        },
+        {
+          "doc_id": "544f0843035406af839128aee374f88723bcfbc5",
+          "stream_offset": 104948,
+          "source_type": "web",
+          "shared_ngrams": 700,
+          "document_ngrams": 5430,
+          "shared_fraction": 0.1289134438305709,
+          "longest_shared": "पर पर स न कल इसल ए उपन षद क स ष ट क प रत कह कथन म एव",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              157
+            ],
+            [
+              "indicqa.hi",
+              219
+            ]
+          ]
+        },
+        {
+          "doc_id": "4155470d450eb92e04952dd206a8ed08c64fd7ce",
+          "stream_offset": 506900,
+          "source_type": "web",
+          "shared_ngrams": 95,
+          "document_ngrams": 6227,
+          "shared_fraction": 0.01525614260478561,
+          "longest_shared": "ध सम प रद य मह य न बज रय न थ रव द आद क अन स र यह",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              169
+            ]
+          ]
+        },
+        {
+          "doc_id": "e5c12a357bcaeea5c6f6c8f20139361aa9030926",
+          "stream_offset": 838908,
+          "source_type": "web",
+          "shared_ngrams": 36,
+          "document_ngrams": 1391,
+          "shared_fraction": 0.025880661394680086,
+          "longest_shared": "रत एक ल कत त र क गणर ज य ह ज सक द व सदन त मक स सद",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              168
+            ]
+          ]
+        },
+        {
+          "doc_id": "aa26be008b8195bac7df7e43ccd8d141c6cda7f4",
+          "stream_offset": 498131,
+          "source_type": "web",
+          "shared_ngrams": 28,
+          "document_ngrams": 6240,
+          "shared_fraction": 0.004487179487179487,
+          "longest_shared": "र और प रय ग म ख य ह प रय ग म यम न एक व श ल नद",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              147
+            ]
+          ]
+        },
+        {
+          "doc_id": "ac29eca8fda35e6aa6b1af02e3ad9bce6fafbbab",
+          "stream_offset": 375734,
+          "source_type": "web",
+          "shared_ngrams": 10,
+          "document_ngrams": 1757,
+          "shared_fraction": 0.005691519635742743,
+          "longest_shared": "उसक व शज त म र ल ग क ख नद न स थ और म त पक ष क",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              19
+            ]
+          ]
+        },
+        {
+          "doc_id": "76a4e3faf6eb99a42ee7092d838a9f16fe62e3b7",
+          "stream_offset": 699132,
+          "source_type": "web",
+          "shared_ngrams": 9,
+          "document_ngrams": 2109,
+          "shared_fraction": 0.004267425320056899,
+          "longest_shared": "और अन स च त जनज त अत य च र न व रण अध न यम 1989 क तहत",
+          "eval_items_touched": [
+            [
+              "milu.hindi",
+              1723
+            ],
+            [
+              "milu.hindi",
+              1725
+            ],
+            [
+              "milu.hindi",
+              1726
+            ],
+            [
+              "milu.hindi",
+              1727
+            ],
+            [
+              "milu.hindi",
+              1728
+            ]
+          ]
+        },
+        {
+          "doc_id": "00cfef9134a9ab62d71b71deff61a8d8d07e36b8",
+          "stream_offset": 926281,
+          "source_type": "web",
+          "shared_ngrams": 9,
+          "document_ngrams": 741,
+          "shared_fraction": 0.012145748987854251,
+          "longest_shared": "प रद श हर य ण र जस थ न मध य प रद श छत त सगढ झ रखण",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              59
+            ]
+          ]
+        },
+        {
+          "doc_id": "12f0404bbe08fb221ffa8773356785a4f3ea3114",
+          "stream_offset": 672925,
+          "source_type": "web",
+          "shared_ngrams": 8,
+          "document_ngrams": 1087,
+          "shared_fraction": 0.007359705611775529,
+          "longest_shared": "म क इत ह स क स दर भ म न म नल ख त कथन पर व च र",
+          "eval_items_touched": [
+            [
+              "milu.hindi",
+              10406
+            ],
+            [
+              "milu.hindi",
+              14288
+            ]
+          ]
+        },
+        {
+          "doc_id": "8c0bbbe9d351474f743397966ee841b9891e4f83",
+          "stream_offset": 533028,
+          "source_type": "web",
+          "shared_ngrams": 4,
+          "document_ngrams": 248,
+          "shared_fraction": 0.016129032258064516,
+          "longest_shared": "द नदय ल अ त य दय य जन र ष ट र य ग र म ण आज व",
+          "eval_items_touched": [
+            [
+              "milu.hindi",
+              14618
+            ]
+          ]
+        },
+        {
+          "doc_id": "37ec8c7a20d7e9e9b8f734b96c8eb1f714e14d59",
+          "stream_offset": 1004872,
+          "source_type": "web",
+          "shared_ngrams": 4,
+          "document_ngrams": 1713,
+          "shared_fraction": 0.002335084646818447,
+          "longest_shared": "जब श व सत क म त द ह क ल कर क ल श पर वत ज रह थ",
+          "eval_items_touched": [
+            [
+              "indicqa.hi",
+              137
+            ]
+          ]
+        },
+        {
+          "doc_id": "fb3bfd5bbf34890f575dbb7dd708f0fade305186",
+          "stream_offset": 1004905,
+          "source_type": "web",
+          "shared_ngrams": 4,
+          "document_ngrams": 2425,
+          "shared_fraction": 0.0016494845360824743,
+          "longest_shared": "द नदय ल अ त य दय य जन र ष ट र य ग र म ण आज व",
+          "eval_items_touched": [
+            [
+              "milu.hindi",
+              14618
+            ]
+          ]
+        }
+      ]
+    }
+  },
+  "precision_audit": {
+    "n8": {
+      "flagged": 60,
+      "audited_true_positives": 6,
+      "false_positives": 54,
+      "precision": 0.1
+    },
+    "n13": {
+      "flagged": 6,
+      "audited_true_positives": 6,
+      "false_positives": 0,
+      "precision": 1.0
+    },
+    "n20": {
+      "flagged": 3,
+      "audited_true_positives": 3,
+      "false_positives": 0,
+      "precision": 1.0
+    }
+  },
+  "indexability": {
+    "n8": {
+      "indicqa.hi": {
+        "items": 261,
+        "indexable": 261,
+        "share": 1.0,
+        "median_tokens": 375
+      },
+      "milu.hindi": {
+        "items": 14831,
+        "indexable": 13423,
+        "share": 0.9050637178882072,
+        "median_tokens": 15
+      },
+      "xnli.hi": {
+        "items": 5010,
+        "indexable": 4710,
+        "share": 0.9401197604790419,
+        "median_tokens": 20
+      }
+    },
+    "n13": {
+      "indicqa.hi": {
+        "items": 261,
+        "indexable": 261,
+        "share": 1.0,
+        "median_tokens": 375
+      },
+      "milu.hindi": {
+        "items": 14831,
+        "indexable": 9370,
+        "share": 0.631784775133167,
+        "median_tokens": 15
+      },
+      "xnli.hi": {
+        "items": 5010,
+        "indexable": 3879,
+        "share": 0.774251497005988,
+        "median_tokens": 20
+      }
+    },
+    "n20": {
+      "indicqa.hi": {
+        "items": 261,
+        "indexable": 261,
+        "share": 1.0,
+        "median_tokens": 375
+      },
+      "milu.hindi": {
+        "items": 14831,
+        "indexable": 5122,
+        "share": 0.3453576967163374,
+        "median_tokens": 15
+      },
+      "xnli.hi": {
+        "items": 5010,
+        "indexable": 2604,
+        "share": 0.5197604790419161,
+        "median_tokens": 20
+      }
+    }
+  },
+  "minhash": [
+    {
+      "window_tokens": null,
+      "threshold": 0.5,
+      "permutations": 128,
+      "bands": 32,
+      "rows": 4,
+      "shingle_size": 5,
+      "candidate_pairs": 0,
+      "confirmed_pairs": 0,
+      "documents_involved": 0,
+      "eval_items_indexed": 19874,
+      "pairs": []
+    },
+    {
+      "window_tokens": 64,
+      "threshold": 0.3,
+      "permutations": 128,
+      "bands": 32,
+      "rows": 4,
+      "shingle_size": 5,
+      "candidate_pairs": 3,
+      "confirmed_pairs": 1,
+      "documents_involved": 1,
+      "eval_items_indexed": 19874,
+      "pairs": [
+        {
+          "doc_id": "7383a66ad38527eacc315a7e4f0df607d87d48df",
+          "stream_offset": 768952,
+          "eval_id": "milu.hindi",
+          "item_index": 14243,
+          "jaccard": 0.3333333333333333,
+          "eval_containment": 0.3333333333333333
+        }
+      ]
+    },
+    {
+      "window_tokens": 64,
+      "threshold": 0.5,
+      "permutations": 128,
+      "bands": 32,
+      "rows": 4,
+      "shingle_size": 5,
+      "candidate_pairs": 3,
+      "confirmed_pairs": 0,
+      "documents_involved": 0,
+      "eval_items_indexed": 19874,
+      "pairs": []
+    }
+  ],
+  "clean_dirty": [
+    {
+      "eval_id": "indicqa.hi",
+      "total_items": 261,
+      "dirty_items": 7,
+      "clean_items": 254,
+      "dirty_fraction": 0.02681992337164751,
+      "assumed_clean_accuracy": 0.41,
+      "assumed_memorized_accuracy": 1.0,
+      "reported_score": 0.42582375478927204,
+      "inflation_points": 1.582375478927206
+    },
+    {
+      "eval_id": "milu.hindi",
+      "total_items": 14831,
+      "dirty_items": 0,
+      "clean_items": 14831,
+      "dirty_fraction": 0.0,
+      "assumed_clean_accuracy": 0.41,
+      "assumed_memorized_accuracy": 1.0,
+      "reported_score": 0.41,
+      "inflation_points": 0.0
+    },
+    {
+      "eval_id": "xnli.hi",
+      "total_items": 5010,
+      "dirty_items": 0,
+      "clean_items": 5010,
+      "dirty_fraction": 0.0,
+      "assumed_clean_accuracy": 0.41,
+      "assumed_memorized_accuracy": 1.0,
+      "reported_score": 0.41,
+      "inflation_points": 0.0
+    }
+  ],
+  "lsh_curve": {
+    "0.1": 0.003195044956405657,
+    "0.2": 0.04995032258901233,
+    "0.3": 0.22914536447207823,
+    "0.4": 0.5638932494314449,
+    "0.5": 0.8732112136229997,
+    "0.6": 0.9882238254216146,
+    "0.7": 0.9998471708406208,
+    "0.8": 0.9999999525011427,
+    "0.9": 0.9999999999999986
+  },
+  "matra_demonstration": {
+    "source": "इन प्रदर्शनों में भाग लेने वालों पर कार्रवाई की गई।",
+    "indic_safe": "इन प्रदर्शनों में भाग लेने वालों पर कार्रवाई की गई",
+    "naive": "इन प रदर शन म भ ग ल न व ल पर क र रव ई क गई"
+  }
+}

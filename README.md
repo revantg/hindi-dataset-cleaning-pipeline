@@ -41,7 +41,7 @@ The main pipeline runs these eight stages in order:
 | 4 | **Quality filtering** | Flags transparent low-value signals: too-short text, malformed symbols or repeated characters, link-heavy spam, low vocabulary diversity, and repetitive text. These are policy signals, not universal quality scores. |
 | 5 | **Deduplication** | Removes exact duplicates with SHA-256, then uses a local MinHash/LSH approximation for near duplicates: 16 permutations, four-row bands, length-ratio guard, and similarity threshold. This is intentionally a bounded local approximation rather than global corpus deduplication. The separate [`deduplication/deduplication.py`](deduplication/deduplication.py) notebook surveys nine deduplication techniques and executes exact-hash plus FineWeb-parameter MinHash/LSH near-duplicate detection on a 20,000-document Sangraha sample. |
 | 6 | **PII scrubbing** | Redacts email addresses, Indian phone numbers, IPv4 addresses, credential-like values, and Aadhaar-like numbers. The report exposes category counts only; removed values are never displayed. |
-| 7 | **Decontamination** | Runs a limited textual proxy for named benchmark/evaluation markers such as GSM8K, MMLU, HellaSwag, ARC Challenge, and eval-harness terms. No full benchmark corpus is downloaded, so this is not a complete contamination guarantee. |
+| 7 | **Decontamination** | Runs a limited textual proxy for named benchmark/evaluation markers such as GSM8K, MMLU, HellaSwag, ARC Challenge, and eval-harness terms. No full benchmark corpus is downloaded, so this is not a complete contamination guarantee. The separate [`decontamination/decontamination.py`](decontamination/decontamination.py) notebook surveys eleven decontamination techniques and measures a 12,000-document Sangraha stride probe against IndicQA, MILU and XNLI Hindi held-out text, including the Devanagari normalisation bug that inflates the flag count 137-fold. |
 | 8 | **Manifest / provenance** | Writes source URL, dataset revision, license, split, selection rule, hashes, token-estimation rule, pipeline version, UTC run time, dedup method, decontamination scope, and final statistics. |
 
 ## Indic-specific concern
@@ -56,6 +56,7 @@ The pipeline avoids English-only assumptions. It preserves meaningful Brahmic Un
 - [`language-identification/language_identification.py`](language-identification/language_identification.py) — bounded Indic language-ID comparison and routing study
 - [`quality-filtering/quality_filtering.py`](quality-filtering/quality_filtering.py) — bounded quality-signal workbook
 - [`deduplication/deduplication.py`](deduplication/deduplication.py) — nine-technique deduplication survey with one executed MinHash/LSH pipeline
+- [`decontamination/decontamination.py`](decontamination/decontamination.py) — eleven-technique decontamination survey with measured n-gram, MinHash and clean/dirty rungs
 - [`extraction/data/sangraha_hi_verified_30m/download_dataset.py`](extraction/data/sangraha_hi_verified_30m/download_dataset.py) — deterministic source-cache rebuild script
 
 ## Run locally
@@ -73,6 +74,7 @@ The widget lets you choose a 10–30M estimated-token target and run all eight s
 uv run marimo edit extraction/stepwise_cleaning.py
 uv run marimo edit language-identification/language_identification.py
 uv run marimo edit quality-filtering/quality_filtering.py
+uv run marimo edit decontamination/decontamination.py
 ```
 
 To rebuild the local 30M-token raw cache:

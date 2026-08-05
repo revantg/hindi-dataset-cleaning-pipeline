@@ -51,6 +51,15 @@ pii-scrubbing/data/*
 pii-scrubbing/bigcode-dataset/
 pii-scrubbing/data-preparation/
 
+# Decontamination stage: the 12,000-document Sangraha stride probe (67MB) and
+# the cached Hindi eval suite (19MB) are derived data, rebuildable from the
+# pinned revisions by data/build_decontamination_cache.py, so only the build
+# script, provenance manifest, and frozen measurements are tracked.
+decontamination/data/*
+!decontamination/data/build_decontamination_cache.py
+!decontamination/data/probe_manifest.json
+!decontamination/data/measurement_results.json
+
 # Manifest/provenance stage: the built slice, manifests, and metrics are
 # tracked; the tiktoken BPE cache and per-shard splits are local scratch.
 # The root-anchored data/* rule above does not reach nested stage folders.

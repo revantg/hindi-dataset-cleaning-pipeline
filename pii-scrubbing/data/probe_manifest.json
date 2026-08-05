@@ -1,0 +1,39 @@
+{
+  "dataset_id": "ai4bharat/sangraha",
+  "dataset_revision": "8b813c3f62d37b2fa174d68c31e8b35ae2fe85e8",
+  "license": "CC-BY-4.0",
+  "access_method": "huggingface datasets-server /rows endpoint",
+  "selection_rule": "For each config, take fixed stride windows across the whole split: stride = floor(split_rows / windows), window = 100 consecutive rows from each offset, preserving stream order. No shuffling, no PII-conditioned selection.",
+  "token_estimator": "ceil(whitespace units x 1.35)",
+  "materialized_at_utc": "2026-08-05T19:10:58.045226+00:00",
+  "splits": [
+    {
+      "config": "verified",
+      "split": "hin",
+      "split_rows_total": 1048577,
+      "windows": 100,
+      "window_size": 100,
+      "stride": 10485,
+      "documents": 9300,
+      "characters": 20002139,
+      "whitespace_units": 3910895,
+      "estimated_tokens": 5279709,
+      "path": "sangraha_hin_verified_probe.jsonl",
+      "sha256": "059e5535c98b441f6d5e71c108b2090c4e990716e778fe6a45391465b6299046"
+    },
+    {
+      "config": "unverified",
+      "split": "hin",
+      "split_rows_total": 898779,
+      "windows": 100,
+      "window_size": 100,
+      "stride": 8987,
+      "documents": 9100,
+      "characters": 23384690,
+      "whitespace_units": 4571028,
+      "estimated_tokens": 6170888,
+      "path": "sangraha_hin_unverified_probe.jsonl",
+      "sha256": "5db7a34dfde1f1ac84282c4ad0ee515fe999172b46a8b39514e638176a99c46e"
+    }
+  ]
+}

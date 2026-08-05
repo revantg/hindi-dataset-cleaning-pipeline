@@ -1,0 +1,143 @@
+{
+  "generated_utc": "2026-08-05T19:35:46.062428+00:00",
+  "gold_set": {
+    "candidates_reviewed": 490,
+    "pii_spans_raw": 68,
+    "pii_spans_overlap_deduped": 61,
+    "labelling_rule": "A span is PII when it identifies a private individual. Published institutional contact points, documentation examples and non-identifier numerics are labelled not-PII.",
+    "recall_caveat": "Recall is measured against the union of candidates proposed by the cascade and a faithful Dolma FastPiiRegex port. It is a candidate-recall bound, not corpus truth: PII that neither detector proposes is invisible to this metric."
+  },
+  "variants": {
+    "A. Dolma FastPiiRegex (faithful port)": {
+      "tp": 59,
+      "fp": 136,
+      "fn": 2,
+      "P": 0.3026,
+      "R": 0.9672,
+      "F1": 0.4609
+    },
+    "B. cascade, ASCII patterns only (no digit folding)": {
+      "tp": 58,
+      "fp": 70,
+      "fn": 3,
+      "P": 0.4531,
+      "R": 0.9508,
+      "F1": 0.6138
+    },
+    "C. cascade, all layers, handles included": {
+      "tp": 59,
+      "fp": 162,
+      "fn": 2,
+      "P": 0.267,
+      "R": 0.9672,
+      "F1": 0.4184
+    },
+    "D. cascade, handles excluded (shipped)": {
+      "tp": 59,
+      "fp": 71,
+      "fn": 2,
+      "P": 0.4538,
+      "R": 0.9672,
+      "F1": 0.6178
+    }
+  },
+  "layer_ladder": {
+    "1. patterns only": {
+      "tp": 58,
+      "fp": 66,
+      "fn": 3,
+      "P": 0.4677,
+      "R": 0.9508,
+      "F1": 0.627,
+      "spans_kept": 124
+    },
+    "2. + checksum gates": {
+      "tp": 58,
+      "fp": 66,
+      "fn": 3,
+      "P": 0.4677,
+      "R": 0.9508,
+      "F1": 0.627,
+      "spans_kept": 124
+    },
+    "3. + context scoring": {
+      "tp": 59,
+      "fp": 99,
+      "fn": 2,
+      "P": 0.3734,
+      "R": 0.9672,
+      "F1": 0.5388,
+      "spans_kept": 158
+    },
+    "4. + allowlist suppression": {
+      "tp": 59,
+      "fp": 71,
+      "fn": 2,
+      "P": 0.4538,
+      "R": 0.9672,
+      "F1": 0.6178,
+      "spans_kept": 130
+    }
+  },
+  "shipped_false_positive_causes": {
+    "published institutional/service line": 48,
+    "published organisational contact": 17,
+    "documentation example address": 2,
+    "not a phone number: Russian TIN": 1,
+    "not a phone number: bank missed-call service number": 1,
+    "not a phone number: bank SMS service number": 1,
+    "not a phone number: bank SMS validation number": 1
+  },
+  "shipped_missed_spans": [
+    {
+      "config": "unverified",
+      "doc_id": "16f66c8a7a77e423c570fccb4950970f9a2e64c27a42e2a105754a80c767e53d",
+      "reason": "identifier neither layer proposes at threshold 0.50"
+    },
+    {
+      "config": "unverified",
+      "doc_id": "5444200aeffd4a04de250f2b3fe12966fc732b328eee0f4229fd0793ee6afa99",
+      "reason": "identifier neither layer proposes at threshold 0.50"
+    }
+  ],
+  "density": {
+    "verified": {
+      "documents": 9300,
+      "characters": 20002139,
+      "estimated_tokens": 5277609,
+      "documents_touched": 25,
+      "spans_total": 36,
+      "spans_by_category": {
+        "phone_in": 24,
+        "email": 8,
+        "phone_landline": 4
+      },
+      "documents_by_category": {
+        "phone_in": 17,
+        "email": 7,
+        "phone_landline": 2
+      },
+      "spans_per_million_tokens": 6.82,
+      "documents_touched_pct": 0.269
+    },
+    "unverified": {
+      "documents": 9100,
+      "characters": 23384690,
+      "estimated_tokens": 6170103,
+      "documents_touched": 53,
+      "spans_total": 94,
+      "spans_by_category": {
+        "phone_in": 55,
+        "email": 32,
+        "phone_landline": 7
+      },
+      "documents_by_category": {
+        "phone_in": 31,
+        "email": 25,
+        "phone_landline": 6
+      },
+      "spans_per_million_tokens": 15.23,
+      "documents_touched_pct": 0.582
+    }
+  }
+}

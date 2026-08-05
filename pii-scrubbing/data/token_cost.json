@@ -1,0 +1,50 @@
+{
+  "tokenizer": "cl100k_base (relative comparison only, not a Hindi tokenizer)",
+  "documents_touched": 78,
+  "spans_replaced": 130,
+  "tokens_in_raw_identifiers": 719,
+  "tokens_per_raw_identifier": 5.531,
+  "whole_corpus": [
+    {
+      "policy": "keep raw (no scrubbing)",
+      "tokens": 363643,
+      "delta_vs_raw": 0,
+      "pct": 0.0
+    },
+    {
+      "policy": "dolma  ` |||EMAIL_ADDRESS||| `",
+      "tokens": 363849,
+      "delta_vs_raw": 206,
+      "pct": 0.0566
+    },
+    {
+      "policy": "bigscience `PI:EMAIL`",
+      "tokens": 363247,
+      "delta_vs_raw": -396,
+      "pct": -0.1089
+    },
+    {
+      "policy": "bigcode `<EMAIL>`",
+      "tokens": 363212,
+      "delta_vs_raw": -431,
+      "pct": -0.1185
+    }
+  ],
+  "placeholder_cost": [
+    {
+      "policy": "dolma  ` |||EMAIL_ADDRESS||| `",
+      "tokens_spent_on_placeholders": 910,
+      "tokens_per_span": 7.0
+    },
+    {
+      "policy": "bigscience `PI:EMAIL`",
+      "tokens_spent_on_placeholders": 390,
+      "tokens_per_span": 3.0
+    },
+    {
+      "policy": "bigcode `<EMAIL>`",
+      "tokens_spent_on_placeholders": 390,
+      "tokens_per_span": 3.0
+    }
+  ]
+}

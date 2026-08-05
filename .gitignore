@@ -38,6 +38,19 @@ deduplication/data/*
 !deduplication/data/selection_manifest.json
 !deduplication/data/dedup_metrics.json
 
+# PII-scrubbing stage: the probe cache is 109MB of Sangraha rows, rebuildable
+# from the pinned revision by data/build_pii_probe_cache.py, so only the build
+# script, provenance manifest, hand-labelled gold set, and measurements are
+# tracked. Upstream reference clones read for citations are not vendored.
+pii-scrubbing/data/*
+!pii-scrubbing/data/build_pii_probe_cache.py
+!pii-scrubbing/data/probe_manifest.json
+!pii-scrubbing/data/metrics.json
+!pii-scrubbing/data/token_cost.json
+!pii-scrubbing/data/gold_labelled.jsonl
+pii-scrubbing/bigcode-dataset/
+pii-scrubbing/data-preparation/
+
 # Manifest/provenance stage: the built slice, manifests, and metrics are
 # tracked; the tiktoken BPE cache and per-shard splits are local scratch.
 # The root-anchored data/* rule above does not reach nested stage folders.

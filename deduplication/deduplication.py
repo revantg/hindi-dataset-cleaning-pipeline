@@ -568,19 +568,18 @@ def technique_diagrams(
             box(766, 168, 108, 48, fill=SURFACE, stroke=DROP, width=1.6, dash="4 3"),
             label(820, 188, "DROP", size=12, anchor="middle", fill=DROP, weight="bold"),
             label(820, 206, "duplicate", size=10, anchor="middle", fill=MUTED),
-            rule_line(30, 240, 870, 240),
-            doc_card(30, 250, ["\u092f\u0939 \u0935\u093e\u0915\u094d\u092f \u0939\u0948"], tone=MARK, w=200, title="doc C: one word differs", deva_index={0})[0],
-            arrow(s, 240, 276, 520, 276),
-            box(525, 256, 175, 40, fill=SURFACE, stroke=MARK, width=1.6),
-            label(612, 281, "sha256 = c19b\u2026", size=11, family=MONO, anchor="middle", fill=MARK),
-            box(766, 256, 108, 40, fill=SURFACE, stroke=KEEP, width=1.6),
-            label(820, 281, "KEEP", size=12, anchor="middle", fill=KEEP, weight="bold"),
-            caption(292, "Exact hashing is all-or-nothing: one differing word is as different as a differing document."),
+            rule_line(30, 244, 870, 244),
+            doc_card(30, 256, ["\u092f\u0939 \u0935\u093e\u0915\u094d\u092f \u0939\u0948"], tone=MARK, w=200, title="doc C: one word differs", deva_index={0})[0],
+            arrow(s, 240, 282, 520, 282),
+            box(525, 262, 175, 40, fill=SURFACE, stroke=MARK, width=1.6),
+            label(612, 287, "sha256 = c19b\u2026", size=11, family=MONO, anchor="middle", fill=MARK),
+            box(766, 262, 108, 40, fill=SURFACE, stroke=KEEP, width=1.6),
+            label(820, 287, "KEEP", size=12, anchor="middle", fill=KEEP, weight="bold"),
+            caption(346, "Exact hashing is all-or-nothing: one differing word is as different as a differing document."),
         ])
         return svg(s, "Exact document hashing collapses whitespace and case but nothing else",
                    "Two documents differing only in whitespace and case normalize to the same string and yield identical SHA-256 digests, so the second is dropped; a document differing by one word yields a different digest and is kept.",
-                   300, body)
-
+                   364, body)
 
     def _build_bloom_filter():
         s = "bloom-filter"
@@ -656,12 +655,11 @@ def technique_diagrams(
             label(620, 326, "|A \u222a B| = 99", size=13, family=MONO, fill=INK),
             rule_line(620, 340, 854, 340),
             label(620, 366, "J(A,B) = 41 / 99 = 0.414", size=13, family=MONO, fill=KEEP, weight="bold"),
-            caption(412, "Resemblance is set overlap: shingle order is irrelevant, only which windows two documents share."),
+            caption(438, "Resemblance is set overlap: shingle order is irrelevant, only which windows two documents share."),
         ])
         return svg(s, "Shingling turns a document into a set of word 5-grams; Jaccard measures set overlap",
                    "A five-word window slides across a Hindi sentence producing shingles; two documents' shingle sets are compared by Jaccard resemblance, the intersection size over the union size.",
-                   398, body)
-
+                   456, body)
 
     def _build_minhash():
         s = "minhash"
@@ -686,23 +684,22 @@ def technique_diagrams(
             arrow(s, 292, 165, 328, 165),
             label(330, 110, "permutations (min per column)", size=11, family=SANS, fill=MUTED),
             "".join(rowsvg),
-            label(510, ry + 4 * 34 + 18, "\u22ee  (112 rows)", size=11, family=MONO, anchor="middle", fill=MUTED),
             arrow(s, 566, 200, 604, 200),
             box(610, 120, 260, 130, fill=WASH, stroke=KEEP, width=1.4),
             label(630, 148, "slots where A and B agree", size=12, family=SANS, fill=KEEP),
             label(630, 178, "104 / 112", size=18, family=MONO, fill=KEEP, weight="bold"),
             label(630, 204, "J\u0302 = 0.929", size=13, family=MONO, fill=INK),
             label(630, 226, "true J = 0.941", size=13, family=MONO, fill=MUTED),
-            label(740, ry + 2 * 34 + 19, "\u2190 one row disagrees", size=10, family=SANS, fill=DROP),
-            box(40, 262, 830, 66, fill=SURFACE, stroke=RULE),
-            label(60, 288, "P[ min(h(A)) = min(h(B)) ] = J(A, B)", size=14, family=MONO, fill=INK, weight="bold"),
-            label(60, 312, "the fraction of agreeing rows is an unbiased estimate of Jaccard; measured mean |est \u2212 true| = 0.019", size=11, family=SANS, fill=MUTED),
-            caption(352, "One disagreeing row is expected: the signature is a probabilistic estimator, not an exact match."),
+            label(405, 262, "\u22ee   112 permutations in total", size=11, family=MONO, anchor="middle", fill=MUTED),
+            label(451, 280, "permutation 3 (0345) is the one row where A \u2260 B", size=11, family=SANS, anchor="middle", fill=DROP),
+            box(40, 298, 830, 60, fill=SURFACE, stroke=RULE),
+            label(60, 322, "P[ min(h(A)) = min(h(B)) ] = J(A, B)", size=14, family=MONO, fill=INK, weight="bold"),
+            label(60, 344, "the fraction of agreeing rows is an unbiased estimate of Jaccard; measured mean |est \u2212 true| = 0.019", size=11, family=SANS, fill=MUTED),
+            caption(388, "One disagreeing row is expected: the signature is a probabilistic estimator, not an exact match."),
         ])
         return svg(s, "MinHash estimates Jaccard by the fraction of permutations whose minimum agrees",
                    "For each of 112 permutations the minimum hashed shingle is recorded; the fraction of permutations where two documents' minima agree is an unbiased estimate of their Jaccard similarity.",
-                   372, body)
-
+                   406, body)
 
     def _build_lsh_banding():
         s = "lsh-banding"
@@ -716,42 +713,42 @@ def technique_diagrams(
         thr_x = round(520 + 340 * thr, 1)
         dotP = 1 - (1 - 0.75 ** 8) ** 14
         dot_x = round(520 + 340 * 0.75, 1); dot_y = round(380 - 130 * dotP, 1)
-        bx = 40; bw = 30; by = 110
+        bx = 40; bw = 30; by = 116; hot = 3
         strip = []
         for b in range(14):
-            color = MARK if b == 2 else RULE
-            fillc = "#fdebd0" if b == 2 else SURFACE
-            strip.append(box(bx + b * (bw + 3), by, bw, 40, fill=fillc, stroke=color, width=1.8 if b == 2 else 1))
+            color = MARK if b == hot else RULE
+            fillc = "#fdebd0" if b == hot else SURFACE
+            strip.append(box(bx + b * (bw + 3), by, bw, 40, fill=fillc, stroke=color, width=1.8 if b == hot else 1))
             strip.append(label(bx + b * (bw + 3) + bw / 2, by + 56, f"b{b}", size=9, family=MONO, anchor="middle", fill=color))
+        hot_cx = bx + hot * (bw + 3) + bw / 2
         body = "".join([
             panel_title(30, 34, "5. LSH banding: 112 slots split into 14 bands of 8; any one band collision \u2192 candidate"),
+            label(40, 74, "signature of docs A and B, partitioned into 14 bands", size=11, family=SANS, fill=MUTED),
+            label(hot_cx, 100, "\u25bc band b3 identical", size=9, family=SANS, anchor="middle", fill=MARK),
             "".join(strip),
-            label(40, 100, "signature of docs A and B, partitioned into 14 bands", size=11, family=SANS, fill=MUTED),
-            label(bx + 2 * (bw + 3) + bw / 2, by - 8, "\u2193 band b3 identical", size=9, family=SANS, anchor="middle", fill=MARK),
-            box(40, 200, 430, 70, fill=WASH, stroke=MARK, width=1.4),
-            label(60, 226, "band b3 hashes to the same bucket for A and B", size=12, family=SANS, fill=INK),
-            label(60, 250, "\u2192 (A, B) becomes a candidate pair; other bands differ", size=11, family=SANS, fill=MARK),
-            label(40, 300, "P(candidate) = 1 \u2212 (1 \u2212 s\u2078)\u00b9\u2074", size=13, family=MONO, fill=INK, weight="bold"),
-            label(40, 322, "threshold (1/14)^(1/8) = 0.719", size=12, family=MONO, fill=MUTED),
-            label(40, 342, "at s = 0.75, P = 0.772", size=12, family=MONO, fill=KEEP),
+            box(40, 202, 430, 70, fill=WASH, stroke=MARK, width=1.4),
+            label(60, 228, "band b3 hashes to the same bucket for A and B", size=12, family=SANS, fill=INK),
+            label(60, 252, "\u2192 (A, B) becomes a candidate pair; other bands differ", size=11, family=SANS, fill=MARK),
+            label(40, 302, "P(candidate) = 1 \u2212 (1 \u2212 s\u2078)\u00b9\u2074", size=13, family=MONO, fill=INK, weight="bold"),
+            label(40, 324, "threshold (1/14)^(1/8) = 0.719", size=12, family=MONO, fill=MUTED),
+            label(40, 344, "at s = 0.75, P = 0.772", size=12, family=MONO, fill=KEEP),
             box(520, 250, 340, 130, fill=SURFACE, stroke=RULE),
             rule_line(520, 380, 860, 380, stroke=MUTED),
             rule_line(520, 250, 520, 380, stroke=MUTED),
-            label(516, 258, "P=1", size=9, family=MONO, anchor="end", fill=MUTED),
-            label(516, 382, "0", size=9, family=MONO, anchor="end", fill=MUTED),
-            label(520, 396, "s=0", size=9, family=MONO, anchor="middle", fill=MUTED),
-            label(860, 396, "s=1", size=9, family=MONO, anchor="middle", fill=MUTED),
+            label(514, 258, "P=1", size=9, family=MONO, anchor="end", fill=MUTED),
+            label(514, 382, "0", size=9, family=MONO, anchor="end", fill=MUTED),
+            label(520, 394, "s=0", size=9, family=MONO, anchor="middle", fill=MUTED),
+            label(860, 394, "s=1", size=9, family=MONO, anchor="middle", fill=MUTED),
             f'<path d="{dpath}" fill="none" stroke="{KEEP}" stroke-width="2"/>',
             rule_line(thr_x, 250, thr_x, 380, stroke=DROP, dash="4 3"),
             label(thr_x, 246, "0.719", size=9, family=MONO, anchor="middle", fill=DROP),
             f'<circle cx="{dot_x}" cy="{dot_y}" r="4" fill="{MARK}"/>',
             label(dot_x + 6, dot_y - 6, "(0.75, 0.772)", size=9, family=MONO, fill=MARK),
-            caption(400, "The band/row split is a tunable S-curve: it sharply separates similar from dissimilar around the threshold."),
+            caption(420, "The band/row split is a tunable S-curve: it sharply separates similar from dissimilar around the threshold."),
         ])
         return svg(s, "LSH banding makes near-duplicate probability an S-curve in similarity",
                    "The 112-slot signature is split into 14 bands of 8 rows; a pair is a candidate if any band matches. The probability of becoming a candidate follows 1 minus (1 minus s to the 8) to the 14, an S-curve crossing near similarity 0.72.",
-                   418, body)
-
+                   440, body)
 
     def _build_simhash():
         s = "simhash"
@@ -781,19 +778,18 @@ def technique_diagrams(
             bits(600, 116, "1011", KEEP),
             label(600, 176, "doc B fingerprint", size=11, family=SANS, fill=INK),
             bits(600, 188, "1010", DROP),
-            label(730, 205, "Hamming = 1 \u2192 near-duplicate", size=11, family=SANS, anchor="middle", fill=DROP),
-            box(40, 258, 400, 66, fill=WASH),
-            label(60, 284, "MinHash \u2192 Jaccard over sets", size=12, family=MONO, fill=KEEP),
-            label(60, 308, "SimHash \u2192 cosine over weighted vectors", size=12, family=MONO, fill=DROP),
-            box(470, 258, 400, 66, fill=SURFACE, stroke=RULE),
-            label(490, 284, "Google production (Manku 2007):", size=12, family=SANS, fill=INK),
-            label(490, 308, "64-bit fingerprint, near-duplicate iff Hamming \u2264 3", size=11, family=MONO, fill=MUTED),
-            caption(348, "SimHash preserves cosine similarity of weighted term vectors; close vectors yield fingerprints a few bits apart."),
+            label(730, 236, "Hamming distance = 1 \u2192 near-duplicate", size=11, family=SANS, anchor="middle", fill=DROP),
+            box(40, 262, 400, 66, fill=WASH),
+            label(60, 288, "MinHash \u2192 Jaccard over sets", size=12, family=MONO, fill=KEEP),
+            label(60, 312, "SimHash \u2192 cosine over weighted vectors", size=12, family=MONO, fill=DROP),
+            box(470, 262, 400, 66, fill=SURFACE, stroke=RULE),
+            label(490, 288, "Google production (Manku 2007):", size=12, family=SANS, fill=INK),
+            label(490, 312, "64-bit fingerprint, near-duplicate iff Hamming \u2264 3", size=11, family=MONO, fill=MUTED),
+            caption(360, "SimHash preserves cosine similarity of weighted term vectors; close vectors yield fingerprints a few bits apart."),
         ])
         return svg(s, "SimHash encodes weighted-vector cosine similarity into a small Hamming distance",
                    "A weighted n-gram vector is projected onto random hyperplanes; the sign of each projection is one fingerprint bit. Similar documents differ in only a few bits, so near-duplicates have small Hamming distance.",
-                   344, body)
-
+                   378, body)
 
     def _build_suffix_array():
         s = "suffix-array"
@@ -842,33 +838,33 @@ def technique_diagrams(
             panel_title(30, 34, "8. SemDeDup: cluster embeddings, then collapse each dense cosine neighborhood"),
             label(30, 62, "embedding space (after k-means)", size=11, family=SANS, fill=MUTED),
         ]
-        c1 = (250, 210)
-        parts.append(f'<circle cx="{c1[0]}" cy="{c1[1]}" r="120" fill="{KEEP}" fill-opacity="0.07" stroke="{RULE}" stroke-dasharray="4 3"/>')
-        parts.append(label(c1[0], 110, "cluster 1", size=11, anchor="middle", fill=MUTED))
+        c1 = (250, 220)
+        parts.append(f'<circle cx="{c1[0]}" cy="{c1[1]}" r="110" fill="{KEEP}" fill-opacity="0.07" stroke="{RULE}" stroke-dasharray="4 3"/>')
+        parts.append(label(c1[0], 100, "cluster 1 (dense)", size=11, anchor="middle", fill=MUTED))
         parts.append(f'<circle cx="{c1[0]}" cy="{c1[1]}" r="4" fill="{INK}"/>')
-        parts.append(label(c1[0] + 8, c1[1] + 4, "centroid", size=9, family=SANS, fill=MUTED))
-        parts.append(f'<circle cx="290" cy="180" r="46" fill="none" stroke="{DROP}" stroke-dasharray="3 3"/>')
-        for (px, py, col) in [(300, 150, DROP), (275, 205, DROP), (315, 195, DROP), (330, 140, KEEP)]:
+        parts.append(label(c1[0] - 10, c1[1] + 16, "centroid", size=9, family=SANS, anchor="middle", fill=MUTED))
+        parts.append(f'<circle cx="290" cy="190" r="42" fill="none" stroke="{DROP}" stroke-dasharray="3 3"/>')
+        for (px, py, col) in [(300, 165, DROP), (278, 208, DROP), (315, 200, DROP), (330, 150, KEEP)]:
             parts.append(f'<circle cx="{px}" cy="{py}" r="6" fill="{col}"/>')
-        parts.append(label(345, 138, "kept: farthest from centroid", size=10, family=SANS, fill=KEEP))
-        parts.append(label(255, 235, "dropped (within cosine radius)", size=10, family=SANS, fill=DROP))
-        parts.append(f'<circle cx="235" cy="170" r="6" fill="{MARK}"/>')
-        parts.append(f'<circle cx="215" cy="185" r="6" fill="{MARK}"/>')
-        parts.append(label(150, 300, "\u0917\u094d\u0930\u093e\u092e \u2248 \"the village\" (no shared words,", size=10, family=DEVA, fill=MARK))
-        parts.append(label(150, 316, "adjacent in embedding space) \u2014 MinHash cannot catch this", size=10, family=SANS, fill=MARK))
-        c2 = (640, 210)
-        parts.append(f'<circle cx="{c2[0]}" cy="{c2[1]}" r="110" fill="none" stroke="{DROP}" stroke-width="1.6" stroke-dasharray="6 4"/>')
-        parts.append(label(c2[0], 110, "cluster 2 (sparse, under-represented)", size=11, anchor="middle", fill=DROP))
-        for (px, py) in [(610, 190), (660, 230), (690, 170)]:
+        parts.append(label(348, 150, "kept: farthest from centroid", size=10, family=SANS, fill=KEEP))
+        parts.append(label(348, 210, "dropped (within cosine radius)", size=10, family=SANS, fill=DROP))
+        parts.append(f'<circle cx="205" cy="180" r="6" fill="{MARK}"/>')
+        parts.append(f'<circle cx="188" cy="196" r="6" fill="{MARK}"/>')
+        parts.append(label(150, 300, "\u0917\u094d\u0930\u093e\u092e \u2248 \"the village\": no shared words,", size=10, family=DEVA, anchor="middle", fill=MARK))
+        parts.append(label(150, 316, "adjacent in embedding space", size=10, family=SANS, anchor="middle", fill=MARK))
+        parts.append(label(150, 332, "\u2014 MinHash cannot catch this", size=10, family=SANS, anchor="middle", fill=MARK))
+        c2 = (660, 210)
+        parts.append(f'<circle cx="{c2[0]}" cy="{c2[1]}" r="88" fill="none" stroke="{DROP}" stroke-width="1.6" stroke-dasharray="6 4"/>')
+        parts.append(label(c2[0], 100, "cluster 2 (sparse, under-represented)", size=11, anchor="middle", fill=DROP))
+        for (px, py) in [(635, 195), (680, 232), (700, 178)]:
             parts.append(f'<circle cx="{px}" cy="{py}" r="6" fill="{MARK}"/>')
-        parts.append(label(c2[0], 300, "over-pruning here worsens fairness (FairDeDup)", size=10, anchor="middle", fill=DROP))
-        parts.append(box(30, 330, 840, 34, fill=WASH))
-        parts.append(label(50, 352, "duplicate when cos \u2265 1 \u2212 \u03b5; keep the member FARTHEST from the centroid (contrast: union-find keeps the longest text)", size=11, family=SANS, fill=INK))
-        parts.append(caption(388, "Semantic dedup removes near-synonymous documents that share no surface tokens \u2014 exactly what MinHash misses."))
+        parts.append(label(c2[0], 320, "over-pruning here worsens fairness (FairDeDup)", size=10, anchor="middle", fill=DROP))
+        parts.append(box(30, 344, 840, 34, fill=WASH))
+        parts.append(label(50, 366, "duplicate when cos \u2265 1 \u2212 \u03b5; keep the member FARTHEST from the centroid (contrast: union-find keeps the longest text)", size=11, family=SANS, fill=INK))
+        parts.append(caption(404, "Semantic dedup removes near-synonymous documents that share no surface tokens \u2014 exactly what MinHash misses."))
         return svg(s, "SemDeDup collapses embedding-space neighborhoods, keeping the least central member",
                    "Documents are embedded and k-means clustered; within a cluster, points inside a cosine radius are duplicates and all but the member farthest from the centroid are dropped. Over-pruning sparse clusters can worsen fairness.",
-                   398, "".join(parts))
-
+                   424, "".join(parts))
 
     def _build_dedup_scope():
         s = "dedup-scope"

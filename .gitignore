@@ -37,6 +37,12 @@ deduplication/data/*
 !deduplication/data/README.md
 !deduplication/data/selection_manifest.json
 !deduplication/data/dedup_metrics.json
+
+# Manifest/provenance stage: the built slice, manifests, and metrics are
+# tracked; the tiktoken BPE cache and per-shard splits are local scratch.
+# The root-anchored data/* rule above does not reach nested stage folders.
+manifest-provenance/data/.tiktoken_cache/
+manifest-provenance/data/shards/
 *.parquet
 .hf_cache/
 

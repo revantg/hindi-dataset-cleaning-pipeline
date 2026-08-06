@@ -34,3 +34,4 @@ dev = [
 # Both are intrinsic to marimo's saved format, not authoring defects.
 "deduplication/deduplication.py" = ["B018", "PLR1711"]
 "manifest-provenance/manifest_provenance.py" = ["PLR1711"]
+"decontamination/decontamination.py" = ["B018", "PLR1711"]

@@ -30,6 +30,7 @@ def title(mo):
     > A contaminated benchmark does not make a model better. It removes the only
     > instrument that could tell you whether the model is any good.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -42,14 +43,10 @@ def runtime_setup():
     if str(NOTEBOOK_DIR.resolve()) not in _sys.path:
         _sys.path.insert(0, str(NOTEBOOK_DIR.resolve()))
 
-    import decontamination_lib as dcl
     import diagrams
 
-    DATA_DIR = NOTEBOOK_DIR / "data"
-    PROBE_PATH = DATA_DIR / "sangraha_hin_stride_probe.jsonl"
-    EVAL_PATH = DATA_DIR / "eval_suite.jsonl"
-    MANIFEST_PATH = DATA_DIR / "probe_manifest.json"
-    RESULTS_PATH = DATA_DIR / "measurement_results.json"
+    MANIFEST_PATH = NOTEBOOK_DIR / "data" / "probe_manifest.json"
+    RESULTS_PATH = NOTEBOOK_DIR / "data" / "measurement_results.json"
 
     PROBE_MANIFEST = _json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     RESULTS = _json.loads(RESULTS_PATH.read_text(encoding="utf-8"))
@@ -60,17 +57,7 @@ def runtime_setup():
     def pct(value: float, places: int = 2) -> str:
         return f"{value * 100:.{places}f}%"
 
-    return (
-        DATA_DIR,
-        EVAL_PATH,
-        PROBE_MANIFEST,
-        PROBE_PATH,
-        RESULTS,
-        dcl,
-        diagrams,
-        fmt,
-        pct,
-    )
+    return PROBE_MANIFEST, RESULTS, diagrams, fmt, pct
 
 
 @app.cell(hide_code=True)
@@ -118,6 +105,7 @@ def scope(mo):
     with a measurement against actual held-out text and reports, in section 8,
     exactly what the proxy was missing.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -160,20 +148,20 @@ def definition(mo):
     Treating decontamination as a cleaning-time afterthought means running the
     expensive layer without the cheap one.
     """)
+    return
 
 
 @app.cell(hide_code=True)
 def firewall_figure(diagrams, mo):
-    mo.md(
-        f"""
+    mo.md(f"""
     {diagrams.firewall_diagram()}
 
     **Figure 1.** The wall is placed once, at sourcing. The left column may be
     trained on freely, including benchmark *train* splits; the right column never
     can. Everything a cleaning pipeline does afterwards is enforcement of a
     decision that was already made.
-    """
-    )
+    """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -191,6 +179,7 @@ def techniques_intro(mo):
     inferred. Where a widely-repeated claim did not survive that check, it is
     marked as such rather than reported.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -247,6 +236,7 @@ def technique_1(mo):
     excerpt in a forum post, or a translated copy passes straight through. Goes
     stale the moment a new benchmark is published.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -293,6 +283,7 @@ def technique_2(mo):
     editorial cost. Useless for the fixed academic benchmarks everyone actually
     reports. Cannot retroactively clean anything.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -341,6 +332,7 @@ def technique_3(mo):
     prose, so exposure tends to overestimate risk for real text. Aggressive
     deduplication can strip the canary and destroy the instrument.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -412,20 +404,20 @@ def technique_4(mo):
     tokens. And it is only as good as the normaliser — section 6 shows a
     normalisation bug inflating the flag count by 137×.
     """)
+    return
 
 
 @app.cell(hide_code=True)
 def ngram_figure(diagrams, mo):
-    mo.md(
-        f"""
+    mo.md(f"""
     {diagrams.ngram_diagram()}
 
     **Figure 2.** The mechanism is a set intersection. What makes it subtle is
     not the algorithm but the two parameters framing it: the normaliser that
     decides what counts as the same token, and `n`, which trades recall against
     precision with no setting that is correct for both.
-    """
-    )
+    """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -484,6 +476,7 @@ def technique_5(mo):
     Construction is a serious engineering step. Still exact, so it is no better
     than n-gram matching against paraphrase.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -544,12 +537,12 @@ def technique_6(mo):
     0.006 against it — no usable threshold reaches that, so the scan is silent
     even on a verbatim leak. Section 5.4 measures exactly this.
     """)
+    return
 
 
 @app.cell(hide_code=True)
 def minhash_figure(diagrams, mo):
-    mo.md(
-        f"""
+    mo.md(f"""
     {diagrams.minhash_diagram()}
 
     **Figure 3.** Banding is what makes the threshold sharp: at b = 32, r = 4 a
@@ -557,8 +550,8 @@ def minhash_figure(diagrams, mo):
     collides with probability 0.05. The right panel is the reason this technique
     reported nothing here — the mechanism is sound, the comparison unit was
     wrong.
-    """
-    )
+    """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -612,6 +605,7 @@ def technique_7(mo):
     judge model, and on a 12,000-document slice it would produce a number with no
     error bars. Naming the gap is more useful than filling it badly.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -651,6 +645,7 @@ def technique_8(mo):
     acting on a single result is unsound. Needs token probabilities, which many
     APIs no longer expose. Sensitive to text length and domain.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -694,6 +689,7 @@ def technique_9(mo):
     access and many forward passes. Tests the dataset as a whole, so it cannot
     say which items leaked.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -751,6 +747,7 @@ def technique_10(mo):
     move items into the wrong partition. Without a real model, the output is only
     as good as its assumptions.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -816,10 +813,11 @@ def technique_11(mo):
     **differential-privacy training** (a training-objective guarantee). All
     three are real; none belongs in stage 7.
     """)
+    return
 
 
 @app.cell(hide_code=True)
-def dataset_section(mo, PROBE_MANIFEST, fmt):
+def dataset_section(PROBE_MANIFEST, fmt, mo):
     _corpus = PROBE_MANIFEST["corpus"]
     _suite = PROBE_MANIFEST["eval_suite"]
     _rows = "\n".join(
@@ -897,6 +895,7 @@ def dataset_section(mo, PROBE_MANIFEST, fmt):
     is the gap stage 7 has to close.
     """
     )
+    return
 
 
 @app.cell(hide_code=True)
@@ -909,6 +908,7 @@ def ladder_intro(mo):
     `data/measurement_results.json`, so the notebook reports a single run rather
     than recomputing with drifting parameters.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -929,6 +929,7 @@ def corpus_totals(RESULTS, fmt, mo):
     estimated tokens the probe sits inside the assignment's 10–100M band.
     """
     )
+    return
 
 
 @app.cell(hide_code=True)
@@ -964,6 +965,7 @@ def ngram_results(RESULTS, fmt, mo, pct):
       and it is the fact that makes conservative over-removal affordable.
     """
     )
+    return
 
 
 @app.cell(hide_code=True)
@@ -1007,6 +1009,7 @@ def precision_audit(RESULTS, fmt, mo, pct):
     table. **Precision is an audit, not a default.**
     """
     )
+    return
 
 
 @app.cell(hide_code=True)
@@ -1044,6 +1047,7 @@ def indexability(RESULTS, mo, pct):
     indexability overstates the coverage of the check.
     """
     )
+    return
 
 
 @app.cell(hide_code=True)
@@ -1098,6 +1102,7 @@ def minhash_results(RESULTS, fmt, mo):
     Jaccard, or a window sized like the thing being searched for.
     """
     )
+    return
 
 
 @app.cell(hide_code=True)
@@ -1116,8 +1121,7 @@ def matra_results(RESULTS, fmt, mo, pct):
     Devanagari dependent vowel signs and the virama are Unicode **combining
     marks**: U+093E DEVANAGARI VOWEL SIGN AA has general category `Mc`
     (Spacing_Mark) and U+094D DEVANAGARI SIGN VIRAMA has category `Mn`
-    (Nonspacing_Mark) ([UAX
-    #44](https://www.unicode.org/reports/tr44/#General_Category_Values);
+    (Nonspacing_Mark) ([UAX #44](https://www.unicode.org/reports/tr44/#General_Category_Values);
     [Devanagari chart](https://www.unicode.org/charts/PDF/U0900.pdf)). They are
     neither letters nor digits, so the standard normalisation idiom
     `re.sub(r"[^\\w\\s]", " ", text)` deletes every one of them.
@@ -1169,19 +1173,19 @@ def matra_results(RESULTS, fmt, mo, pct):
     warning not to apply English-shaped rules to Indic script.
     """
     )
+    return
 
 
 @app.cell(hide_code=True)
 def matra_figure(diagrams, mo):
-    mo.md(
-        f"""
+    mo.md(f"""
     {diagrams.matra_trap_diagram()}
 
     **Figure 4.** Ten code points, four of them combining marks. `\\w` matches
     letters and digits; combining marks are neither, so the negated class deletes
     them. The fix is to decide by Unicode general category rather than by `\\w`.
-    """
-    )
+    """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -1231,19 +1235,19 @@ def clean_dirty_results(RESULTS, fmt, mo, pct):
     "no detected overlap among the indexable majority", not "clean".
     """
     )
+    return
 
 
 @app.cell(hide_code=True)
 def inflation_figure(diagrams, mo):
-    mo.md(
-        f"""
+    mo.md(f"""
     {diagrams.inflation_diagram()}
 
     **Figure 5.** The stage's deliverable. Flagging documents is the intermediate
     step; partitioning the exam and reporting both scores is the output, and it is
     the part most often omitted when this stage is imitated.
-    """
-    )
+    """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -1305,6 +1309,7 @@ def recommendation(mo):
     metadata, which is why the manifest records it as a limited proxy rather than
     a decontamination guarantee.
     """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -1368,6 +1373,7 @@ def provenance(PROBE_MANIFEST, RESULTS, mo):
     a decontamination procedure at all.
     """
     )
+    return
 
 
 if __name__ == "__main__":

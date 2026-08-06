@@ -66,6 +66,12 @@ def runtime_setup():
     LICENSE = "CC-BY-4.0"
     TOKENIZER_NAME = "o200k_base"
     COMPARISON_TOKENIZER_NAME = "cl100k_base"
+    # tiktoken caches each BPE file under sha1(url); the expected sha256 is the one
+    # tiktoken itself asserts in tiktoken_ext.openai_public.o200k_base.
+    TIKTOKEN_BPE_URL_PREFIX = "https://openaipublic.blob.core.windows.net/encodings"
+    TOKENIZER_BPE_EXPECTED_SHA256 = (
+        "446a9538cb6c348e3516120d7c08b09f57c36495e2acfffe59a5bf8b0cfb1a2d"
+    )
     SHARD_COUNT = 4
     PIPELINE_VERSION = "s4-manifest-provenance-v1"
     TOKEN_PROXY_FERTILITY = 1.35
@@ -179,7 +185,9 @@ def runtime_setup():
         SLICE_PATH,
         SURFACE,
         SVG_FONT,
+        TIKTOKEN_BPE_URL_PREFIX,
         TIKTOKEN_CACHE_DIR,
+        TOKENIZER_BPE_EXPECTED_SHA256,
         TOKENIZER_NAME,
         TOKEN_PROXY_FERTILITY,
         hashlib_module,
@@ -528,8 +536,11 @@ def tokenizers(
     COMPARISON_TOKENIZER_NAME,
     NOTEBOOK_PATH,
     SLICE_PATH,
+    TIKTOKEN_BPE_URL_PREFIX,
     TIKTOKEN_CACHE_DIR,
+    TOKENIZER_BPE_EXPECTED_SHA256,
     TOKENIZER_NAME,
+    hashlib_module,
     mo,
     sha256_file,
     short,
@@ -548,11 +559,23 @@ def tokenizers(
     encoding = _tiktoken.get_encoding(TOKENIZER_NAME)
     comparison_encoding = _tiktoken.get_encoding(COMPARISON_TOKENIZER_NAME)
 
-    _bpe_files = sorted(p for p in TIKTOKEN_CACHE_DIR.glob("*") if p.is_file())
-    tokenizer_bpe_sha256 = (
-        sha256_file(_bpe_files[0]) if len(_bpe_files) == 1 else "unavailable"
-    )
-    tokenizer_bpe_bytes = _bpe_files[0].stat().st_size if len(_bpe_files) == 1 else 0
+    # tiktoken names each cached BPE file sha1(url), so the artifact backing a named
+    # encoding is resolvable exactly. Globbing the directory would be ambiguous --
+    # loading a second encoding puts a second file there -- and an ambiguous lookup
+    # that degrades to "unavailable" would silently void the whole claim that the
+    # measuring instrument is content-addressed.
+    _bpe_url = f"{TIKTOKEN_BPE_URL_PREFIX}/{TOKENIZER_NAME}.tiktoken"
+    _bpe_path = TIKTOKEN_CACHE_DIR / hashlib_module.sha1(_bpe_url.encode()).hexdigest()
+    if not _bpe_path.is_file():
+        raise FileNotFoundError(
+            f"Expected the {TOKENIZER_NAME} BPE artifact at {_bpe_path}. "
+            "tiktoken should have cached it when the encoding loaded above."
+        )
+    tokenizer_bpe_sha256 = sha256_file(_bpe_path)
+    tokenizer_bpe_bytes = _bpe_path.stat().st_size
+    # tiktoken asserts this same digest itself before trusting the download, so a
+    # match here means the local artifact is the one upstream published.
+    tokenizer_bpe_verified = tokenizer_bpe_sha256 == TOKENIZER_BPE_EXPECTED_SHA256
 
     notebook_digest = sha256_file(NOTEBOOK_PATH)
     recomputed_slice_digest = sha256_file(SLICE_PATH)
@@ -564,7 +587,7 @@ def tokenizers(
         | Instrument | Identity |
         |---|---|
         | Tokenizer | `{TOKENIZER_NAME}`, `n_vocab` {encoding.n_vocab:,} |
-        | Tokenizer BPE artifact | {tokenizer_bpe_bytes:,} bytes, sha256 `{short(tokenizer_bpe_sha256)}` |
+        | Tokenizer BPE artifact | {tokenizer_bpe_bytes:,} bytes, sha256 `{short(tokenizer_bpe_sha256)}` ({"matches tiktoken's own expected_hash" if tokenizer_bpe_verified else "DOES NOT MATCH upstream"}) |
         | Comparison tokenizer | `{COMPARISON_TOKENIZER_NAME}`, `n_vocab` {comparison_encoding.n_vocab:,} |
         | This notebook's source | sha256 `{short(notebook_digest)}` |
 
@@ -1707,77 +1730,124 @@ def persist(
 
 @app.cell
 def svg_helpers(INK, MUTED, RULE, SURFACE, SVG_FONT, mo):
-    def svg_figure(svg_body, caption, view_width, view_height):
-        """Wrap a hand-authored SVG body in a scaling frame plus its takeaway.
-
-        No rendering library and no mermaid: every diagram in this notebook is
-        literal SVG, so the reader can see exactly what is being claimed.
-        """
-        return mo.vstack([
-            mo.Html(
-                f'<svg viewBox="0 0 {view_width} {view_height}" width="100%" '
-                f'role="img" xmlns="http://www.w3.org/2000/svg" '
-                f'font-family="{SVG_FONT}">{svg_body}</svg>'
-            ),
-            mo.md(f"*{caption}*"),
-        ])
-
-
-    def svg_box(x, y, w, h, label, sub=None, fill=SURFACE, stroke=RULE, text=INK):
-        """A labelled rounded box. `sub` is a second line, one step smaller."""
-        parts = [
-            (
-                f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="6" '
-                f'fill="{fill}" stroke="{stroke}" stroke-width="1.5"/>'
-            )
-        ]
-        if sub is None:
-            parts.append(
-                f'<text x="{x + w / 2}" y="{y + h / 2 + 4}" text-anchor="middle" '
-                f'font-size="12" fill="{text}">{label}</text>'
-            )
-        else:
-            parts.append(
-                f'<text x="{x + w / 2}" y="{y + h / 2 - 3}" text-anchor="middle" '
-                f'font-size="12" fill="{text}">{label}</text>'
-            )
-            parts.append(
-                f'<text x="{x + w / 2}" y="{y + h / 2 + 12}" text-anchor="middle" '
-                f'font-size="11" fill="{MUTED}">{sub}</text>'
-            )
-        return "".join(parts)
-
-
-    def svg_arrow(x1, y1, x2, y2, stroke=MUTED, label=None, dash=None):
-        dash_attr = f' stroke-dasharray="{dash}"' if dash else ""
-        parts = [
-            (
-                f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{stroke}" '
-                f'stroke-width="1.5" marker-end="url(#mp-arrow)"{dash_attr}/>'
-            )
-        ]
-        if label:
-            parts.append(
-                f'<text x="{(x1 + x2) / 2}" y="{(y1 + y2) / 2 - 6}" '
-                f'text-anchor="middle" font-size="11" fill="{MUTED}">{label}</text>'
-            )
-        return "".join(parts)
-
-
-    def svg_text(x, y, label, size=12, fill=INK, anchor="start", weight="normal"):
-        return (
-            f'<text x="{x}" y="{y}" text-anchor="{anchor}" font-size="{size}" '
-            f'fill="{fill}" font-weight="{weight}">{label}</text>'
-        )
-
-
     # One marker definition, referenced by every arrow in every diagram.
     SVG_DEFS = (
         '<defs><marker id="mp-arrow" viewBox="0 0 10 10" refX="9" refY="5" '
         'markerWidth="6" markerHeight="6" orient="auto-start-reverse">'
         f'<path d="M 0 0 L 10 5 L 0 10 z" fill="{MUTED}"/></marker></defs>'
     )
-    return SVG_DEFS, svg_arrow, svg_box, svg_figure, svg_text
+
+    # Approximate advance widths for the ui-sans-serif stack, in em. Only used to size
+    # boxes and the viewBox, so "close enough to catch overflow" is the bar.
+    NARROW_GLYPHS = "iljI.,'|!:;()[]/\\ft"
+    WIDE_GLYPHS = "mwMW"
+
+
+    def text_width(label, size):
+        total = 0.0
+        for character in label:
+            if character in NARROW_GLYPHS:
+                total += 0.31
+            elif character in WIDE_GLYPHS:
+                total += 0.86
+            elif character == " ":
+                total += 0.27
+            elif character.isupper():
+                total += 0.66
+            else:
+                total += 0.55
+        return total * size
+
+
+    class SvgCanvas:
+        """A small SVG builder that tracks its own extents and checks that text fits.
+
+        Hand-authored SVG is the right call here — the reader can see exactly what is
+        being claimed — but hand-authored `viewBox` numbers silently clip content the
+        moment a label changes. So the canvas measures what it draws: `render` derives
+        the `viewBox` from actual content, and any label wider than its box, or below
+        the 11px floor, lands in `overflows`. `render` asserts that list is empty,
+        which turns a class of layout regression into a failed notebook run rather
+        than a quietly cropped figure.
+        """
+
+        PAD = 14
+
+        def __init__(self):
+            self.parts = [SVG_DEFS]
+            self.max_x = 0.0
+            self.max_y = 0.0
+            self.overflows = []
+
+        def _extend(self, x, y):
+            self.max_x = max(self.max_x, x)
+            self.max_y = max(self.max_y, y)
+
+        def box(self, x, y, w, h, label, sub=None, fill=SURFACE, stroke=RULE, text=INK):
+            self.parts.append(
+                f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="6" '
+                f'fill="{fill}" stroke="{stroke}" stroke-width="1.5"/>'
+            )
+            for content, size in ((label, 12),) if sub is None else ((label, 12), (sub, 11)):
+                if text_width(content, size) > w - 12:
+                    self.overflows.append(f"{content!r} ({size}px) wider than box w={w}")
+            if sub is None:
+                self.text(x + w / 2, y + h / 2 + 4, label, 12, text, "middle")
+            else:
+                self.text(x + w / 2, y + h / 2 - 3, label, 12, text, "middle")
+                self.text(x + w / 2, y + h / 2 + 12, sub, 11, MUTED, "middle")
+            self._extend(x + w, y + h)
+            return x + w
+
+        def text(self, x, y, label, size=12, fill=INK, anchor="start", weight="normal"):
+            if size < 11:
+                self.overflows.append(f"{label!r} font-size {size} below the 11px floor")
+            self.parts.append(
+                f'<text x="{x}" y="{y}" text-anchor="{anchor}" font-size="{size}" '
+                f'fill="{fill}" font-weight="{weight}">{label}</text>'
+            )
+            width = text_width(label, size)
+            if anchor == "start":
+                right = x + width
+            elif anchor == "middle":
+                right = x + width / 2
+            else:
+                right = x
+            self._extend(right, y + size * 0.25)
+            return right
+
+        def line(self, x1, y1, x2, y2, stroke=RULE, dash=None):
+            """A connector with no arrowhead — for feeder strokes into a junction,
+            where repeating the head just stacks markers into a blob."""
+            dash_attr = f' stroke-dasharray="{dash}"' if dash else ""
+            self.parts.append(
+                f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{stroke}" '
+                f'stroke-width="1.5"{dash_attr}/>'
+            )
+            self._extend(max(x1, x2), max(y1, y2))
+
+        def arrow(self, x1, y1, x2, y2, stroke=MUTED, dash=None):
+            dash_attr = f' stroke-dasharray="{dash}"' if dash else ""
+            self.parts.append(
+                f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{stroke}" '
+                f'stroke-width="1.5" marker-end="url(#mp-arrow)"{dash_attr}/>'
+            )
+            self._extend(max(x1, x2), max(y1, y2))
+
+        def render(self, caption):
+            assert not self.overflows, "SVG layout problems: " + "; ".join(self.overflows)
+            view_w = round(self.max_x + self.PAD)
+            view_h = round(self.max_y + self.PAD)
+            return mo.vstack([
+                mo.Html(
+                    f'<svg viewBox="0 0 {view_w} {view_h}" width="100%" role="img" '
+                    f'xmlns="http://www.w3.org/2000/svg" font-family="{SVG_FONT}">'
+                    f"{''.join(self.parts)}</svg>"
+                ),
+                mo.md(f"*{caption}*"),
+            ])
+
+    return (SvgCanvas,)
 
 
 @app.cell(hide_code=True)
@@ -1833,13 +1903,9 @@ def diagram_gate(
     BLOCK,
     BLOCK_BG,
     MUTED,
-    SVG_DEFS,
-    svg_arrow,
-    svg_box,
-    svg_figure,
-    svg_text,
+    SvgCanvas,
 ):
-    _stages = [
+    _STAGES = [
         ("raw shard", "text as received"),
         ("canonicalize", "NFC, hashing copy"),
         ("digest", "sha2-256:…"),
@@ -1847,45 +1913,36 @@ def diagram_gate(
         ("emit", "canonical JSON"),
     ]
 
-    _body = [SVG_DEFS]
-    _x = 12
-    for _label, _sub in _stages:
-        _body.append(svg_box(_x, 60, 116, 46, _label, _sub))
-        if _x > 12:
-            _body.append(svg_arrow(_x - 16, 83, _x - 3, 83))
-        _x += 132
+    _c = SvgCanvas()
+    _c.text(14, 26, "Both exits are drawn on purpose: a gate with only one exit is a log line.", 11, MUTED)
 
-    _body.append(svg_arrow(_x - 16, 83, _x - 3, 83))
-    _body.append(svg_box(_x, 60, 96, 46, "gate", "one decision", ACCENT_BG, ACCENT, ACCENT))
+    _STAGE_W, _STAGE_H, _ROW_Y, _GAP = 122, 46, 56, 22
+    _mid = _ROW_Y + _STAGE_H / 2
 
-    _gate_x = _x + 96
-    _body.append(svg_arrow(_gate_x + 4, 72, _gate_x + 44, 34))
-    _body.append(
-        svg_box(_gate_x + 48, 12, 150, 42, "ADMITTED", "manifest is authoritative", ADMIT_BG, ADMIT, ADMIT)
-    )
-    _body.append(svg_arrow(_gate_x + 4, 94, _gate_x + 44, 130))
-    _body.append(
-        svg_box(_gate_x + 48, 110, 150, 42, "BLOCKED", "+ specific reason", BLOCK_BG, BLOCK, BLOCK)
-    )
+    _x = 14
+    for _label, _sub in _STAGES:
+        _c.box(_x, _ROW_Y, _STAGE_W, _STAGE_H, _label, _sub)
+        _x += _STAGE_W
+        _c.arrow(_x + 4, _mid, _x + _GAP - 4, _mid)
+        _x += _GAP
 
-    _body.append(svg_text(12, 176, "The text itself is never modified by this stage.", 11, MUTED))
-    _body.append(
-        svg_text(
-            12,
-            30,
-            "Both exits are drawn on purpose: a gate with only one exit is a log line.",
-            11,
-            MUTED,
-        )
-    )
+    _GATE_W = 104
+    _c.box(_x, _ROW_Y, _GATE_W, _STAGE_H, "gate", "one decision", ACCENT_BG, ACCENT, ACCENT)
+    _x += _GATE_W
 
-    svg_figure(
-        "".join(_body),
+    # Both exits fan from the gate's right edge: admitted up, blocked down.
+    _EXIT_W, _EXIT_H = 186, 44
+    _c.arrow(_x + 4, _mid - 6, _x + _GAP + 4, _ROW_Y - 22)
+    _c.box(_x + _GAP + 8, _ROW_Y - 44, _EXIT_W, _EXIT_H, "ADMITTED", "manifest is authoritative", ADMIT_BG, ADMIT, ADMIT)
+    _c.arrow(_x + 4, _mid + 6, _x + _GAP + 4, _ROW_Y + _STAGE_H + 22)
+    _c.box(_x + _GAP + 8, _ROW_Y + _STAGE_H + 12, _EXIT_W, _EXIT_H, "BLOCKED", "+ specific reason", BLOCK_BG, BLOCK, BLOCK)
+
+    _c.text(14, _ROW_Y + _STAGE_H + 58, "The text itself is never modified by this stage.", 11, MUTED)
+
+    _c.render(
         "Diagram 1 — the emitter is a pipeline with two exits. A record either becomes "
         "authoritative or is blocked with a reason a human can act on; there is no "
-        "third outcome and no silent pass-through.",
-        960,
-        190,
+        "third outcome and no silent pass-through."
     )
     return
 
@@ -1959,55 +2016,55 @@ def diagram_opaque_vs_content(
     MUTED,
     RULE,
     SURFACE,
-    SVG_DEFS,
+    SvgCanvas,
     duplicate_group_rows,
-    svg_arrow,
-    svg_box,
-    svg_figure,
-    svg_text,
 ):
-    _dup_ids = [row["upstream_doc_id"] for row in duplicate_group_rows][:5]
+    _dup_ids = [row["upstream_doc_id"] for row in duplicate_group_rows]
     _dup_digest = duplicate_group_rows[0]["record_id (content-addressed)"]
 
-    _body = [SVG_DEFS]
-    _body.append(svg_text(12, 22, "Same 5 byte-identical documents, two identity schemes", 12, INK, weight="600"))
+    _c = SvgCanvas()
+    _c.text(14, 24, "The same byte-identical documents under two identity schemes", 12, INK, weight="600")
 
-    _body.append(svg_text(12, 52, "upstream doc_id (opaque)", 11, MUTED))
+    _ROW_H, _ROW_GAP, _TOP = 26, 32, 56
+    _LANE_W, _VERDICT_W = 190, 128
+    _LEFT = 14
+    _RIGHT = _LEFT + _LANE_W + 30 + _VERDICT_W + 60
+
+    _c.text(_LEFT, 46, "upstream doc_id (opaque)", 11, MUTED)
+    _c.text(_RIGHT, 46, "record_id (content-addressed)", 11, MUTED)
+
     for _i, _doc_id in enumerate(_dup_ids):
-        _y = 62 + _i * 30
-        _body.append(svg_box(12, _y, 200, 24, f"{_doc_id[:12]}…", None, SURFACE, RULE))
-        _body.append(svg_arrow(216, _y + 12, 250, _y + 12))
-        _body.append(svg_box(254, _y, 118, 24, "kept", None, BLOCK_BG, BLOCK, BLOCK))
-    _body.append(svg_text(12, 62 + 5 * 30 + 14, f"{len(_dup_ids)} rows in, {len(_dup_ids)} rows out", 11, BLOCK))
+        _y = _TOP + _i * _ROW_GAP
+        _c.box(_LEFT, _y, _LANE_W, _ROW_H, f"{_doc_id[:14]}…", None, SURFACE, RULE)
+        _c.arrow(_LEFT + _LANE_W + 4, _y + _ROW_H / 2, _LEFT + _LANE_W + 26, _y + _ROW_H / 2)
+        _c.box(_LEFT + _LANE_W + 30, _y, _VERDICT_W, _ROW_H, "kept", None, BLOCK_BG, BLOCK, BLOCK)
+        _c.box(_RIGHT, _y, _LANE_W, _ROW_H, _dup_digest, None, SURFACE, RULE, MUTED)
 
-    _body.append(svg_text(430, 52, "record_id (content-addressed)", 11, MUTED))
+    # All five rows carry the identical digest, so they converge on one box. Drawing
+    # five arrowheads into the same edge point stacks them into a blob; instead each
+    # row runs to a shared junction and a single arrow continues from there.
+    _collapse_y = _TOP + (len(_dup_ids) - 1) * _ROW_GAP / 2
+    _junction_x = _RIGHT + _LANE_W + 26
     for _i in range(len(_dup_ids)):
-        _y = 62 + _i * 30
-        _body.append(svg_box(430, _y, 200, 24, _dup_digest, None, SURFACE, RULE))
-        _body.append(svg_arrow(634, _y + 12, 686, 122))
-    _body.append(
-        svg_box(690, 110, 150, 24, "1 distinct id", None, ADMIT_BG, ADMIT, ADMIT)
-    )
-    _body.append(svg_text(430, 62 + 5 * 30 + 14, f"{len(_dup_ids)} rows in, 1 distinct id out", 11, ADMIT))
+        _c.line(_RIGHT + _LANE_W + 4, _TOP + _i * _ROW_GAP + _ROW_H / 2, _junction_x, _collapse_y + _ROW_H / 2)
+    _c.arrow(_junction_x, _collapse_y + _ROW_H / 2, _junction_x + 22, _collapse_y + _ROW_H / 2)
+    _c.box(_junction_x + 26, _collapse_y, _VERDICT_W, _ROW_H, "1 distinct id", None, ADMIT_BG, ADMIT, ADMIT)
 
-    _body.append(
-        svg_text(
-            12,
-            62 + 5 * 30 + 36,
-            "Identical byte_count, identical token_count, identical digest — five different keys.",
-            11,
-            MUTED,
-        )
+    _tally_y = _TOP + len(_dup_ids) * _ROW_GAP + 8
+    _c.text(_LEFT, _tally_y, f"{len(_dup_ids)} rows in, {len(_dup_ids)} rows out", 11, BLOCK)
+    _c.text(_RIGHT, _tally_y, f"{len(_dup_ids)} rows in, 1 distinct id out", 11, ADMIT)
+    _c.text(
+        _LEFT,
+        _tally_y + 22,
+        "Identical byte_count, identical token_count, identical digest — and five different keys.",
+        11,
+        MUTED,
     )
 
-    svg_figure(
-        "".join(_body),
+    _c.render(
         f"Diagram 2 — metric 1, drawn. The opaque-id lane cannot see that these "
-        f"{len(_dup_ids)} documents are the same bytes, so all "
-        f"{len(_dup_ids)} survive. The content-address lane collapses them to one "
-        f"without comparing any text.",
-        880,
-        250,
+        f"{len(_dup_ids)} documents are the same bytes, so all {len(_dup_ids)} survive. "
+        f"The content-address lane collapses them to one without comparing any text."
     )
     return
 
@@ -2065,83 +2122,88 @@ def technique_02(mo):
 
 @app.cell(hide_code=True)
 def diagram_canon_ladder(
-    ACCENT,
-    ACCENT_BG,
     ADMIT,
     ADMIT_BG,
+    BLOCK,
+    BLOCK_BG,
     INK,
     MUTED,
     RULE,
     SURFACE,
-    SVG_DEFS,
-    canonical_text,
-    digest_string,
+    SvgCanvas,
     hashlib_module,
     re_module,
     short,
     slice_rows,
-    svg_arrow,
-    svg_box,
-    svg_figure,
-    svg_text,
     unicodedata_module,
 ):
     _sample = slice_rows[0]["text"]
-    _ladder = [
-        ("raw utf-8", _sample),
+    _LADDER = [
+        ("raw utf-8 (the baseline)", _sample),
+        ("NFC — the pinned form", unicodedata_module.normalize("NFC", _sample)),
+        ("NFKC (compatibility)", unicodedata_module.normalize("NFKC", _sample)),
         ("strip()", _sample.strip()),
-        ("LF -> CRLF", _sample.replace("\n", "\r\n")),
+        ("LF → CRLF", _sample.replace("\n", "\r\n")),
         ("whitespace collapse", re_module.sub(r"\s+", " ", _sample)),
         ("lower()", _sample.lower()),
-        ("NFKC", unicodedata_module.normalize("NFKC", _sample)),
     ]
+    _baseline = hashlib_module.sha256(_sample.encode("utf-8")).hexdigest()
 
-    _body = [SVG_DEFS]
-    _body.append(svg_text(12, 22, "One abstract document", 12, INK, weight="600"))
-    _body.append(svg_box(12, 34, 190, 34, "the same Hindi text", "one logical value", ACCENT_BG, ACCENT, ACCENT))
+    _c = SvgCanvas()
+    _c.text(14, 24, "One document, seven defensible byte encodings", 12, INK, weight="600")
 
-    _body.append(svg_text(250, 22, "six byte encodings", 11, MUTED))
-    _body.append(svg_text(560, 22, "six digests", 11, MUTED))
+    _FORM_X, _FORM_W = 14, 208
+    _DIG_X, _DIG_W = 268, 186
+    _NOTE_X = 474
+    _ROW_H, _ROW_GAP, _TOP = 28, 34, 44
 
-    for _i, (_label, _variant) in enumerate(_ladder):
-        _y = 34 + _i * 34
-        _body.append(svg_arrow(206, 51, 246, _y + 13))
-        _body.append(svg_box(250, _y, 190, 26, _label, None, SURFACE, RULE))
-        _body.append(svg_arrow(444, _y + 13, 484, _y + 13))
-        _digest = short(hashlib_module.sha256(_variant.encode("utf-8")).hexdigest())
-        _body.append(svg_box(488, _y, 170, 26, _digest, None, SURFACE, RULE, MUTED))
+    _c.text(_FORM_X, _TOP - 6, "canonical form applied before hashing", 11, MUTED)
+    _c.text(_DIG_X, _TOP - 6, "resulting digest", 11, MUTED)
+    _c.text(_NOTE_X, _TOP - 6, "vs the baseline", 11, MUTED)
 
-    _pinned_y = 34 + len(_ladder) * 34 + 16
-    _body.append(
-        svg_box(250, _pinned_y, 190, 30, "NFC — the pinned form", None, ADMIT_BG, ADMIT, ADMIT)
+    for _i, (_label, _variant) in enumerate(_LADDER):
+        _y = _TOP + _i * _ROW_GAP
+        _digest = hashlib_module.sha256(_variant.encode("utf-8")).hexdigest()
+        _same = _digest == _baseline
+        _pinned = _label.startswith("NFC")
+        if _pinned:
+            _fill, _stroke, _ink = ADMIT_BG, ADMIT, ADMIT
+        elif _same:
+            _fill, _stroke, _ink = SURFACE, RULE, MUTED
+        else:
+            _fill, _stroke, _ink = BLOCK_BG, BLOCK, BLOCK
+        _c.box(_FORM_X, _y, _FORM_W, _ROW_H, _label, None, _fill, _stroke, _ink)
+        _c.arrow(_FORM_X + _FORM_W + 4, _y + _ROW_H / 2, _DIG_X - 4, _y + _ROW_H / 2)
+        _c.box(_DIG_X, _y, _DIG_W, _ROW_H, short(_digest), None, _fill, _stroke, _ink)
+        if _i == 0:
+            _note, _colour = "the baseline itself", MUTED
+        elif _same:
+            _note, _colour = "identical — agrees on this slice", ADMIT if _pinned else MUTED
+        else:
+            _note, _colour = "a different document, by identity", BLOCK
+        _c.text(_NOTE_X, _y + _ROW_H / 2 + 4, _note, 11, _colour)
+
+    _foot = _TOP + len(_LADDER) * _ROW_GAP + 6
+    _c.text(
+        14,
+        _foot,
+        "NFC agrees with raw here because this slice arrives normalized — a property of this data, not a law.",
+        11,
+        MUTED,
     )
-    _body.append(svg_arrow(444, _pinned_y + 15, 484, _pinned_y + 15))
-    _body.append(
-        svg_box(
-            488,
-            _pinned_y,
-            170,
-            30,
-            short(digest_string(canonical_text(_sample))),
-            None,
-            ADMIT_BG,
-            ADMIT,
-            ADMIT,
-        )
-    )
-    _body.append(svg_text(676, _pinned_y + 19, "exactly one id", 11, ADMIT))
-    _body.append(
-        svg_text(12, _pinned_y + 19, "Pinning collapses the ladder to one row.", 11, MUTED)
+    _c.text(
+        14,
+        _foot + 20,
+        "Nothing in a digest reveals which rung produced it, so the form must be recorded, never inferred.",
+        11,
+        MUTED,
     )
 
-    svg_figure(
-        "".join(_body),
-        "Diagram 3 — metric 2, drawn on the slice's first document. Six defensible "
-        "encodings of one logical value give six unrelated digests. Nothing about a "
-        "digest reveals which rung produced it, so the canonical form must be stated "
-        "in the manifest, not inferred.",
-        880,
-        300,
+    _c.render(
+        "Diagram 3 — metric 2, drawn on the slice's first document. Four of these "
+        "transforms mint a different identity for the same logical text; NFC and NFKC "
+        "happen to agree with raw on this corpus. Pinning the form is what makes the "
+        "agreement a fact rather than an assumption."
     )
     return
 
@@ -2319,71 +2381,51 @@ def diagram_input_addressed(
     MUTED,
     RULE,
     SURFACE,
-    SVG_DEFS,
+    SvgCanvas,
     corpus_pass1,
     notebook_digest,
     short,
     slice_manifest,
-    svg_arrow,
-    svg_box,
-    svg_figure,
-    svg_text,
     tokenizer_bpe_sha256,
 ):
-    _inputs = [
+    _INPUTS = [
         ("source slice", short(slice_manifest["slice_sha256"])),
         ("this notebook", short(notebook_digest)),
         ("tokenizer BPE", short(tokenizer_bpe_sha256)),
         ("pinned config", f"rev {DATASET_REVISION[:8]}…"),
     ]
 
-    _body = [SVG_DEFS]
-    _body.append(svg_text(12, 22, "Everything that determined the output, hashed", 12, INK, weight="600"))
+    _c = SvgCanvas()
+    _c.text(14, 24, "Everything that determined the output, hashed", 12, INK, weight="600")
 
-    for _i, (_label, _digest) in enumerate(_inputs):
-        _y = 36 + _i * 46
-        _body.append(svg_box(12, _y, 210, 38, _label, _digest, SURFACE, RULE))
-        _body.append(svg_arrow(226, _y + 19, 292, 126))
+    _IN_W, _IN_H, _IN_GAP, _TOP = 214, 40, 48, 40
+    _DER_X, _DER_W = 300, 200
+    _OUT_X, _OUT_W = 546, 254
+    _centre_y = _TOP + (len(_INPUTS) * _IN_GAP - (_IN_GAP - _IN_H)) / 2 - _IN_H / 2
 
-    _body.append(
-        svg_box(296, 100, 190, 52, "derivation hash", "canonical JSON → sha2-256", ACCENT_BG, ACCENT, ACCENT)
-    )
-    _body.append(svg_arrow(490, 126, 540, 126))
-    _body.append(
-        svg_box(
-            544,
-            100,
-            250,
-            52,
-            "corpus identity",
-            short(corpus_pass1["manifest_digest"]),
-            ADMIT_BG,
-            ADMIT,
-            ADMIT,
-        )
-    )
+    for _i, (_label, _digest) in enumerate(_INPUTS):
+        _y = _TOP + _i * _IN_GAP
+        _c.box(14, _y, _IN_W, _IN_H, _label, _digest, SURFACE, RULE)
+        _c.arrow(14 + _IN_W + 4, _y + _IN_H / 2, _DER_X - 4, _centre_y + 26)
 
-    _body.append(
-        svg_text(296, 176, "Change any input on the left and the identity on the right changes.", 11, MUTED)
-    )
-    _body.append(
-        svg_text(
-            296,
-            194,
-            "Not captured here, and stated as a gap: library versions, interpreter build, OS.",
-            11,
-            BLOCK,
-        )
+    _c.box(_DER_X, _centre_y, _DER_W, 52, "derivation hash", "canonical JSON → sha2-256", ACCENT_BG, ACCENT, ACCENT)
+    _c.arrow(_DER_X + _DER_W + 4, _centre_y + 26, _OUT_X - 4, _centre_y + 26)
+    _c.box(_OUT_X, _centre_y, _OUT_W, 52, "corpus identity", short(corpus_pass1["manifest_digest"]), ADMIT_BG, ADMIT, ADMIT)
+
+    _foot = _TOP + len(_INPUTS) * _IN_GAP + 18
+    _c.text(14, _foot, "Change any input on the left and the identity on the right changes.", 11, MUTED)
+    _c.text(
+        14,
+        _foot + 20,
+        "Not captured here, and stated as a gap: library versions, interpreter build, OS.",
+        11,
+        BLOCK,
     )
 
-    svg_figure(
-        "".join(_body),
+    _c.render(
         "Diagram 5 — input-addressed derivation, as this notebook actually implements "
         "it. The red line is the honest limit: the closure covers data, code, and "
-        "tokenizer, but not the environment, so it is weaker than a Nix derivation "
-        "hash.",
-        820,
-        210,
+        "tokenizer, but not the environment, so it is weaker than a Nix derivation hash."
     )
     return
 
@@ -2452,51 +2494,41 @@ def diagram_sidecar(
     MUTED,
     RULE,
     SURFACE,
-    SVG_DEFS,
-    svg_arrow,
-    svg_box,
-    svg_figure,
-    svg_text,
+    SvgCanvas,
 ):
-    _paths = ["hin/0000.jsonl", "hin/0001.jsonl", "hin/0002.jsonl"]
+    _PATHS = ["hin/0000.jsonl", "hin/0001.jsonl", "hin/0002.jsonl"]
 
-    _body = [SVG_DEFS]
-    _body.append(svg_text(12, 22, "documents/ (immutable)", 12, INK, weight="600"))
-    _body.append(svg_text(330, 22, "attributes/&lt;tagger&gt;/ (mirrored paths)", 12, INK, weight="600"))
-    _body.append(svg_text(690, 22, "consumer", 12, INK, weight="600"))
+    _c = SvgCanvas()
+    _DOC_X, _DOC_W = 14, 204
+    _ATT_X, _ATT_W = 296, 214
+    _CONS_X, _CONS_W = 588, 210
+    _ROW_H, _ROW_GAP, _TOP = 36, 44, 52
 
-    for _i, _path in enumerate(_paths):
-        _y = 34 + _i * 42
-        _body.append(svg_box(12, _y, 200, 34, _path, "id, text, source", SURFACE, RULE))
-        _body.append(svg_arrow(216, _y + 17, 326, _y + 17, MUTED, "same path", "4 3"))
-        _body.append(svg_box(330, _y, 210, 34, _path, "id, attributes", ACCENT_BG, ACCENT, ACCENT))
-        _body.append(svg_arrow(544, _y + 17, 686, 96))
+    _c.text(_DOC_X, 26, "documents/ (immutable)", 12, INK, weight="600")
+    _c.text(_ATT_X, 26, "attributes/&lt;tagger&gt;/ (mirrored paths)", 12, INK, weight="600")
+    _c.text(_CONS_X, 26, "consumer", 12, INK, weight="600")
 
-    _body.append(
-        svg_box(690, 70, 200, 52, "threshold at load time", "a view, not a delete", ADMIT_BG, ADMIT, ADMIT)
-    )
+    _join_y = _TOP + (len(_PATHS) - 1) * _ROW_GAP / 2
 
-    _y2 = 34 + len(_paths) * 42 + 20
-    _body.append(svg_text(12, _y2 + 14, "Destructive alternative:", 11, BLOCK))
-    _body.append(svg_box(160, _y2, 200, 30, "filtered.jsonl", None, BLOCK_BG, BLOCK, BLOCK))
-    _body.append(
-        svg_text(
-            372,
-            _y2 + 20,
-            "the removed rows, and the reason they were removed, no longer exist",
-            11,
-            BLOCK,
-        )
-    )
+    for _i, _path in enumerate(_PATHS):
+        _y = _TOP + _i * _ROW_GAP
+        _c.box(_DOC_X, _y, _DOC_W, _ROW_H, _path, "id, text, source", SURFACE, RULE)
+        _c.arrow(_DOC_X + _DOC_W + 4, _y + _ROW_H / 2, _ATT_X - 4, _y + _ROW_H / 2, MUTED, "4 3")
+        _c.text((_DOC_X + _DOC_W + _ATT_X) / 2, _y + _ROW_H / 2 - 6, "same path", 11, MUTED, "middle")
+        _c.box(_ATT_X, _y, _ATT_W, _ROW_H, _path, "id, attributes", ACCENT_BG, ACCENT, ACCENT)
+        _c.arrow(_ATT_X + _ATT_W + 4, _y + _ROW_H / 2, _CONS_X - 4, _join_y + _ROW_H / 2)
 
-    svg_figure(
-        "".join(_body),
-        "Diagram 8 — the Dolma layout. Attributes join to documents by path "
-        "substitution and record id, so a threshold change is a re-query. The red row "
-        "is what destructive filtering costs: not just the data, but the evidence for "
-        "the decision.",
-        920,
-        215,
+    _c.box(_CONS_X, _join_y, _CONS_W, _ROW_H + 8, "threshold at load time", "a view, not a delete", ADMIT_BG, ADMIT, ADMIT)
+
+    _alt_y = _TOP + len(_PATHS) * _ROW_GAP + 16
+    _c.text(_DOC_X, _alt_y + 22, "Destructive alternative:", 11, BLOCK)
+    _c.box(_ATT_X - 90, _alt_y, 174, 32, "filtered.jsonl", None, BLOCK_BG, BLOCK, BLOCK)
+    _c.text(_ATT_X + 96, _alt_y + 22, "the removed rows, and the reason they were removed, no longer exist", 11, BLOCK)
+
+    _c.render(
+        "Diagram 8 — the Dolma layout. Attributes join to documents by path substitution "
+        "and record id, so a threshold change is a re-query. The red row is what "
+        "destructive filtering costs: not just the data, but the evidence for the decision."
     )
     return
 
@@ -2568,70 +2600,75 @@ def diagram_provo(
     MUTED,
     RULE,
     SURFACE,
-    SVG_DEFS,
-    svg_arrow,
-    svg_box,
-    svg_figure,
-    svg_text,
+    SvgCanvas,
 ):
-    _body = [SVG_DEFS]
-    _body.append(
-        svg_text(12, 20, "PROV-O classes and starting-point properties, mapped onto this pipeline", 12, INK, weight="600")
+    _c = SvgCanvas()
+    _c.text(14, 24, "PROV-O classes and starting-point properties, mapped onto this pipeline", 12, INK, weight="600")
+
+    _E_W, _E_H = 200, 44
+    _A_W, _A_H = 168, 44
+    _ENTITY_Y, _ACTIVITY_Y, _AGENT_Y = 66, 210, 336
+    _E_X = [14, 274, 534]
+    _A_X = [104, 364]
+
+    for _x, (_label, _sub, _fill, _stroke, _ink) in zip(
+        _E_X,
+        [
+            ("sangraha verified/hin", "prov:Entity (source)", SURFACE, RULE, INK),
+            ("the tracked slice", "prov:Entity", SURFACE, RULE, INK),
+            ("corpus manifest", "prov:Entity", ADMIT_BG, ADMIT, ADMIT),
+        ],
+    ):
+        _c.box(_x, _ENTITY_Y, _E_W, _E_H, _label, _sub, _fill, _stroke, _ink)
+
+    for _x, _label in zip(_A_X, ("build_slice.py", "this notebook")):
+        _c.box(_x, _ACTIVITY_Y, _A_W, _A_H, _label, "prov:Activity", ACCENT_BG, ACCENT, ACCENT)
+
+    _c.box(274, _AGENT_Y, _E_W, _E_H, "the operator", "prov:Agent", SURFACE, RULE, INK)
+
+    # wasDerivedFrom: Entity -> Entity, along the top row, pointing left at the source.
+    for _i in (0, 1):
+        _from_x, _to_x = _E_X[_i + 1], _E_X[_i] + _E_W
+        _c.arrow(_from_x - 6, _ENTITY_Y + _E_H / 2, _to_x + 6, _ENTITY_Y + _E_H / 2)
+        _c.text((_from_x + _to_x) / 2, _ENTITY_Y - 10, "prov:wasDerivedFrom", 11, MUTED, "middle")
+
+    # used (Activity -> Entity) and wasGeneratedBy (Entity -> Activity) both touch "the
+    # tracked slice", one from each side. Anchoring both near its centre made the two
+    # arrows cross directly under the box in an earlier revision. Fixed by giving each
+    # property its own anchor on the entity: wasGeneratedBy always lands on the LEFT
+    # of the entity it produces (the producing activity sits to the left), used always
+    # leaves from the RIGHT of the entity it consumes (the consuming activity sits to
+    # the right) -- so the two lines never share the space under any entity box.
+    for _i, _ax in enumerate(_A_X):
+        _consumed_x = _E_X[_i] + _E_W - 36  # right edge of the entity this activity used
+        _c.arrow(_ax + 30, _ACTIVITY_Y - 4, _consumed_x, _ENTITY_Y + _E_H + 4)
+        # used labels ride a high lane, wasGeneratedBy a low one, so the two that meet
+        # in the central gap between build_slice.py and this notebook never overprint.
+        _c.text(_ax + 30, _ACTIVITY_Y - 52, "prov:used", 11, MUTED, "end")
+
+        _produced_x = _E_X[_i + 1] + 36  # left edge of the entity this activity produced
+        _c.arrow(_produced_x, _ENTITY_Y + _E_H + 4, _ax + _A_W - 30, _ACTIVITY_Y - 4)
+        _c.text(_ax + _A_W - 30, _ACTIVITY_Y - 26, "prov:wasGeneratedBy", 11, MUTED, "start")
+
+    # wasAssociatedWith: Activity -> Agent.
+    _agent_centre = 274 + _E_W / 2
+    for _i, _ax in enumerate(_A_X):
+        _c.arrow(_ax + _A_W / 2, _ACTIVITY_Y + _A_H + 4, _agent_centre + (24 if _i else -24), _AGENT_Y - 4)
+    _c.text(_agent_centre, _AGENT_Y - 18, "prov:wasAssociatedWith", 11, MUTED, "middle")
+
+    _c.text(
+        14,
+        _AGENT_Y + _E_H + 28,
+        "Each arrow's direction is fixed by the property's declared domain and range — none can be drawn backwards.",
+        11,
+        MUTED,
     )
 
-    # Entities (data artifacts), left to right in derivation order.
-    _body.append(svg_box(12, 44, 170, 44, "sangraha verified/hin", "prov:Entity (source)", SURFACE, RULE))
-    _body.append(svg_box(330, 44, 170, 44, "the tracked slice", "prov:Entity", SURFACE, RULE))
-    _body.append(svg_box(648, 44, 200, 44, "corpus manifest", "prov:Entity", ADMIT_BG, ADMIT, ADMIT))
-
-    # Activities, below the entities they connect.
-    _body.append(svg_box(196, 132, 120, 44, "build_slice.py", "prov:Activity", ACCENT_BG, ACCENT, ACCENT))
-    _body.append(svg_box(514, 132, 120, 44, "this notebook", "prov:Activity", ACCENT_BG, ACCENT, ACCENT))
-
-    # Agent.
-    _body.append(svg_box(330, 218, 200, 40, "the operator", "prov:Agent", SURFACE, RULE))
-
-    # prov:used  (Activity -> Entity)
-    _body.append(svg_arrow(196, 148, 186, 84, MUTED, None))
-    _body.append(svg_text(96, 116, "prov:used", 11, MUTED))
-    _body.append(svg_arrow(514, 148, 504, 84, MUTED, None))
-    _body.append(svg_text(414, 116, "prov:used", 11, MUTED))
-
-    # prov:wasGeneratedBy  (Entity -> Activity)
-    _body.append(svg_arrow(336, 76, 320, 146, MUTED, None))
-    _body.append(svg_text(330, 116, "prov:wasGeneratedBy", 11, MUTED))
-    _body.append(svg_arrow(654, 76, 638, 146, MUTED, None))
-    _body.append(svg_text(648, 116, "prov:wasGeneratedBy", 11, MUTED))
-
-    # prov:wasDerivedFrom  (Entity -> Entity)
-    _body.append(svg_arrow(326, 56, 190, 56, MUTED, None))
-    _body.append(svg_text(196, 36, "prov:wasDerivedFrom", 11, MUTED))
-    _body.append(svg_arrow(644, 56, 508, 56, MUTED, None))
-    _body.append(svg_text(514, 36, "prov:wasDerivedFrom", 11, MUTED))
-
-    # prov:wasAssociatedWith  (Activity -> Agent)
-    _body.append(svg_arrow(256, 180, 348, 214, MUTED, None))
-    _body.append(svg_arrow(574, 180, 512, 214, MUTED, None))
-    _body.append(svg_text(360, 200, "prov:wasAssociatedWith", 11, MUTED))
-
-    _body.append(
-        svg_text(
-            12,
-            282,
-            "Each arrow's direction is fixed by the property's declared domain and range — they cannot be drawn backwards.",
-            11,
-            MUTED,
-        )
-    )
-
-    svg_figure(
-        "".join(_body),
+    _c.render(
         "Diagram 6 — the same provenance this notebook emits as JSON, expressed in "
         "PROV-O terms. Only properties whose domain and range were confirmed against "
-        "the specification body are used; the equivalent JSON is one file, which is "
-        "why this stage ships JSON.",
-        880,
-        296,
+        "the specification body are used; the equivalent JSON is one file, which is why "
+        "this stage ships JSON."
     )
     return
 
@@ -2703,93 +2740,93 @@ def diagram_merkle(
     MUTED,
     RULE,
     SURFACE,
-    SVG_DEFS,
+    SvgCanvas,
     merkle_leaf,
     merkle_node,
     merkle_path,
-    merkle_root,
     short,
-    svg_arrow,
-    svg_box,
-    svg_figure,
-    svg_text,
 ):
-    _demo_leaves = [f"record-{i}".encode() for i in range(8)]
-    _demo_root = merkle_root(_demo_leaves)
+    _N = 8
     _TAMPERED = 5
+    _demo_leaves = [f"record-{i}".encode() for i in range(_N)]
     _demo_path = merkle_path(_demo_leaves, _TAMPERED)
 
-    # Rebuild the internal nodes so the changed path can be drawn.
+    # Rebuild every level so the changed spine and the proof siblings can be drawn.
     _l0 = [merkle_leaf(leaf) for leaf in _demo_leaves]
-    _l1 = [merkle_node(_l0[i], _l0[i + 1]) for i in range(0, 8, 2)]
-    _l2 = [merkle_node(_l1[i], _l1[i + 1]) for i in range(0, 4, 2)]
+    _l1 = [merkle_node(_l0[i], _l0[i + 1]) for i in range(0, _N, 2)]
+    _l2 = [merkle_node(_l1[i], _l1[i + 1]) for i in range(0, _N // 2, 2)]
+    _root = merkle_node(_l2[0], _l2[1])
 
-    _changed_leaves = {_TAMPERED}
-    _changed_l1 = {_TAMPERED // 2}
-    _changed_l2 = {_TAMPERED // 4}
-    _proof_leaves = {_TAMPERED ^ 1}
-    _proof_l1 = {(_TAMPERED // 2) ^ 1}
-    _proof_l2 = {(_TAMPERED // 4) ^ 1}
+    # The changed spine is the tampered leaf and every ancestor of it. The proof is
+    # the sibling at each level -- which is exactly the complement, never an ancestor.
+    _spine = {0: {_TAMPERED}, 1: {_TAMPERED // 2}, 2: {_TAMPERED // 4}}
+    _proof = {0: {_TAMPERED ^ 1}, 1: {(_TAMPERED // 2) ^ 1}, 2: {(_TAMPERED // 4) ^ 1}}
 
-    _body = [SVG_DEFS]
-    _body.append(svg_text(12, 20, "8 leaves, RFC 6962 domain separation", 12, INK, weight="600"))
-    _body.append(svg_text(560, 20, "changed by the tamper", 11, BLOCK))
-    _body.append(svg_text(730, 20, "the inclusion proof", 11, ACCENT))
-
-
-    def _style(index, changed, proof):
-        if index in changed:
-            return (BLOCK_BG, BLOCK, BLOCK)
-        if index in proof:
-            return (ACCENT_BG, ACCENT, ACCENT)
-        return (SURFACE, RULE, MUTED)
+    _c = SvgCanvas()
+    _c.text(14, 24, f"{_N} leaves, RFC 6962 domain separation", 12, INK, weight="600")
+    _c.text(292, 24, "changed by the tamper", 11, BLOCK)
+    _c.text(452, 24, "the inclusion proof", 11, ACCENT)
 
 
-    # Root
-    _body.append(svg_box(370, 44, 190, 34, f"root {short(_demo_root.hex(), 10)}", None, BLOCK_BG, BLOCK, BLOCK))
+    def _node_style(level, index):
+        if index in _spine[level]:
+            return BLOCK_BG, BLOCK, BLOCK
+        if index in _proof[level]:
+            return ACCENT_BG, ACCENT, ACCENT
+        return SURFACE, RULE, MUTED
 
-    # Level 2
+
+    _LEAF_W, _LEAF_GAP = 84, 92
+    _ROOT_Y, _L2_Y, _L1_Y, _L0_Y = 44, 108, 172, 236
+    _H = 32
+    _LEAF_H = 44
+    _centres_0 = [14 + i * _LEAF_GAP + _LEAF_W / 2 for i in range(_N)]
+    _centres_1 = [(_centres_0[i] + _centres_0[i + 1]) / 2 for i in range(0, _N, 2)]
+    _centres_2 = [(_centres_1[i] + _centres_1[i + 1]) / 2 for i in range(0, _N // 2, 2)]
+    _root_centre = (_centres_2[0] + _centres_2[1]) / 2
+
+    # Root, then each level below it, children drawn pointing up at their parent.
+    _c.box(_root_centre - 100, _ROOT_Y, 200, _H, f"root {short(_root.hex(), 10)}", None, BLOCK_BG, BLOCK, BLOCK)
+
     for _i, _node in enumerate(_l2):
-        _x = 190 + _i * 380
-        _fill, _stroke, _text = _style(_i, _changed_l2, _proof_l2)
-        _body.append(svg_box(_x, 104, 170, 30, f"0x01 {short(_node.hex(), 8)}", None, _fill, _stroke, _text))
-        _body.append(svg_arrow(_x + 85, 102, 465, 82))
+        _fill, _stroke, _ink = _node_style(2, _i)
+        _c.box(_centres_2[_i] - 88, _L2_Y, 176, _H, f"0x01 {short(_node.hex(), 8)}", None, _fill, _stroke, _ink)
+        _c.arrow(_centres_2[_i], _L2_Y - 4, _root_centre + (14 if _i else -14), _ROOT_Y + _H + 4)
 
-    # Level 1
     for _i, _node in enumerate(_l1):
-        _x = 20 + _i * 190
-        _fill, _stroke, _text = _style(_i, _changed_l1, _proof_l1)
-        _body.append(svg_box(_x, 164, 160, 30, f"0x01 {short(_node.hex(), 8)}", None, _fill, _stroke, _text))
-        _body.append(svg_arrow(_x + 80, 162, 275 + (_i // 2) * 380, 138))
+        _fill, _stroke, _ink = _node_style(1, _i)
+        _c.box(_centres_1[_i] - 82, _L1_Y, 164, _H, f"0x01 {short(_node.hex(), 8)}", None, _fill, _stroke, _ink)
+        _parent = _centres_2[_i // 2]
+        _c.arrow(_centres_1[_i], _L1_Y - 4, _parent + (14 if _i % 2 else -14), _L2_Y + _H + 4)
 
-    # Leaves
     for _i, _node in enumerate(_l0):
-        _x = 8 + _i * 95
-        _fill, _stroke, _text = _style(_i, _changed_leaves, _proof_leaves)
-        _body.append(svg_box(_x, 224, 86, 44, "0x00", short(_node.hex(), 6), _fill, _stroke, _text))
-        _body.append(svg_arrow(_x + 43, 222, 100 + (_i // 2) * 190, 198))
+        _fill, _stroke, _ink = _node_style(0, _i)
+        _c.box(14 + _i * _LEAF_GAP, _L0_Y, _LEAF_W, _LEAF_H, "0x00", short(_node.hex(), 6), _fill, _stroke, _ink)
+        _parent = _centres_1[_i // 2]
+        _c.arrow(_centres_0[_i], _L0_Y - 4, _parent + (14 if _i % 2 else -14), _L1_Y + _H + 4)
 
-    _body.append(
-        svg_text(8, 292, f"leaf {_TAMPERED} tampered → its ancestors change all the way to the root", 11, BLOCK)
+    _foot = _L0_Y + _LEAF_H + 22
+    _c.text(14, _foot, f"leaf {_TAMPERED} tampered → every ancestor changes, up to the root", 11, BLOCK)
+    _c.text(
+        14,
+        _foot + 20,
+        f"proof for leaf {_TAMPERED} = {len(_demo_path)} siblings, one per level (ceil(log2 {_N}) = {len(_demo_path)}), not {_N} digests",
+        11,
+        ACCENT,
     )
-    _body.append(
-        svg_text(
-            8,
-            310,
-            f"proof for leaf {_TAMPERED} = {len(_demo_path)} siblings, one per level (ceil(log2 8) = 3), not 8 digests",
-            11,
-            ACCENT,
-        )
+    _c.text(
+        14,
+        _foot + 40,
+        "The proof never contains an ancestor: at each level it is the sibling of the changed node.",
+        11,
+        MUTED,
     )
 
-    svg_figure(
-        "".join(_body),
+    _c.render(
         "Diagram 4 — the red spine is why a single root detects any change; the purple "
-        "boxes are why verifying one record is cheap. The 0x00/0x01 prefixes are RFC "
-        "6962's domain separation: a leaf digest can never be presented as an internal "
-        "node.",
-        790,
-        322,
+        "siblings are why verifying one record is cheap. The 0x00/0x01 prefixes are RFC "
+        "6962's domain separation, so a leaf digest can never be presented as an "
+        "internal node."
     )
     return
 
@@ -2805,89 +2842,83 @@ def diagram_hierarchy(
     RULE,
     SHARD_COUNT,
     SURFACE,
-    SVG_DEFS,
+    SvgCanvas,
     corpus_pass1,
     record_digests,
     records_pass1,
     shards_pass1,
     short,
-    svg_arrow,
-    svg_box,
-    svg_figure,
-    svg_text,
 ):
-    _body = [SVG_DEFS]
-    _body.append(svg_text(12, 20, "Three levels, digests rolling upward", 12, INK, weight="600"))
-    _body.append(svg_text(560, 20, "what each level can prove", 11, MUTED))
+    _c = SvgCanvas()
+    _c.text(14, 24, "Three levels, digests rolling upward", 12, INK, weight="600")
 
-    # Records
+    _REC_W, _REC_H, _REC_GAP = 112, 44, 120
+    _REC_Y, _SHARD_Y, _CORPUS_Y = 46, 152, 258
+    _SHARD_W, _SHARD_H = 112, 44
+    _CORPUS_W, _CORPUS_H = 466, 48
+    _NOTE_X = 510
+
+    _rec_centres = [14 + i * _REC_GAP + _REC_W / 2 for i in range(4)]
+    _shard_centres = [14 + i * _REC_GAP + _SHARD_W / 2 for i in range(SHARD_COUNT)]
+    _corpus_centre = 14 + _CORPUS_W / 2
+
+    # Records 0..3 all land in shard-00, and drawing four separate strokes into it
+    # either crosses the neighbouring shards or reads as a bus feeding all of them.
+    # So they converge on one short vertical stem directly above shard-00.
+    _stem_y = _SHARD_Y - 24
     for _i in range(4):
-        _x = 12 + _i * 118
-        _body.append(
-            svg_box(_x, 40, 106, 42, f"record {_i}", short(record_digests[_i], 8), SURFACE, RULE)
-        )
-        _body.append(svg_arrow(_x + 53, 86, 200, 122))
-    _body.append(svg_text(484, 66, f"… {len(records_pass1) - 4} more", 11, MUTED))
-    _body.append(
-        svg_text(560, 66, "this document's bytes are exactly these", 11, MUTED)
-    )
+        _c.box(14 + _i * _REC_GAP, _REC_Y, _REC_W, _REC_H, f"record {_i}", short(record_digests[_i], 8), SURFACE, RULE)
+        _c.line(_rec_centres[_i], _REC_Y + _REC_H + 4, _shard_centres[0], _stem_y)
+    _c.arrow(_shard_centres[0], _stem_y, _shard_centres[0], _SHARD_Y - 4)
 
-    # Shards
+    _c.text(_NOTE_X, _REC_Y + 16, f"… and {len(records_pass1) - 4} more records", 11, MUTED)
+    _c.text(_NOTE_X, _REC_Y + 36, "proves: this document's bytes are exactly these", 11, MUTED)
+
     for _i, _shard in enumerate(shards_pass1):
-        _x = 12 + _i * 118
-        _body.append(
-            svg_box(
-                _x,
-                126,
-                106,
-                42,
-                _shard["shard_id"],
-                short(_shard["merkle_root"], 8),
-                ACCENT_BG,
-                ACCENT,
-                ACCENT,
-            )
+        _c.box(
+            14 + _i * _REC_GAP,
+            _SHARD_Y,
+            _SHARD_W,
+            _SHARD_H,
+            _shard["shard_id"],
+            short(_shard["merkle_root"], 8),
+            ACCENT_BG,
+            ACCENT,
+            ACCENT,
         )
-        _body.append(svg_arrow(_x + 53, 172, 250, 214))
-    _body.append(
-        svg_text(560, 152, "this record belongs to this shard (O(log n))", 11, MUTED)
+        _c.line(_shard_centres[_i], _SHARD_Y + _SHARD_H + 4, _corpus_centre, _CORPUS_Y - 24)
+    _c.arrow(_corpus_centre, _CORPUS_Y - 24, _corpus_centre, _CORPUS_Y - 4)
+
+    _c.text(_NOTE_X, _SHARD_Y + 26, "proves: this record belongs to this shard,", 11, MUTED)
+    _c.text(_NOTE_X, _SHARD_Y + 44, "in O(log n) sibling hashes", 11, MUTED)
+
+    _c.box(
+        14,
+        _CORPUS_Y,
+        _CORPUS_W,
+        _CORPUS_H,
+        "corpus manifest",
+        f"merkle_root over {SHARD_COUNT} shard roots: {short(corpus_pass1['merkle_root'], 12)}",
+        ADMIT_BG,
+        ADMIT,
+        ADMIT,
+    )
+    _c.text(_NOTE_X, _CORPUS_Y + 20, "proves: these shards, this source,", 11, MUTED)
+    _c.text(_NOTE_X, _CORPUS_Y + 38, "this code, this tokenizer", 11, MUTED)
+
+    _c.text(
+        14,
+        _CORPUS_Y + _CORPUS_H + 28,
+        "Each level's digest is computed only from the level below, so a change at any depth reaches the top.",
+        11,
+        MUTED,
     )
 
-    # Corpus
-    _body.append(
-        svg_box(
-            12,
-            218,
-            470,
-            46,
-            "corpus manifest",
-            f"merkle_root over {SHARD_COUNT} shard roots: {short(corpus_pass1['merkle_root'], 12)}",
-            ADMIT_BG,
-            ADMIT,
-            ADMIT,
-        )
-    )
-    _body.append(
-        svg_text(560, 238, "these shards, this source, this code, this tokenizer", 11, MUTED)
-    )
-    _body.append(
-        svg_text(
-            12,
-            288,
-            "Each level's digest is computed only from the level below, so a change at any depth reaches the top.",
-            11,
-            MUTED,
-        )
-    )
-
-    svg_figure(
-        "".join(_body),
+    _c.render(
         f"Diagram 7 — the emitted hierarchy for this run: {len(records_pass1)} record "
         f"manifests, {SHARD_COUNT} shard manifests, one corpus manifest. Four shards "
         f"rather than one exist precisely so the middle level, and a root computed over "
-        f"roots, are real rather than illustrative.",
-        880,
-        300,
+        f"roots, are real rather than illustrative."
     )
     return
 

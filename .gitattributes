@@ -12,3 +12,5 @@ pii-scrubbing/omp-session-*.html filter=lfs diff=lfs merge=lfs -text
 pii-scrubbing/data/gold_labelled.jsonl filter=lfs diff=lfs merge=lfs -text
 deduplication/omp-session-*.jsonl filter=lfs diff=lfs merge=lfs -text
 deduplication/omp-session-*.html filter=lfs diff=lfs merge=lfs -text
+decontamination/omp-session-*.jsonl filter=lfs diff=lfs merge=lfs -text
+decontamination/omp-session-*.html filter=lfs diff=lfs merge=lfs -text

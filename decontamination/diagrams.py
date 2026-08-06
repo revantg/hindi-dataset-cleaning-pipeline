@@ -160,15 +160,15 @@ def ngram_diagram() -> str:
                       "and intersected.", 11.5, MUTE))
 
     # held-out side
-    body.append(_box(24, 70, 320, 148, HELD_SOFT, HELD))
+    body.append(_box(24, 70, 320, 156, HELD_SOFT, HELD))
     body.append(_text(38, 92, "1 · Held-out side, built once", 11.5, INK, "600"))
     body.append(_text(38, 112, "eval item:  A B C D E F G H", 11, INK, mono=True))
     for index, label in enumerate(["A B C D", "B C D E", "C D E F", "D E F G", "E F G H"]):
-        y = 128 + index * 17
-        body.append(_box(38, y - 11, 118, 15, "#ffffff", HELD, radius=3, width=0.9))
-        body.append(_text(44, y, label, 10, INK, mono=True))
+        y = 130 + index * 18
+        body.append(_box(38, y - 12, 118, 18, "#ffffff", HELD, radius=3, width=0.9))
+        body.append(_text(48, y, label, 10, INK, mono=True))
         body.append(_text(168, y, f"→ hash h{index + 1}", 10, MUTE, mono=True))
-    body.append(_text(250, 205, "n = 4 shown", 10, MUTE))
+    body.append(_text(250, 213, "n = 4 shown", 10, MUTE))
 
     # hash set
     body.append(_box(384, 96, 150, 96, GOLD_SOFT, GOLD))
@@ -179,39 +179,39 @@ def ngram_diagram() -> str:
     body.append(_arrow(344, 144, 380, 144))
 
     # corpus side
-    body.append(_box(24, 236, 320, 130, TRAIN_SOFT, TRAIN))
-    body.append(_text(38, 258, "2 · Corpus side, streamed", 11.5, INK, "600"))
-    body.append(_text(38, 278, "document:  X Y C D E F Z W", 11, INK, mono=True))
+    body.append(_box(24, 244, 320, 138, TRAIN_SOFT, TRAIN))
+    body.append(_text(38, 266, "2 · Corpus side, streamed", 11.5, INK, "600"))
+    body.append(_text(38, 286, "document:  X Y C D E F Z W", 11, INK, mono=True))
     for index, (label, hit) in enumerate(
         [("X Y C D", False), ("Y C D E", False), ("C D E F", True), ("D E F Z", False)]
     ):
-        y = 296 + index * 17
+        y = 304 + index * 18
         fill = WARN_SOFT if hit else "#ffffff"
         stroke = WARN if hit else TRAIN
-        body.append(_box(38, y - 11, 118, 15, fill, stroke, radius=3, width=0.9))
-        body.append(_text(44, y, label, 10, INK, mono=True))
+        body.append(_box(38, y - 12, 118, 18, fill, stroke, radius=3, width=0.9))
+        body.append(_text(48, y, label, 10, INK, mono=True))
         if hit:
             body.append(_text(168, y, "→ IN SET · flag", 10, WARN, "700", mono=True))
-    body.append(_arrow(344, 300, 380, 200, WARN, "arw"))
+    body.append(_arrow(344, 308, 380, 200, WARN, "arw"))
 
     # verdict
-    body.append(_box(384, 236, 350, 130, PANEL, LINE))
-    body.append(_text(398, 258, "3 · What the collision means", 11.5, INK, "600"))
-    body.append(_text(398, 280, "One shared n-gram ⇒ the document is flagged.", 11, INK))
-    body.append(_text(398, 300, "GPT-3 uses exactly this rule at n = 13.", 11, INK))
-    body.append(_text(398, 326, "It proves the surface forms coincide.", 10.5, WARN))
-    body.append(_text(398, 342, "It does not prove a leak: at small n, ordinary", 10.5, WARN))
-    body.append(_text(398, 357, "idiom collides too. Precision is an audit, not a default.", 10.5, WARN))
+    body.append(_box(384, 244, 350, 138, PANEL, LINE))
+    body.append(_text(398, 266, "3 · What the collision means", 11.5, INK, "600"))
+    body.append(_text(398, 290, "One shared n-gram ⇒ the document is flagged.", 11, INK))
+    body.append(_text(398, 310, "GPT-3 uses exactly this rule at n = 13.", 11, INK))
+    body.append(_text(398, 337, "It proves the surface forms coincide.", 10.5, WARN))
+    body.append(_text(398, 353, "It does not prove a leak: at small n, ordinary", 10.5, WARN))
+    body.append(_text(398, 369, "idiom collides too. Precision is an audit, not a default.", 10.5, WARN))
 
-    body.append(_text(24, 400, "The parameter n is the whole trade-off.", 11.5, INK, "600"))
-    body.append(_text(24, 420,
+    body.append(_text(24, 414, "The parameter n is the whole trade-off.", 11.5, INK, "600"))
+    body.append(_text(24, 434,
                       "Small n catches paraphrase-adjacent overlap and floods on common phrasing. "
                       "Large n is nearly", 11, INK))
-    body.append(_text(24, 438,
+    body.append(_text(24, 452,
                       "always a real leak but cannot see any evaluation item shorter than n tokens.",
                       11, INK))
 
-    return _svg(760, 456, "".join(body), "Internals of exact n-gram overlap detection")
+    return _svg(760, 470, "".join(body), "Internals of exact n-gram overlap detection")
 
 
 # ---------------------------------------------------------------------------
@@ -229,7 +229,7 @@ def matra_trap_diagram() -> str:
                       "not punctuation.", 11.5, MUTE))
 
     # character table
-    body.append(_box(24, 68, 710, 98, PANEL, LINE))
+    body.append(_box(24, 68, 710, 102, PANEL, LINE))
     columns = [
         ("प", "U+092A", "Lo", "letter", False),
         ("्", "U+094D", "Mn", "virama", True),
@@ -246,13 +246,13 @@ def matra_trap_diagram() -> str:
         x = 40 + index * 69
         fill = WARN_SOFT if is_mark else "#ffffff"
         stroke = WARN if is_mark else LINE
-        body.append(_box(x, 80, 60, 72, fill, stroke, radius=4))
+        body.append(_box(x, 80, 60, 76, fill, stroke, radius=4))
         body.append(_text(x + 30, 104, glyph, 17, INK, anchor="middle"))
         body.append(_text(x + 30, 120, code, 8.5, MUTE, anchor="middle", mono=True))
         body.append(_text(x + 30, 134, category, 9.5,
                           WARN if is_mark else INK, "700", anchor="middle", mono=True))
         body.append(_text(x + 30, 147, role, 8, MUTE, anchor="middle"))
-    body.append(_text(24, 186, "प्रदर्शनों — ten code points, five of which are combining marks (Mn/Mc).",
+    body.append(_text(24, 190, "प्रदर्शनों — ten code points, four of which are combining marks (Mn/Mc).",
                       11, INK))
 
     # two normalizers
@@ -307,21 +307,21 @@ def minhash_diagram() -> str:
     body.append(_text(24, 82, "128-value signature, split into 32 bands of 4 rows", 11.5, INK, "600"))
     for band in range(7):
         x = 24 + band * 88
-        body.append(_box(x, 92, 78, 58, TRAIN_SOFT if band != 3 else GOLD_SOFT,
+        body.append(_box(x, 92, 78, 62, TRAIN_SOFT if band != 3 else GOLD_SOFT,
                          TRAIN if band != 3 else GOLD))
         for row in range(4):
             body.append(_text(x + 39, 108 + row * 12, f"m{band * 4 + row + 1}", 9,
                               INK, anchor="middle", mono=True))
-        body.append(_text(x + 39, 164, f"band {band + 1}", 9.5, MUTE, anchor="middle"))
-    body.append(_box(640, 92, 94, 58, PANEL, LINE, dash="4 3"))
-    body.append(_text(687, 126, "… 25 more", 10.5, MUTE, anchor="middle"))
-    body.append(_text(687, 164, "bands 8–32", 9.5, MUTE, anchor="middle"))
+        body.append(_text(x + 39, 168, f"band {band + 1}", 9.5, MUTE, anchor="middle"))
+    body.append(_box(640, 92, 94, 62, PANEL, LINE, dash="4 3"))
+    body.append(_text(687, 128, "… 25 more", 10.5, MUTE, anchor="middle"))
+    body.append(_text(687, 168, "bands 8–32", 9.5, MUTE, anchor="middle"))
     body.append(_text(24, 186,
                       "Two texts become candidates if all 4 rows of any one band are identical. "
                       "P(collision) = 1 − (1 − Jᵣ)ᵇ.", 11, INK))
 
     # s-curve
-    body.append(_box(24, 204, 350, 208, PANEL, LINE))
+    body.append(_box(24, 204, 350, 212, PANEL, LINE))
     body.append(_text(38, 226, "The S-curve at b = 32, r = 4", 11.5, INK, "600"))
     ox, oy, w, h = 62, 356, 272, 118
     body.append(f'<line x1="{ox}" y1="{oy}" x2="{ox + w}" y2="{oy}" stroke="{MUTE}" stroke-width="1"/>')
@@ -340,16 +340,16 @@ def minhash_diagram() -> str:
     body.append(f'<line x1="{ox + 0.5 * w}" y1="{oy}" x2="{ox + 0.5 * w}" y2="{oy - h}" '
                 f'stroke="{GOLD}" stroke-width="1" stroke-dasharray="3 3"/>')
     body.append(_text(ox + 0.5 * w + 6, oy - h + 16, "J = 0.5 → P = 0.87", 9.5, GOLD, "600"))
-    body.append(_text(38, 404, "Sharp transition: near-duplicates collide, unrelated text does not.",
+    body.append(_text(38, 402, "Sharp transition: near-duplicates collide, unrelated text does not.",
                       10, MUTE))
 
     # the failure mode
-    body.append(_box(384, 204, 350, 208, WARN_SOFT, WARN))
+    body.append(_box(384, 204, 350, 212, WARN_SOFT, WARN))
     body.append(_text(398, 226, "Why it found nothing on this corpus", 11.5, INK, "600"))
     body.append(_box(398, 240, 322, 46, "#ffffff", MUTE, radius=4))
     body.append(_text(410, 258, "corpus document ≈ 2,300 tokens", 10.5, INK, mono=True))
-    body.append(_box(410, 264, 30, 15, GOLD_SOFT, GOLD, radius=3))
-    body.append(_text(425, 275, "15", 9, GOLD, "700", anchor="middle", mono=True))
+    body.append(_box(410, 263, 32, 17, GOLD_SOFT, GOLD, radius=3))
+    body.append(_text(426, 275, "15", 9, GOLD, "700", anchor="middle", mono=True))
     body.append(_text(448, 275, "← the evaluation item, to scale", 9.5, MUTE))
     body.append(_text(398, 308, "A MILU stem is 15 tokens. Document-level Jaccard", 11, INK))
     body.append(_text(398, 324, "against it is ≈ 0.006 — no threshold reaches that,", 11, INK))

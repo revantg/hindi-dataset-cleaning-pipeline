@@ -1177,7 +1177,7 @@ def matra_figure(diagrams, mo):
         f"""
     {diagrams.matra_trap_diagram()}
 
-    **Figure 4.** Ten code points, five of them combining marks. `\\w` matches
+    **Figure 4.** Ten code points, four of them combining marks. `\\w` matches
     letters and digits; combining marks are neither, so the negated class deletes
     them. The fix is to decide by Unicode general category rather than by `\\w`.
     """

@@ -838,33 +838,33 @@ def technique_diagrams(
             panel_title(30, 34, "8. SemDeDup: cluster embeddings, then collapse each dense cosine neighborhood"),
             label(30, 62, "embedding space (after k-means)", size=11, family=SANS, fill=MUTED),
         ]
-        c1 = (250, 220)
-        parts.append(f'<circle cx="{c1[0]}" cy="{c1[1]}" r="110" fill="{KEEP}" fill-opacity="0.07" stroke="{RULE}" stroke-dasharray="4 3"/>')
-        parts.append(label(c1[0], 100, "cluster 1 (dense)", size=11, anchor="middle", fill=MUTED))
+        c1 = (250, 200)
+        parts.append(f'<circle cx="{c1[0]}" cy="{c1[1]}" r="90" fill="{KEEP}" fill-opacity="0.07" stroke="{RULE}" stroke-dasharray="4 3"/>')
+        parts.append(label(c1[0], 96, "cluster 1 (dense)", size=11, anchor="middle", fill=MUTED))
         parts.append(f'<circle cx="{c1[0]}" cy="{c1[1]}" r="4" fill="{INK}"/>')
-        parts.append(label(c1[0] - 10, c1[1] + 16, "centroid", size=9, family=SANS, anchor="middle", fill=MUTED))
-        parts.append(f'<circle cx="290" cy="190" r="42" fill="none" stroke="{DROP}" stroke-dasharray="3 3"/>')
-        for (px, py, col) in [(300, 165, DROP), (278, 208, DROP), (315, 200, DROP), (330, 150, KEEP)]:
+        parts.append(label(c1[0] - 20, c1[1] + 22, "centroid", size=9, family=SANS, anchor="middle", fill=MUTED))
+        parts.append(f'<circle cx="288" cy="180" r="38" fill="none" stroke="{DROP}" stroke-dasharray="3 3"/>')
+        for (px, py, col) in [(298, 158, DROP), (276, 196, DROP), (312, 192, DROP), (326, 142, KEEP)]:
             parts.append(f'<circle cx="{px}" cy="{py}" r="6" fill="{col}"/>')
-        parts.append(label(348, 150, "kept: farthest from centroid", size=10, family=SANS, fill=KEEP))
-        parts.append(label(348, 210, "dropped (within cosine radius)", size=10, family=SANS, fill=DROP))
-        parts.append(f'<circle cx="205" cy="180" r="6" fill="{MARK}"/>')
-        parts.append(f'<circle cx="188" cy="196" r="6" fill="{MARK}"/>')
-        parts.append(label(150, 300, "\u0917\u094d\u0930\u093e\u092e \u2248 \"the village\": no shared words,", size=10, family=DEVA, anchor="middle", fill=MARK))
-        parts.append(label(150, 316, "adjacent in embedding space", size=10, family=SANS, anchor="middle", fill=MARK))
-        parts.append(label(150, 332, "\u2014 MinHash cannot catch this", size=10, family=SANS, anchor="middle", fill=MARK))
-        c2 = (660, 210)
-        parts.append(f'<circle cx="{c2[0]}" cy="{c2[1]}" r="88" fill="none" stroke="{DROP}" stroke-width="1.6" stroke-dasharray="6 4"/>')
-        parts.append(label(c2[0], 100, "cluster 2 (sparse, under-represented)", size=11, anchor="middle", fill=DROP))
-        for (px, py) in [(635, 195), (680, 232), (700, 178)]:
+        parts.append(label(346, 140, "kept: farthest from centroid", size=10, family=SANS, fill=KEEP))
+        parts.append(label(346, 198, "dropped (within cosine radius)", size=10, family=SANS, fill=DROP))
+        parts.append(f'<circle cx="202" cy="164" r="6" fill="{MARK}"/>')
+        parts.append(f'<circle cx="186" cy="180" r="6" fill="{MARK}"/>')
+        parts.append(label(150, 312, "\u0917\u094d\u0930\u093e\u092e \u2248 \"the village\": no shared words,", size=10, family=DEVA, anchor="middle", fill=MARK))
+        parts.append(label(150, 328, "adjacent in embedding space", size=10, family=SANS, anchor="middle", fill=MARK))
+        parts.append(label(150, 344, "\u2014 MinHash cannot catch this", size=10, family=SANS, anchor="middle", fill=MARK))
+        c2 = (660, 200)
+        parts.append(f'<circle cx="{c2[0]}" cy="{c2[1]}" r="86" fill="none" stroke="{DROP}" stroke-width="1.6" stroke-dasharray="6 4"/>')
+        parts.append(label(c2[0], 96, "cluster 2 (sparse, under-represented)", size=11, anchor="middle", fill=DROP))
+        for (px, py) in [(636, 186), (678, 222), (698, 170)]:
             parts.append(f'<circle cx="{px}" cy="{py}" r="6" fill="{MARK}"/>')
-        parts.append(label(c2[0], 320, "over-pruning here worsens fairness (FairDeDup)", size=10, anchor="middle", fill=DROP))
-        parts.append(box(30, 344, 840, 34, fill=WASH))
-        parts.append(label(50, 366, "duplicate when cos \u2265 1 \u2212 \u03b5; keep the member FARTHEST from the centroid (contrast: union-find keeps the longest text)", size=11, family=SANS, fill=INK))
-        parts.append(caption(404, "Semantic dedup removes near-synonymous documents that share no surface tokens \u2014 exactly what MinHash misses."))
+        parts.append(label(c2[0], 312, "over-pruning here worsens fairness (FairDeDup)", size=10, anchor="middle", fill=DROP))
+        parts.append(box(30, 362, 840, 34, fill=WASH))
+        parts.append(label(50, 384, "duplicate when cos \u2265 1 \u2212 \u03b5; keep the member FARTHEST from the centroid (contrast: union-find keeps the longest text)", size=11, family=SANS, fill=INK))
+        parts.append(caption(422, "Semantic dedup removes near-synonymous documents that share no surface tokens \u2014 exactly what MinHash misses."))
         return svg(s, "SemDeDup collapses embedding-space neighborhoods, keeping the least central member",
                    "Documents are embedded and k-means clustered; within a cluster, points inside a cosine radius are duplicates and all but the member farthest from the centroid are dropped. Over-pruning sparse clusters can worsen fairness.",
-                   424, "".join(parts))
+                   442, "".join(parts))
 
     def _build_dedup_scope():
         s = "dedup-scope"
